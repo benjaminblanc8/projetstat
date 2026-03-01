@@ -134,7 +134,23 @@ Attention : contrairement aux logiciels de traitement de texte les plus couramme
 
 # Introduction
 
-Écrire ici l’introduction du rapport.
+
+
+
+Ce projet a pour objectif de comprendre quelles variables affectent les inégalités scolaires au sein des pays de l’OCDE à partir des données PISA. L’ambition est de comprendre dans quelle mesure les différences de performance et note observés entre élèves et pays ne proviennent pas uniquement du système éducatif, mais aussi d’un ensemble de facteurs institutionnels, sociaux, économiques, familiaux et individuels. Le tableau des variables ci-dessous permet de distinguer clairement les différentes dimensions de l’analyse.
+
+Dans un premier temps, nous utilisons les indicateurs centraux de performance scolaire qui sont :la moyenne des 10 plausible values en mathématiques (PV_MATHS), en lecture (PV_LECTURE) et en sciences (PV_SCIENCE). Ces variables mesurent la réussite académique et permettent d’observer les écarts de niveau entre les pays grâce à la variable CNT. Elles sont accompagnées par des variables décrivant le fonctionnement du système éducatif et les conditions d’enseignement, comme la qualité perçue de l’établissement (PQSCHOOL), les actions de soutien aux apprentissages (SCHSUST), la qualité de l’enseignement des mathématiques (ST272Q01JA), le redoublement précoce (ST127Q01TA), le nombre d’heures de mathématiques (ST059Q01TA), la charge horaire totale (ST059Q02JA), l’exposition aux mathématiques du XXIe siècle (EXPO21ST) ainsi que le type de programme suivi (PROGN). L’objectif est d’évaluer à quel niveau l’organisation institutionnelle et les moyens éducatifs affectent les différences de performance.
+
+L’analyse comprend ensuite les caractéristiques socio-économiques et culturelles des élèves, étant un déterminant majeur des trajectoires scolaires. L’indice ESCS englobe la position économique, sociale et culturelle des familles. Il est complété par le statut professionnel parental (HISEI), le revenu du ménage (PA042Q01TA), la richesse du foyer (WEALTH), les biens matériels à domicile (HOMEPOS), les ressources éducatives disponibles (LEARRES) et l’accès aux ressources numériques (ICTRES). À ces indicateurs s’ajoutent aussi le nombre de livres à la maison (ST255Q01JA), les biens culturels disponibles (CULTPOSS), l’argent de poche (FL170Q02JA), le travail rémunéré en dehors de l’école (FL170Q03JA), le fait de prendre un petit-déjeuner les jours d’école (ST294Q01JA), le travail pour financer ses études (ST295Q04JA) ainsi que l’aide familiale après l’école (ST295Q03JA). L’ensemble de ces variables montrent les inégalités de conditions de vie et les possibles contraintes économiques pouvant influencer le temps disponible de l'élève, sa concentration et la qualité de son travail scolaire.
+
+Le rôle de la famille est également étudié à travers l’implication parentale (PARINVOL) et le niveau d’éducation des parents (HISCED, FISCED, MISCED), mesurant le capital scolaire au sein du foyer. Ces éléments permettent de différencier l’effet des ressources matérielles de celui des pratiques éducatives et du capital culturel parental. L’analyse prend aussi en compte les inégalités liées à l’origine et au parcours migratoire grace au statut migratoire (IMMIG) et la durée en éducation préscolaire (DURECEC), variables importante pour comprendre les écarts pouvant apparaître dès les premières années scolaire.
+
+Enfin, quelques caractéristiques individuelles sont aussi intégrées afin d’élargir la compréhension des tous les mécanismes en jeu : l’année de naissance (ST003D03T), le genre (ST004D01T), la satisfaction de vie (ST016Q01NA), le soutien émotionnel des enseignants (ST267Q02JA), les absences prolongées (ST260Q01JA), le temps consacré au travail scolaire (ST295Q02JA) ainsi que la persévérance face aux tâches (ST307Q01JA). Ces variables permettent d’introduire des dimensions liées au bien-être, au climat scolaire et à l’engagement personnel.
+
+Ainsi, grâce à la mise en relation des différents groupes de variables présentés dans le tableau, le projet vise à montrer que les inégalités scolaires observées dans les pays de l’OCDE résultent d’un ensemble de facteurs structurels et individuels. Cette approche globale permet de comprendre la complexité des écarts de réussite scolaire à l’échelle internationale et d’en proposer un résumé multidimensionnelle cohérent
+
+
+
 
 # \# Titre de premier niveau
 
