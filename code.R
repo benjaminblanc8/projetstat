@@ -1,68 +1,7 @@
 library(dplyr)
 
 pisa_oecd_clean=read.table("data_ocde.csv", sep=",", header = TRUE)
-data=readRDS("stu_qqq.rds")
-  
-data_ocde<-data %>%
-  filter(OECD==1)
 
-# garder uniquement les élèves OCDE
-data_ocde <- data[data$OECD == 1, ]
-
-# moyenne des 10 plausible values par élève
-data_ocde$moyenne_sciences <- rowMeans(
-  data_ocde[, paste0("PV", 1:10, "SCIE")],
-  na.rm = TRUE
-)
-
-data_ocde$moyenne_maths <- rowMeans(
-  data_ocde[, paste0("PV", 1:10, "MATH")],
-  na.rm = TRUE
-)
-
-data_ocde$moyenne_lecture <- rowMeans(
-  data_ocde[, paste0("PV", 1:10, "READ")],
-  na.rm = TRUE
-)
-
-# Charger le dictionnaire
-dico=read.csv("dico.csv", sep=";")
-
-
-
-var2 <- dico %>%
-  filter(tolower(trimws(dico[[8]])) == "oui") %>%
-  pull(1)
-
-
-pisa_oecd_clean <- data_ocde %>%
-  select(
-    CNT,
-    moyenne_maths,
-    moyenne_lecture,
-    moyenne_sciences,
-    IMMIG,
-    any_of(var2)
-  )
-
-pisa_oecd_clean <- data_ocde[
-  ,
-  c(
-    "CNT",
-    "moyenne_maths",
-    "moyenne_lecture",
-    "moyenne_sciences",
-    "IMMIG",
-    intersect(var2, names(data_ocde))
-  )
-]
-
-pisa_oecd_clean$DI
-
-
-write.csv(pisa_oecd_clean, "data_ocde.csv", row.names = FALSE)
-
-table(pisa_oecd_clean$CNT)
 
 
 correspondance <- data.frame(

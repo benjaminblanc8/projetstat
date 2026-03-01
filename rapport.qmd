@@ -1,5 +1,623 @@
 ---
-title: "rapport"
-format: html
+title: ""
+format:
+  pdf:
+    documentclass: report
+    mainfont: "TeX Gyre Termes"
+    header-includes: |
+      \usepackage{enumitem}
+      \setlist[itemize]{label=$\bullet$}  % Puce ronde classique
+lang: fr
+fontsize: 11pt
+papersize: a4
+geometry: top=1.5cm, bottom=1.5cm, left=2.5cm, right=2.5cm
+bibliography: references.bib
+link-citations: true 
+nocite: "@*"
 ---
 
+<!--Cette première partie ci-dessus entre deux « --- » s’appelle un « YAML header » (nom en anglais aussi utilisé en français) ou un « en-tête YAML ».-->
+
+<!--« lang: fr » à remplacer par « lang: en » si rapport rédigé en anglais. Définir la langue du document est utile pour la typographie (par exemple les espaces autour de la ponctuation ne sont pas les mêmes dans les deux langues), la langue de la table des matières, des dates, le cadre linguistique du PDF généré, etc.-->
+
+<!--« mainfont » définit la police utilisée et « fontsize » la taille de cette police.-->
+
+```{=html}
+<!--« header-includes: |
+      \usepackage[bottom]{footmisc} » permet aux notes de bas de page d’être réellement en bas de page et non juste après la dernière ligne de texte (ce qui peut amener à des notes en milieu de page si le texte s’arrête à ce niveau).-->
+```
+
+```{=html}
+<!--« text: |
+      \usepackage[dvipsnames]{xcolor} » permet de mettre des portions de texte en couleur.-->
+```
+
+```{=html}
+<!--« text: |
+      \usepackage{booktabs} » permet d’utiliser le langage LaTeX pour améliorer la présentation des tableaux. -->
+```
+
+<!--« geometry » définit les marges de chaque taille du rapport. « top », en haut ; « bottom », en bas ; « left », à gauche ; « right », à droite.-->
+
+```{=html}
+<!--« bibliography: references.bib
+citation: true
+link-citations: true 
+nocite: "@*" » est utile pour faire une liste bibliographique, pour plus d’explications, voir la section dédiée.-->
+```
+
+<!--La présentation de la page de titre est codée ci-dessous en LaTeX qui est un langage supporté par les documents Quarto sur RStudio ; sauf à vouloir innover la présentation, vous n’avez pas à apprendre le langage LaTeX à cette fin. Toutefois, selon la nature du projet, vous aurez peut-être à étudier davantage LaTeX pour rédiger des formules mathématiques ou pour améliorer la présentation de vos tableaux. Page officielle de ce langage de programmation : https://www.latex-project.org/ (en anglais). De nombreux autres sites également en français enseignent l’utilisation de LaTeX, dans son ensemble ou pour un usage particulier de ce langage.-->
+
+\begin{titlepage}
+\centering
+
+\includegraphics{ressources/ensai_logo_1.png}\\
+\vspace{1.0cm}
+
+{\LARGE\textsc{Rapport de tel projet}}\\
+\vspace{0.5cm}
+{\large Élèves 1A}
+
+\vspace{2.5cm}
+
+\rule{\textwidth}{0.5mm}\\
+\vspace{0.8cm}
+{\huge\bfseries Titre choisi pour mon rapport en Quarto}\\
+\vspace{0.8cm}
+\rule{\textwidth}{0.5mm}\\
+
+\vspace{2.5cm}
+
+\begin{flushleft}
+\emph{Étudiant·e·s :}\\
+Torreilles Raphaël \\
+Delanzy Romane \\
+Blanc Benjamin \\
+\end{flushleft}
+
+\begin{flushright}
+\emph{Responsable :}\\
+Laurent COSTA\\
+\vspace{1.0cm}
+\emph{Encadrant(e) :}\\
+Louis GERVILLE-REACHE\\
+\end{flushright}
+
+\vfill 
+\begin{center}
+École nationale de la statistique et de l’analyse de l’information\\
+2025--2026
+\end{center}
+\end{titlepage}
+
+<!--« vspace » définit la taille verticale d’un espace à laisser vide.-->
+
+<!--« flushleft », « flushright » et « center » : alignements à gauche, à droite et centré.-->
+
+<!--« \emph » met du texte en italique dans un texte en romain et vice versa.-->
+
+<!--« vfill » renvoie le texte codé par la suite (ici jusqu’à « \end{titlepage} » en bas de la page.-->
+
+<!--Dans « 2025--2026 », les deux traits d’union permettent de faire un tiret long. « 2025--2026 » pourra être remplacé par une date.-->
+
+\tableofcontents
+
+# Objectif de ce document
+
+Ce document sert de modèle pour les rapports de projets de première année à l’Ensai avec quelques recommandations et consignes de base pour la forme. Ce modèle ne traite pas du fond et, en aucun cas, ce document ne se substitue aux consignes données par chaque responsable de projet qui seront toujours prépondérantes par rapport aux éléments figurant ici.
+
+Une fois ce document vidé par les étudiants de son contenu explicatif, il en restera le « squelette » qui pourra servir comme architecture de départ à la rédaction de tout rapport.
+
+Le contenu explicatif est dans le PDF mais aussi dans les commentaires figurant directement dans le document Quarto sur RStudio. De manière générale, on peut mettre des commentaires dans ce type de document de deux façons différentes selon l’endroit :
+
+-   si dans une portion de code R, derrière un croisillon (« `#` »)[^1] et une espace[^2] ;
+
+[^1]: Parfois appelé par erreur dièse mais le dièse a le symbole suivant « ♯ » différent de « \# » ; parfois appelé aussi *hashtag* en français mais *hash* est un des noms du symbole en anglais et le *hashtag* désigne en anglais un mot-clef c’est-à-dire un mot collé tout de suite après un croisillon et servant de mot référence.
+
+[^2]: En typographie, le mot « espace » est féminin.
+
+<!-- -->
+
+-   si dans le texte hors portion R, entre « `<!--` » et « `-->` ».
+
+# Précisions sur la table des matières
+
+Pour afficher la page deux rangs avant celle-ci, il faut saisir la ligne « `\tableofcontents` » à l’endroit souhaité. Par défaut, la page est appelée « Table des matières », si on veut la renommer « Sommaire », on fait précéder la ligne précédente par la ligne « `\renewcommand{\contentsname}{Sommaire}` ».
+
+→ Quelle différence entre un sommaire et une table des matières ?
+
+Généralement, un sommaire est plus ou moins détaillé (parfois juste avec les grandes parties et sans numéro de page) et toujours en début de document quand une table des matières, plus souvent en fin de document, rentre dans les détails de chaque section toujours liée à la page où elle débute. Dans les faits, les deux termes sont souvent employés l’un pour l’autre, surtout quand c’est détaillé (ce qui est plus habituel d’une table des matières) tout en étant à la fois en début de document (ce qui est plus habituel d’un sommaire). Étant ce qui est attendu ici, le nom de cette page sera à la convenance personnelle des rédacteurs du rapport.
+
+Dans le PDF généré en ligne, les titres sont cliquables et renvoient aux sections concernées plus bas dans le document.
+
+Attention : contrairement aux logiciels de traitement de texte les plus couramment utilisés (comme Microsoft Word ou Libre Office Writer), la page de titre n’est pas prise en compte pour la numérotation des pages (un peu comme s’il s’agissait de la couverture d’un livre). Pour ça, pour ceux qui connaissent, c’est pareil que pour un document tapé avec LaTeX sur Overleaf. La page 1 est la première page après la page de titre soit ici celle de la table des matières.
+
+# Introduction
+
+Écrire ici l’introduction du rapport.
+
+# \# Titre de premier niveau
+
+## \## Titre de deuxième niveau
+
+Un titre de premier niveau est introduit dans le langage Quarto par 1 croisillon (« \# »), un titre de deuxième niveau par 2 croisillons (« \## »), de troisième niveau par 3 croisillons (« \### »), etc.
+
+Attention, seuls les titres des trois premiers niveaux paraissent dans la table des matières ; pas les titres de quatrième niveau ou au-delà.
+
+Il faut une espace entre les croisillons et le titre choisi de la section.
+
+## \## Autre titre de deuxième niveau
+
+Tulaliloo ti amo, chika banana ! Minion power, kaboom finale !
+
+### \### Exemple
+
+Bee-do bee-do ! Fire in the pancako ! To the rescue-o, pronto-pronto !
+
+#### \#### Exemple dans l’exemple
+
+Bananaaaa… oh no, le banana kaput ! Omelette du fromage… plan B.
+
+#### \#### Autre exemple
+
+Papoy boom-boom! Hahaha, tutu balala ! Bello ! Me want banana gelato subito !
+
+### \### Dernier exemple
+
+Tank yu veddy mucho, boss man ! Me zip-zap finisho la missiono !
+
+# Utilité de Quarto et utilisation
+
+Un document Quarto sur RStudio permet de mêler du texte et du code R exécutable pour tout regrouper dans un seul document finalisé, comme ici un rapport en format PDF. Pour en savoir plus sur Quarto : [site officiel de Quarto](https://quarto.org)[^3] (en anglais).
+
+[^3]: Pour faire un lien cliquable vers une page externe, voir dans [la section sur les liens externes](#lienexterne).
+
+L’avantage par rapport aux autres logiciels de traitement de texte est que cela permet d’intégrer du code directement dans le document et d’afficher les résultats (graphiques, tableaux, etc.) automatiquement. Cela favorise une reproductibilité scientifique : on peut voir et exécuter le code à l’origine des résultats.
+
+Les résultats sont ainsi générés dynamiquement à partir des données. Si les données changent, il suffit de recompiler le document : tout se met à jour automatiquement (textes, graphiques, analyses…). Cela évite les erreurs de copier-coller ou les résultats obsolètes.
+
+## Mix entre texte et code intégré {#mix}
+
+Lorsqu’on clique sur le bouton **Render** de RStudio (ou combinaisons des touches Ctrl+Maj+K), un PDF est généré incluant à la fois le texte et le code intégré. On peut intégrer du code comme suit en l’encadrant entre une première ligne « ```` ```{r} ```` » et une dernière « ```` ``` ```` » (« `` ` `` » est le symbole accent grave, appelé aussi *backtick* ou *backquote* depuis ses noms en anglais).
+
+```{r}
+1 + 1
+```
+
+Ces sections de code intégré au texte et exécutable sont appelées des *chunks*. Quand on clique sur le bouton **+c** de RStudio (ou Ctrl+Maj+I), un *chunk* est automatiquement rajouté après l’emplacement du curseur.
+
+On peut aussi ajouter des options au code exécutable comme ceci (derrière « `#|` », c’est-à-dire un croisillon et une barre verticale) :
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+L’option « `echo: false` » désactive l’impression du code (seul le résultat final est affiché).
+
+On peut arriver au même résultat avec la première ligne « ```` ```{r} ```` » remplacée par « ```` ```{r, echo=FALSE} ```` ». Pas besoin alors de ligne avec l’option.
+
+On peut également faire l’inverse, masquer le résultat et afficher le code en remplaçant la première ligne « ```` ```{r} ```` » par « ```` ```{r, results="hide"} ```` ».\
+Ou tout masquer en remplaçant la première ligne « ```` ```{r} ```` » par « ```` ```{r, include=FALSE} ```` ». Dans les deux derniers cas, les éléments du *chunk* sont bien exécutés comme dans les *chunks* précédents où les résultats sont affichés.
+
+Exemple avec seulement le résultat :
+
+```{r, echo=FALSE}
+10 - 3
+```
+
+Exemple avec seulement le code :
+
+```{r, results="hide"}
+3 - 5
+```
+
+Exemple où tout est masqué :
+
+```{r, include=FALSE}
+memoire<-sqrt(2)^6
+```
+
+L’intérêt de cacher tout un *chunk* et son résultat est de gagner de la place en n’affichant pas ce qui a peu de pertinence mais comme le code est tout de même exécuté, on peut faire appel aux résultats mémorisés dans ces *chunks* ultérieurement, soit dans d’autres *chunks* (comme immédiatement ci-dessous) soit dans le texte comme on le verra dans [une section suivante](#appelaunresultatr).
+
+```{r}
+memoire / 8
+```
+
+### Un autre exemple avec mix entre texte et code intégré
+
+L’exemple suivant est tiré du deuxième T.P. de « statistique avec R » du cours de 1A de 2024-2025.
+
+On charge des packages (`dplyr` et `ggplot2`).
+
+```{r, include=FALSE}
+library(dplyr)
+library(ggplot2)
+```
+
+Il est fréquent que les packages contiennent des bases de données. On va appeler la liste des tables disponibles dans le package « dplyr » en lançant la commande suivante :
+
+```{r}
+data(package="dplyr")
+```
+
+Puis on va travailler sur la table « starwars ». Pour cela on charge la table avec l’instruction suivante :
+
+```{r}
+data("starwars")
+```
+
+Cette table comporte notamment des informations sur les personnages de la série de films *Star Wars*. On veut maintenant étudier la relation entre le poids (« mass ») et la taille (« height ») de ces personnages. On commence par enlever de la table tous les personnages avec au moins une valeur manquante pour ces deux variables :
+
+```{r}
+starwars<-starwars %>% 
+  filter(is.na(height)==FALSE,
+         is.na(mass)==FALSE)
+```
+
+On représente la variable « mass » (ordonnées) en fonction de la variable « height » (abscisses) sous forme d’un nuage de points :
+
+```{r fig-nuage}
+ggplot(data=starwars,
+       aes(x = height, y= mass ))+
+  geom_point()
+```
+
+On retire l’observation qui semble aberrante (au vu du graphique précédent) puis on refait le nuage de points entre « mass » et « height » :
+
+```{r fig-nuage2}
+ggplot(data=starwars %>% 
+         filter(mass!=max(mass)),
+       aes(x = height, y= mass ))+
+  geom_point()
+```
+
+On peut voir [dans les annexes](#starwars) à quoi ressemble le contenu de la table à ce stade de l’exercice.
+
+\pagebreak
+
+<!--« \pagebreak » force un saut de page. Même sans « \pagebreak », le saut de page est automatique sur le PDF généré par le document Quarto avant chaque titre de premier niveau.-->
+
+### Un dernier exemple avec mix entre texte et code intégré {#appelaunresultatr}
+
+Autre exemple où on « plante » la graine numéro *n* de générateur de nombres aléatoires. La graine (« seed » en anglais) permet d’obtenir une reproductibilité des résultats quand l’on fait appel à un processus aléatoire. Pour cela, il faut appeler à chaque fois la même graine (c’est-à-dire le même numéro de graine).
+
+Ci-dessous, on demande pour la graine numéro *n* :\
+-- 31 nombres aléatoires selon la loi normale centrée réduite ;\
+-- 31 nombres aléatoires entre 0 et 1 selon la loi uniforme ;\
+-- 31 nombres entiers aléatoires tirés entre 1 et 10 inclus (avec remise).
+
+```{r}
+n <- 102
+set.seed(n)
+x_loinormale <- rnorm(31, mean = 0, sd = 1)
+x_loiuniforme <- runif(31, min = 0, max = 1)
+x_tirage <- sample(1:10, 31, replace=TRUE)
+```
+
+La moyenne (arrondie à 2 chiffres après la virgule) des 31 valeurs générées par la loi normale est : **`r round(mean(x_loinormale), 2)`**.
+
+Celle (*idem*) de la loi uniforme est : **`r round(mean(x_loiuniforme), 2)`**.
+
+Celle (*idem*) du tirage des nombres entre 1 et 10 est : **`r round(mean(x_tirage), 2)`**.
+
+Si on choisit de relancer tous les calculs avec une autre graine, grâce à Quarto, pas besoin de tout retaper, on change la valeur de *n* dans le *chunk* et on recompile le document. On peut ainsi remplacer le numéro de départ par 288, 12045, 52, etc.
+
+Pour avoir, en dehors d’un *chunk*, une phrase reprenant un résultat issu de code dans R, on écrit, entre deux accents graves (un au début et un à la fin), « `r` » (pour dire que l’on veut ce code dans le langage R) suivi d’une espace et enfin du code R.\
+Pour le dernier résultat : « `` ` `` `r` `mean(x_tirage)` `` ` `` »\
+ou « `` ` `` `r` `round(mean(x_tirage), 2)` `` ` `` » si arrondi à deux chiffres après la « virgule[^4] ».
+
+[^4]: à propos de virgule, ici R utilise la typographie anglaise pour les nombres et c’est le point qui est utilisé comme séparateur entre partie entière et partie décimale. Pour le remplacer par une virgule comme en français, cf. la [section sur les conventions typographiques](#virgule).
+
+\pagebreak
+
+## Quelques conventions propres à Quarto pour la typographie
+
+### Affichage de caractères spéciaux
+
+Points typographiques : pour que le symbole accent grave ne soit pas compris par Quarto comme du code dans du texte, on doit l’entourer de chaque côté par deux accents graves (cf. le code de la section précédente : si on est actuellement dans le mode **Visual**, pour regarder ce code, cliquer sur le bouton **Source** de RStudio ou Ctrl+Maj+F4).
+
+Si la portion que l’on souhaite afficher comporte trois accents graves (comme pour le début ou la fin d’un *chunk*), on doit entourer cette portion avec quatre accents graves de chaque côté pour les désactiver (cf. le début de [la section « Mix entre texte et code intégré »](#mix)).
+
+Pour les autres caractères spéciaux (« \* », « \\ », « \# », « \< »… liste non exhaustive), c’est la barre oblique inversée (« \\ »), appelée aussi *backslash* ou *antislash*, qui sert à désactiver la fonction spéciale habituelle de ces caractères en Quarto en la mettant juste devant chacun d’eux.
+
+### Gras et italique
+
+Les astérisques (« \* ») servent à mettre en gras ou en italique du texte. En encadrant avec un astérisque de chaque côté, on met \**ce texte en italique*\* ; avec deux astérisques, on met \*\***ce texte en gras**\*\* ; avec trois, on le met à la fois \*\*\****en gras et en italique***\*\*\*. Pour ceux qui connaissent, cela utilise sur ce point les mêmes conventions que la plateforme Discord.
+
+### Couleur dans le texte
+
+En dehors du code propre à R, pour mettre de la couleur dans le texte, on doit au préalable mettre dans l’en-tête YAML « `text: |` » et, ligne suivante, « `\usepackage[dvipsnames]{xcolor}` ».
+
+Ensuite, le texte à colorer (en rouge ici, « red ») doit être précédé par « `\textcolor{red}{` » et suivi par « `}` ». Pour une autre couleur, on remplace « `red` » par la couleur souhaitée en anglais.
+
+Exemple : « `\textcolor{ForestGreen}{Ce texte est vert foncé.}` » pour « \textcolor{ForestGreen}{Ce texte est vert foncé.} »
+
+On peut choisir le noir, le blanc et 74 autres couleurs. Liste complète des couleurs dans la section 4 d’[*Extending LaTeX’s color facilities: the xcolor package*](https://ctan.ceremade.dauphine.fr/macros/latex/contrib/xcolor/xcolor.pdf) (lien externe).
+
+### Parler « `code` »
+
+Lorsque l’on encadre une portion de texte avec un seul accent grave de chaque côté, ce qui est encadré est affiché dans une police à chasse fixe, c’est-à-dire une police où chaque caractère occupe même espace horizontal que les autres caractères. C’est, dans les textes parlant informatique, un type de police souvent utilisé pour représenter le contenu du code utilisé. Exemples :
+
+-   si on tape « `` ` `` `Machin` `` ` `` » dans le code, cela affiche « `Machin` » où le M majuscule n’est pas plus large ou le i minuscule pas moins large que les autres lettres ;
+
+-   alors que si on tape « `Machin` », ça affiche « Machin » dans la police choisie en début de document, idéalement dans une police où la chasse est différente pour chaque caractère.
+
+### Puce
+
+Comme on peut le voir dans les deux exemples ci-dessus, dans le code, un saut de ligne suivi d’une ligne commençant pour un trait d’union est retranscrit par une ligne commençant par une puce.
+
+### Tiret
+
+-- Si on veut réellement commencer la ligne par un tiret, il faut entamer la ligne par deux traits d’union comme pour cette phrase.
+
+### Principales différences entre typographies française et anglaise
+
+#### Espace et ponctuation
+
+En français[^5], les signes de ponctuation dits doubles car composés de deux éléments (« : », « ; », « ? » et « ! ») sont précédés par une espace. En anglais, pas d’espace avant ces signes de ponctuation.
+
+[^5]: Sauf en français du Canada.
+
+Pour les espaces avant les signes de ponctuation, le document Quarto sur R gère cela au moment où le PDF est créé selon, si dans l’en-tête YAML, on a indiqué « lang: fr » ou « lang: en ». Les espaces seront normalement automatiquement rajoutées si le français est la langue choisie ou supprimées pour l’anglais.
+
+#### Guillemets
+
+Le style de guillemets n’est pas le même. Guillemets français : « texte » (avec espaces avant et après le texte[^6]). Guillemets anglais des États-Unis : “texte” (sans espaces). Guillemets anglais du Royaume-Uni : ‘texte’ (sans espaces). Les guillemets anglais des États-Unis sont souvent utilisés en français pour du texte entre guillemets imbriqués dans un extrait lui-même entre guillemets. Exemple :
+
+[^6]: Sauf en français du Canada.
+
+> *Il lui a alors répondu : « Mais vous m’aviez dit “on y va !” à ce moment-là ».*
+
+Dans le PDF généré par un document Quarto sur R, le signe « `"` » (dit guillemet droit ou guillemet informatique) est automatiquement converti en guillemet anglais des États-Unis. Quarto arrive généralement à reconnaître quel signe est le guillemet ouvrant et quel autre signe est le guillemet fermant. De même le signe « `'` » (dit apostrophe droite ou apostrophe informatique) est automatiquement converti en guillemet anglais du Royaume-Uni ou en apostrophe normale (« `’` ») qui est une apostrophe plus soignée.
+
+Pour une typographie irréprochable dans un rapport en français, il faudra donc faire un copier-coller de guillemets français pour avoir les bons guillemets.
+
+#### Espace insécable
+
+Attention, le PDF généré crée parfois des retours à la ligne après un guillemet ouvrant ou avant un guillemet fermant. Une barre oblique inversée (« `\` ») peut alors être mis devant une espace pour la transformer en espace insécable. Écrire donc `«\ texte\ »` à la place de `« texte »`. Rester attentif car l’espace insécable ne fonctionne pas toujours si le texte commence ou termine par un caractère spécial et non par une lettre ou un chiffre. Si le retour à la ligne se fait encore à un endroit non désiré, voir si l’usage de l’italique ou du gras n’est pas tout aussi pertinent que celui des guillemets ou si la phrase ne peut pas être formulée un peu différemment.
+
+Plus rarement, il peut y avoir des retours à la ligne non désirés en d’autres endroits qu’entre guillemets. On peut utiliser la même méthode avec la barre oblique inversée devant l’espace pour résoudre le problème.
+
+#### Majuscules
+
+Pour les documents (articles, ouvrages, vidéos institutionnelles, etc.) à teneur informative, technique ou scientifique, les titres en français se limitent généralement à une majuscule au premier mot[^7] quand les titres en anglais ont une majuscule à chaque mot important.
+
+[^7]: Les œuvres à portée artistique ont des règles particulières pour les majuscules dans les titres mais seront rarement utiles dans un rapport universitaire. Si toutefois le besoin se fait sentir, on peut consulter les [conventions typographiques de Wikipédia en français](https://fr.wikipedia.org/wiki/Wikip%C3%A9dia:Conventions_typographiques#TITRES) qui compilent les normes les plus utilisées sur le sujet.
+
+Les noms de langues ont une lettre initiale minuscule en français, majuscule en anglais : « espagnol » et « arabe » mais « Spanish » et « Arabic ». Même différence pour les adjectifs de nationalité ou pour les noms de jours ou de mois (minuscule en français, majuscule en anglais).
+
+#### Abréviations
+
+Les abréviations en français se terminent généralement (pas toujours) par un point. Les abréviations anglaises du Royaume-Uni sont souvent sans point quand les mêmes abréviations anglaises des États-Unis en comportent souvent une. Ne pas hésiter à consulter des listes d’abréviations courantes pour ne pas se tromper.
+
+### Décimale et séparateurs de milliers {#virgule}
+
+R utilise la typographie anglaise, et donc le point, pour le séparateur entre partie entière et partie décimale.
+
+Dans un rapport en français, pour le remplacer par une virgule comme en français, écrire  « `` ` `` `r` `format(round(mean(x_tirage), 2), decimal.mark = ",")` `` ` `` »  au lieu de\
+« `` ` `` `r` `round(mean(x_tirage), 2)` `` ` `` ».
+
+Cela affichera « **`r format(round(mean(x_tirage), 2), decimal.mark = ",")`** » au lieu de « **`r round(mean(x_tirage), 2)`** ».
+
+```{r}
+v <- 1000 + 5000
+w <- 10000 + 51425
+```
+
+Ici on demande dans une phrase d’afficher les deux valeurs ci-dessus de *v* et de *w* : « le premier résultat est `r v` et le second est `r w` ». On le voit, par défaut quand Quarto fait appel à des résultats de R, il n’utilise pas les séparateurs de milliers (en effet, il écrit les nombres à 4 chiffres d’un seul bloc et use d’une notation scientifique avec une puissance de 10 si les nombres en comportent 5 ou plus).
+
+Pour contraindre Quarto à générer le nombre sans notation scientifique dans le PDF, on se sert d’une option supplémentaire dans la même fonction *format* déjà utilisé plus haut. Écrire alors « `` ` `` `r` `format(w, scientific = FALSE)` `` ` `` » pour afficher « **`r format(w, scientific = FALSE)`** »
+
+Problème qui apparaît, le séparateur de milliers n’est toujours pas utilisé. Il faut donc le rajouter que le rapport soit en français ou en anglais. Et rajouter une espace en français ou une virgule en anglais, respectivement : « 61 425 » et « 61,425 ». Écrire alors dans un texte en français « `` ` `` `r` `format(w, big.mark = " ", scientific = FALSE)` `` ` `` » pour afficher « **`r format(w, big.mark = " ", scientific = FALSE)`** ».\
+Ou avec « `big.mark = ","` » si rapport en anglais.
+
+### Écriture de formules mathématiques {#formule}
+
+Les documents Quarto dans RStudio utilisent du langage LaTeX math pour la rédaction de formules mathématiques. Une imbrication entre deux symboles dollar (« `$` »), un de chaque côté, sert à écrire des formules en ligne au milieu du texte. Une imbrication entre quatre symboles dollar, deux sur une première ligne et deux sur une dernière, à les écrire dans un paragraphe centré par rapport aux marges gauche et droite et propre à cette formule. Exemple :
+
+> Soient $X_1, X_2, \ldots, X_n$ une suite de variables aléatoires indépendantes et identiquement distribuées, telle que $\text{E}[X_i] = \mu$ et $\text{Var}[X_i] = \sigma^2 < \infty$. On définit :
+
+$$
+S_n = \frac{X_1 + X_2 + \cdots + X_n}{n}
+      = \frac{1}{n}\sum_{i}^{n} X_i
+$$ {#eq-sn}
+
+Après chaque équation et les deux `$$`, on peut insérer entre accolades un nom à l’équation. Ici elle a été appelée « sn », la dernière ligne de mon code en LaTeX ci-dessus est « `$$ {#eq-sn}` ». Chaque nom d’équation du rapport sera précédé par « eq- ».
+
+Pour appeler cette équation dans du texte, il suffit d’insérer dans celui-ci « `@eq-sn` » pour donner « @eq-sn ». Le numéro de l’équation (créé par le document Quarto à la génération du PDF) est alors cliquable dans ce PDF pour renvoyer vers l’équation en question.
+
+### Tableaux {#tableaux}
+
+``` text
+| Produit  | Quantité (kg) | Prix unitaire (€) | Prix total (€) |
+|----------|---------------|-------------------|----------------|
+| Pommes   | 10            | 2,50              | 25,00          |
+| Bananes  | 5             | 1,80              | 9,00           |
+| Cerises  | 3             | 4,00              | 12,00          |
+
+: Facture. {#tbl-fact}
+```
+
+> permet de reproduire le tableau suivant :
+
+| Produit | Quantité (kg) | Prix unitaire (€) | Prix total (€) |
+|---------|---------------|-------------------|----------------|
+| Pommes  | 10            | 2,50              | 25,00          |
+| Bananes | 5             | 1,80              | 9,00           |
+| Cerises | 3             | 4,00              | 12,00          |
+
+: Facture. {#tbl-fact}
+
+Comme pour les équations, après chaque tableau et son titre pour le lecteur, on peut insérer entre accolades un nom au tableau pour l’appel au tableau dans le texte. Ici la tableau a été appelé « fact ». Chaque nom de tableau du rapport sera précédé par « tbl- ».
+
+Pour mentionner ce tableau dans du texte, il suffit d’insérer dans celui-ci « `@tbl-fact` » pour donner « @tbl-fact ». Le numéro du tableau (créé par le document Quarto à la génération du PDF) est alors cliquable dans ce PDF pour renvoyer vers le tableau en question.
+
+Pour avoir plus de contôle sur la présentation d’un tableau (alignement, fusion de cases, etc.), il faut utiliser le langage LaTeX après avoir mis au préalable dans l’en-tête YAML « `text: |` » et, ligne suivante, « `\usepackage{booktabs}` », ce qui autorise le langage LaTeX pour dessiner des tableaux.
+
+Il y a aussi la possibilité d’afficher un tableau depuis un *chunk* sous code R avec « `knitr::` » et la fonction « kable » (ici, je demande la table « starwars » où je n’ai gardé que les colonnes, que j’ai renommées en français, sur les noms, tailles et poids) :
+
+```{r , include=FALSE}
+starwarstab <- starwars[, c("name", "height", "mass")]
+colnames(starwarstab) <- c("Nom", "Taille", "Poids")
+```
+
+```{r tbl-star}
+knitr::kable(starwarstab, caption = "Extrait du jeu de données « starwars »")
+```
+
+Sur la première ligne du *chunk*, on écrit « ```` ```{r tbl-star} ```` » à la place de « ```` ```{r} ```` ». On peut ainsi appeler le tableau dans du texte avec « `@tbl-star` » qui donnera « @tbl-star ».
+
+### Figures {#figures}
+
+Pour afficher une image : « `![Logo de l’Ensai](ressources/ensai_logo_1.png){#fig-logoensai}` ». Entre crochets le nom de l’image pour les lecteurs, entre parenthèses le nom du fichier, entre accolades le nom de l’image si on veut le rappeler dans le texte (même fonctionnement que les formules et les tableaux vus précédemment).
+
+![Logo de l’Ensai](ressources/ensai_logo_1.png){#fig-logoensai}
+
+Si on affiche un graphique depuis du code R, sur la première ligne du *chunk*, on écrit « ```` ```{r fig-nuage2} ```` » à la place de « ```` ```{r} ```` ». On peut ainsi appeler le graphique dans du texte avec « `@fig-nuage` » qui donnera « @fig-nuage2 » (qui est le deuxième nuage de points générés avec R plus haut).
+
+## Présentation des paragraphes
+
+### Passage à la ligne
+
+Pour passer à la ligne sans créer un nouveau paragraphe dans le PDF, il faut terminer une ligne par deux espaces et appuyer sur « `Entrée` » afin d’écrire la ligne suivante. La barre oblique inversée (« \\ ») en fin de ligne a la même fonctionnalité que les deux espaces.\
+Lorsque l’on passe à la ligne après deux espaces, il est possible lors d’un enregistrement du document que RStudio transforme automatiquement les deux espaces par une barre oblique inversée.
+
+### Création d’un nouveau paragraphe
+
+Le plus simple (car le plus lisible) est de sauter une ligne en laissant une ligne vide.
+
+Si on passe à la ligne sans sauter de ligne et sans les deux espaces (ou la barre oblique inversée) à la ligne précédente, cela écrira tout à la suite dans le PDF.
+
+De la même manière que décrit dans la section précédente, lorsque l’on passe à la ligne après zéro ou une seule espace, il est possible lors d’un enregistrement du document que RStudio supprime automatiquement le passage à la ligne dans le code et ne garde qu’une espace.
+
+### Retrait de paragraphe
+
+Pour écrire tout un paragraphe avec un retrait à gauche plus important (c’est-à-dire que la marge de gauche est provisoirement augmentée le temps du paragraphe), il faut le commencer par un chevron pointant vers la droite (« `>` ») et une espace. Si l’on souhaite amplifier ce retrait, on cumule les chevrons (« `>>` », « `>>>` », etc.). Ce retrait ne fonctionne que si ces caractères sont bien placés en début de paragraphe, pas en début de ligne. Exemple :
+
+> > Le théorème de Pythagore s’énonce fréquemment sous la forme suivante :
+
+> > > dans un triangle rectangle, le carré de la longueur de l’hypoténuse est égal à la somme des carrés des longueurs des deux autres côtés.
+
+> > En nommant les sommets du triangle, le théorème peut se reformuler dans l’implication suivante :
+
+> > > si un triangle *ABC* est rectangle en *C*, alors *AB² = AC² + BC²*.
+
+## Renvois {#renvois-intro}
+
+Plus haut, on a déjà vu les renvois du texte vers les [équations citées](#formule), vers les [tableaux mentionnés](#tableaux) ou vers les [figures](#figures).
+
+### Notes de bas de page
+
+Pour faire une note de bas de page, il faut mettre à l’endroit souhaité un nom en chiffres ou en lettres précédé d’un accent circonflexe entre crochets comme ceci : « `[^8]` » et cela donne [^8] puis dans un paragraphe suivant, on fait le rappel de la note de la même façon avec le texte associé après deux-points.
+
+[^8]: Voici le contenu de la note de bas de page qui apparaîtra en bas de la même page.
+
+Quel que soit le nom choisi pour le renvoi vers les notes de bas de page, le document PDF généré numérote automatiquement les notes de page. Et si on passe à la page suivante, la numérotation continue, on ne recommence pas à 1.
+
+À noter : lors d’un enregistrement, il se peut que RStudio ait automatiquement remplacé les noms que vous avez choisi pour les notes de bas de page par sa propre numérotation aussi dans le code (pas seulement dans le PDF).
+
+### Renvois vers une autre section du rapport {#renvois}
+
+Voici un lien interne vers la [page des références](#pagedesreferences). Le lien interne est écrit entre crochets tout de suite suivi (sans espace) entre parenthèses d’un mot-clef (mot précédé d’un croisillon) : « `[page des références](#pagedesreferences)` ». Ce mot-clef est répété à la section souhaitée, entre accolades et forcément derrière le titre d’une section, en l’occurrence ici derrière le titre de la section Références : « `{#pagedesreferences}` ».
+
+On peut aussi mettre ce lien interne dans une note de bas de page comme ceci[^9].
+
+[^9]: Pour plus d’informations, se référer à la [page des références](#pagedesreferences).
+
+Dans l’exemple ci-dessus, c’est un cas très utile de renvoi vers les références. D’autres cas qui peuvent être très courants : renvoi vers les annexes ou tout bonnement vers une section particulière du rapport (pour comparer deux résultats notamment). Il faudra alors créer autant de mot-clefs entre accolades tout au long du texte pour chaque endroit vers lequel l’on devra pointer.
+
+### Lien externe {#lienexterne}
+
+Le lien externe fonctionne un peu de la même façon que le lien interne : entre crochets tout de suite suivi (sans espace) entre parenthèses de l’adresse de la page souhaitée.
+
+Exemple : « `[site officiel de l’Ensai](https://www.ensai.fr/)` » donne « [site officiel de l’Ensai](https://www.ensai.fr/) ».
+
+## Utilisation des références
+
+Dans l’en-tête YAML de ce document, on a « `bibliography: references.bib` » qui va servir à faire une liste pour la bibliographie. Pour faciliter son utilisation, cette liste va être rédigée dans un fichier annexe appelé « references.bib ». Pour créer ce fichier, aller dans le menu de R : `File` → `New File` → `Text File` ; une fois ouvert, sauvegarder le fichier sous le nom souhaité.
+
+Pour l’exemple, voici un extrait le contenu du fichier « references.bib » (extrait car la partie centrale remplacée par `[...]`) :
+
+``` text
+@article{calhamer1974,
+  author    = {Allan B. Calhamer},
+  title     = {The Invention of Diplomacy},
+  journal   = {Games and Puzzles},
+  year      = {1974}, 
+  number    = {21}
+}
+
+@book{sharp1978,
+  author    = {Richard Sharp},
+  title     = {The Game of Diplomacy},
+  year      = {1978},
+  publisher = {Arthur Baker}
+}
+
+[...]
+
+@book{kostick2015,
+  author    = {Conor Kostick},
+  title     = {The Art of Correspondence in the Game of Diplomacy},
+  year      = {2015},
+  publisher = {Curses & Magic}
+}
+
+@book{vanmechelen2019,
+  author    = {Erik van Mechelen},
+  title     = {How to Be a Diplomacy Player: A Philosophy of Face to Face Diplomacy},
+  year      = {2019},
+  publisher = {Lean Publishing}
+}
+```
+
+On peut voir dans la [page des références](#pagedesreferences), la présentation finale. On avait choisi de lister les références dans references.bib dans l’ordre chronologique ; attention, par défaut, cela les affiche dans le PDF dans l’ordre alphabétique des auteurs, cela ne respecte pas l’ordre initialement choisi (si on avait choisi de les ranger d’une certaine façon).
+
+Toujours dans l’en-tête YAML, « `nocite: "@*"` » permet de lister dans le PDF la totalité des références mentionnées dans references.bib. Sans cette ligne, seuls les éléments de la bibliographie listés simultanément dans references.bib et cités dans le corps du document seront listés dans le PDF.
+
+Enfin, pour choisir où les lister, rajouter le code suivant à l’emplacement voulu :
+
+``` text
+::: {#refs}
+:::
+```
+
+Pour citer un élément de la bibliographie dans le corps du document, il faut faire précéder le mot d’appel à ce document précédé d’un arobase et le tout entre crochets. Le mot d’appel est le terme composé des caractères juste derrière l’accolade du document dans references.bib donc ici « `calhamer1974` » pour l’article d’Allan B. Calhamer publié en 1974, « `sharp19784` » pour le livre de Richard Sharp édité en 1978, « `kostick2015` » pour celui de Conor Kostick en 2015 ou encore « `vanmechelen2019` » pour celui d’Erik van Mechelen en 2019.
+
+Cet appel dans le corps du texte sera cliquable et renverra à la ligne de la publication dans le PDF si on choisit cette option dans l’en-tête YAML : « `link-citations: true` ».
+
+Exemples avec « `[@calhamer1974]` » et « `[@kostick2015]` » :
+
+Allan B. Calhamer, l’auteur américain du jeu de société *Diplomatie*, célèbre jeu basé sur les talents de stratège et de négociateur des participants et conçu dans les années 1950, a écrit deux décennies plus tard dans la presse un article très développé expliquant le processus l’ayant amené à le créer [@calhamer1974].
+
+Conor Kostick, historien irlandais et champion de ce jeu, a rédigé en 2015 *The Art of Correspondence in the Game of Diplomacy*, un ouvrage avec de nombreux conseils pour mieux gérer les phases de négociation à *Diplomatie* [@kostick2015].
+
+# Conclusion
+
+Écrire ici la conclusion du rapport.
+
+# Références {#pagedesreferences}
+
+Voici la liste de toutes les références bibliographiques utiles à la rédaction de ce rapport :
+
+::: {#refs}
+:::
+
+# Annexes {#pagesdannexes}
+
+Dans les annexes, peut figurer le détail des travaux effectués et permettant de faciliter la compréhension des points développés au fil des pages. Cela peut être notamment code, graphiques, tableaux, etc. qui ne sont pas forcément pertinents dans le corps du rapport (parce que trop volumineux, ou pas assez vulgarisés, ou trop peu lisibles...).
+
+Utiliser des renvois depuis le corps du rapport vers cette section comme vu dans la [section « Renvois vers une autre section du rapport »](#renvois) aide le lecteur sur PDF à naviguer au sein du rapport. Il peut aussi y avoir des renvois dans l’autre sens, depuis l’élément en annexe vers l’élement associé dans le corps du rapport.
+
+## Contenu de la table « starwars » {#starwars}
+
+Affichage du contenu de la table « starwars » :
+
+```{r}
+str(starwars)
+```
+
+# Résumé {#pagederesume}
+
+Dans certains projets (pas nécessairement dans tous), il pourra être demandé de rédiger un résumé (cela sera précisé par le responsable de la matière). Ce résumé sera à écrire dans la même langue que le reste du rapport ou dans deux langues, anglais et français (*idem*).
