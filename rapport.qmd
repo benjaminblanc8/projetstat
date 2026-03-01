@@ -104,21 +104,6 @@ Louis GERVILLE-REACHE\\
 
 # Objectif de ce document
 
-Ce document sert de modèle pour les rapports de projets de première année à l’Ensai avec quelques recommandations et consignes de base pour la forme. Ce modèle ne traite pas du fond et, en aucun cas, ce document ne se substitue aux consignes données par chaque responsable de projet qui seront toujours prépondérantes par rapport aux éléments figurant ici.
-
-Une fois ce document vidé par les étudiants de son contenu explicatif, il en restera le « squelette » qui pourra servir comme architecture de départ à la rédaction de tout rapport.
-
-Le contenu explicatif est dans le PDF mais aussi dans les commentaires figurant directement dans le document Quarto sur RStudio. De manière générale, on peut mettre des commentaires dans ce type de document de deux façons différentes selon l’endroit :
-
--   si dans une portion de code R, derrière un croisillon (« `#` »)[^1] et une espace[^2] ;
-
-[^1]: Parfois appelé par erreur dièse mais le dièse a le symbole suivant « ♯ » différent de « \# » ; parfois appelé aussi *hashtag* en français mais *hash* est un des noms du symbole en anglais et le *hashtag* désigne en anglais un mot-clef c’est-à-dire un mot collé tout de suite après un croisillon et servant de mot référence.
-
-[^2]: En typographie, le mot « espace » est féminin.
-
-<!-- -->
-
--   si dans le texte hors portion R, entre « `<!--` » et « `-->` ».
 
 # Précisions sur la table des matières
 
@@ -136,23 +121,130 @@ Attention : contrairement aux logiciels de traitement de texte les plus couramme
 
 Écrire ici l’introduction du rapport.
 
-# \# Titre de premier niveau
+#  Les inégalités socio-économiques comme vecteur des inégalités
 
-## \## Titre de deuxième niveau
+##  Les indicateurs expliquant les écarts de niveau scolaire
 
-Un titre de premier niveau est introduit dans le langage Quarto par 1 croisillon (« \# »), un titre de deuxième niveau par 2 croisillons (« \## »), de troisième niveau par 3 croisillons (« \### »), etc.
+```{r, echo=FALSE, results='hide'}
+library(dplyr)
 
-Attention, seuls les titres des trois premiers niveaux paraissent dans la table des matières ; pas les titres de quatrième niveau ou au-delà.
+pisa_oecd_clean=read.table("data_ocde.csv", sep=",", header = TRUE)
 
-Il faut une espace entre les croisillons et le titre choisi de la section.
+vars <- c(
+  "PQSCHOOL","SCHSUST","ST127Q01TA","ST059Q01TA","ST059Q02JA",
+  "EXPO21ST",
+  "ESCS","HISEI","HOMEPOS","LEARRES",
+  "PARINVOL"
+)
+pisa_oecd_clean
 
-## \## Autre titre de deuxième niveau
+# Variables de résultats
+moyennes <- c("moyenne_lecture", "moyenne_maths", "moyenne_sciences")
 
-Tulaliloo ti amo, chika banana ! Minion power, kaboom finale !
+# Matrice de corrélation r
+mat_r <- cor(
+  pisa_oecd_clean[, vars],
+  pisa_oecd_clean[, moyennes],
+  use = "pairwise.complete.obs",
+  method = "pearson"
+)
 
-### \### Exemple
+vars_factor <- c(
+  # Système éducatif
+  "ST127Q01TA",   # redoublement
+  "PROGN",        # filière
+  "CNT",          # pays
+  
+  # Milieu socio-économique
+  "ST255Q01JA",   # nombre de livres (classes)
+  "FL170Q02JA",   # argent de poche
+  "FL170Q03JA",   # travail rémunéré
+  
+  "ST294Q01JA",   # petit-déjeuner
+  "ST295Q04JA",   # travail pour financer études
+  "ST295Q03JA",   # aide familiale
+  
+  # Environnement / comportements
+  "DURECEC",
+  "HISCED",
+  "FISCED",
+  "MISCED",
+  "IMMIG",
+  "ST004D01T",    # genre
+  "ST016Q01NA",   # satisfaction
+  "ST260Q01JA",   # absence prolongée
+  "ST267Q02JA",   # soutien émotionnel
+  "ST295Q02JA",   # temps de travail scolaire
+  "ST307Q01JA",   # persévérance
+  "WB150Q01HA"    # santé perçue
+)
 
-Bee-do bee-do ! Fire in the pancako ! To the rescue-o, pronto-pronto !
+eta <- function(y, x){
+  x <- as.factor(x)
+  
+  ok <- complete.cases(y, x)
+  y <- y[ok]
+  x <- x[ok]
+  
+  y_bar <- mean(y)
+  
+  ni <- tapply(y, x, length)
+  mi <- tapply(y, x, mean)
+  
+  num <- sum(ni * (mi - y_bar)^2)
+  den <- sum((y - y_bar)^2)
+  
+  sqrt(num / den)
+}
+
+vars_factor_ok <- intersect(vars_factor, names(pisa_oecd_clean))
+moyennes_ok    <- intersect(moyennes, names(pisa_oecd_clean))
+
+mat_eta <- matrix(NA,
+                  nrow = length(vars_factor_ok),
+                  ncol = length(moyennes_ok))
+
+rownames(mat_eta) <- vars_factor_ok
+colnames(mat_eta) <- moyennes_ok
+
+for(v in vars_factor_ok){
+  for(m in moyennes_ok){
+    mat_eta[v, m] <- eta(
+      pisa_oecd_clean[[m]],
+      pisa_oecd_clean[[v]]
+    )
+  }
+}
+
+mat_eta
+
+
+vars_factor_ok <- intersect(vars_factor, names(pisa_oecd_clean))
+
+pisa_oecd_clean[vars_factor_ok] <-
+  lapply(pisa_oecd_clean[vars_factor_ok], as.factor)
+
+
+
+mat_r
+
+
+
+```
+```{r, echo=FALSE}
+mat_eta
+
+mat_r
+
+```
+
+##  Autre titre de deuxième niveau
+
+
+
+###  Exemple
+
+
 
 #### \#### Exemple dans l’exemple
 
