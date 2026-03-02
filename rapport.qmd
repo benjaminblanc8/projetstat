@@ -255,3 +255,269 @@ mat_r
 
 ```
 
+
+
+# a) les inégalités de résultat au sein des pays 
+
+```{r, echo=FALSE}
+library(ggplot2)
+
+ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_maths, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 16) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Inégalités de résultats en Mathématiques (OCDE)",
+       x = "Pays",
+       y = "Score Maths") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_lecture, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 17) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Inégalités de résultats en Lecture (OCDE)",
+       x = "Pays",
+       y = "Score Lecture") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_sciences, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Inégalités de résultats en Science (OCDE)",
+       x = "Pays",
+       y = "Score Science") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = PQSCHOOL, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Qualité des établissement scolaire",
+       x = "Pays",
+       y = "établissement scolaire") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = SCHSUST, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Actions de l’établissement pour soutenir les apprentissages",
+       x = "Pays",
+       y = "Aide") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q01TA, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Nombre d’heures de mathématiques par semaine",
+       x = "Pays",
+       y = "nombre d'heure") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q02JA, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Nombre total d’heures de cours par semaine",
+       x = "Pays",
+       y = "nombre d'heures") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+ggplot(pisa_oecd_clean, aes(x = CNT, y =EXPO21ST, color = CNT)) +
+  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
+  stat_summary(fun = median,
+               geom = "point",
+               shape = 18,
+               size = 3,
+               color = "black") +
+  theme_minimal() +
+  labs(title = "Exposition aux mathématiques du XXIe siècle",
+       x = "Pays",
+       y = "exposition") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+install.packages("scales")
+library(scales)
+
+pisa_oecd_clean$ST272Q01JA <- factor(
+  pisa_oecd_clean$ST272Q01JA,
+  levels = 1:10,
+  ordered = TRUE
+)
+
+ggplot(pisa_oecd_clean, aes(x = CNT, fill = ST272Q01JA)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_brewer(palette = "RdYlGn", direction = 1) +
+  theme_minimal() +
+  labs(title = "Répartition de la qualité perçue de l'enseignement (OCDE)",
+       x = "Pays",
+       y = "Proportion",
+       fill = "Qualité (1 = faible, 10 = élevée)") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+
+```{r, echo=FALSE}
+ggplot(
+  data = subset(pisa_oecd_clean, !is.na(ST272Q01JA) & !is.na(CNT)),
+  aes(x = reorder(CNT, CNT, length), fill = ST272Q01JA)
+) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_brewer(palette = "RdYlGn") +
+  theme_minimal(base_size = 12) +
+  labs(title = "Répartition de la qualité perçue de l'enseignement (OCDE)",
+       x = "Pays",
+       y = "Proportion",
+       fill = "Catégorie") +
+  theme(
+    axis.text.x = element_text(
+      angle = 90,         
+      hjust = 1,
+      size = 8
+    ),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+
+```{r, echo=FALSE}
+ggplot(
+  data = subset(pisa_oecd_clean, !is.na(PROGN) & !is.na(CNT)),
+  aes(x = CNT, fill = factor(PROGN %% 10))
+) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_manual(
+    values = c(
+      "1" = "#1b9e77",   # générale
+      "2" = "#d95f02",   # techno
+      "3" = "#7570b3",   # pro
+      "4" = "#666666"    # autres
+    ),
+    labels = c(
+      "1" = "Générale",
+      "2" = "Technologique",
+      "3" = "Professionnelle",
+      "4" = "Autres"
+    )
+  ) +
+  theme_minimal(base_size = 8) +
+  labs(
+    title = "Répartition des filières par pays (OCDE)",
+    x = "Pays",
+    y = "Proportion",
+    fill = "Type de filière"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+
+
+
+```{r, echo=FALSE}
+ggplot(
+  data = pisa_oecd_clean, aes(x = CNT, 
+      fill = factor(PROGN %% 10, levels = c("1", "2", "3", "4"))) 
+) +
+  geom_bar(position = "fill") + # "fill" empile les catégories à 100%
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_manual(
+    values = c(
+      "1" = "#1b9e77",   # En bas
+      "2" = "#d95f02",
+      "3" = "#7570b3",
+      "4" = "#666666"    # En haut
+    ),
+    labels = c(
+      "1" = "Générale",
+      "2" = "Technologique",
+      "3" = "Professionnelle",
+      "4" = "Autres"
+    ),
+    na.value = "#e0e0e0" # Les NA seront tout en haut par défaut
+  ) +
+  theme_minimal(base_size = 8) +
+  labs(
+    title = "Répartition des filières par pays (OCDE)",
+    subtitle = "Catégories ordonnées de 1 (bas) à 4 (haut)",
+    x = "Pays",
+    y = "Proportion",
+    fill = "Type de filière"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+```
