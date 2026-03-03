@@ -501,6 +501,18 @@ ggplot(
 \`\`\`
 
 # b) Le système educatif comme influence des résultats scolaires 
+Au sein des pays de l’OCDE, il existe une grande diversité de systèmes éducatifs. La plupart des pays ont un fonctionnement unique qui diffère par les horaires d'enseignement, l’importance relative des matières ou encore par la pratique ou non du redoublement. Au sein d’un même pays, un certain nombre de caractéristiques restent relatives à l’établissement en lui-même ou aux professeurs qui y enseignent. Ainsi, la scolarité de chaque élève diffère selon le pays où il étudie et les établissements qu’il fréquente. 
+Nous cherchons alors dans cette partie à savoir si cette différence de système éducatif et les professeurs qu’aura l’élève au cours de sa scolarité auront un impact sur sa réussite scolaire. Un certain nombre de variables nous permet d’étudier cet impact. 
+Nous disposons notamment dans le cadre de l’enquête PISA les variables suivantes: PQ SCHOOL qui représente la qualité de l’établissement scolaire, SCHSUST représentant les actions de l’établissement pour soutenir les apprentissages, ST272Q01JA à propos de la qualité d’enseignement des mathématiques. Ces variables vont nous permettre d’en apprendre davantage sur l’impact de la qualité des établissements sur le niveau scolaire des élèves. 
+Nous disposons également de variables décrivant l’environnement scolaire national afin d’en étudier encore une fois l’impact sur la réussite scolaire. Nous avons ST059Q01TA à propos du nombre d’heure de mathématiques par semaine, ST059Q02J représentant le nombre total d’heures de cours par semaine, ainsi que EXPO21ST pour l’exposition aux mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
+
+mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
+Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Une première chose qu’il semble important de remarquer est que l’on constate un coefficient de correction négative entre la qualité de l’établissement scolaire et le niveau scolaire. Cela signifierait que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL       -0.02790187  -0.035165426     -0.030904004. ( voir tableau des corrélations). Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient influencer le niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements permettrait d’améliorer les résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible: 0.19646174   0.229284240      0.210517770
+!!!!ST272Q01JA à propos de la qualité d’enseignement des mathématiques.  pas trouvé dans notre base de données 
+Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas influencer le niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
+Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0 particulièrement pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition. (EXPO21ST       -0.04119653  -0.025791092     -0.031050624). Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. ( coefficient de corrélation de 0,01). Nous alors donc étudier l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alors par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
+Les coefficients de corrélation sont les suivants: -0.06526685  -0.040908051     -0.049262516), encore une fois on découvre une absence de lien. Le nombre d'heures de mathématiques est indépendant de la réussite des élèves mêmes en mathématiques. Étonnement, c’est le nombre d’heure de cours hebdomadaires qui semble davantage influencer la réussite en mathématiques. On retrouve les coefficients de corrélations suivant  0.19646174   0.229284240      0.210517770. C'est même les mathématiques pour lequel le lien entre niveau scolaire et heures d’enseignement est le plus fort, alors que le nombre d’heure de mathématiques lui n’influence pas la réussite. 
+faire PROGN
 
 
 #c) L'influence des caractéristiques sociales et familiales sur le niveau scolaire des élèves 
@@ -518,6 +530,8 @@ MISCED          0.26343916    0.27461724      0.265859615
 Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque mêle si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. Elle est similaire dans toutes les matières. (0.08098036    0.08953935      0.085555451). D’autre part, une observation étonnante est issue de la base de donnée l’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela signifie que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. 
 
 Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On constate dans un premier temps que le genre influence les résultats des élèves. ( voir graphique ci-dessus). C’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
+
+
 
 La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’en conclure un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. (ST295Q03JA      0.08098036    0.08953935      0.085555451)
 De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion. (0.08530051    0.11266479      0.089404379)
@@ -680,3 +694,11 @@ data_ocde %>%
 
 
 #II- Les vecteurs d'inégalités scolaires sont ils les mêmes dans tout les pays de l'OCDE
+
+## a)des sources d'inégalités similaires quelque soit les pays de l'OCDE
+
+## b)des origines d'inégalités de niveau scolaire, seulement explicative dans une partie des pays de l'OCDE
+
+## c)focus sur un pays ou groupe de pays où les explications sont uniques
+
+
