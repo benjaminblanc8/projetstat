@@ -188,3 +188,75 @@ data_ocde %>%
     plot.title      = element_text(size = 14, face = "bold", hjust = 0.5),
     legend.position = "none"
   )
+
+
+
+#tableau des corrélations propre entre toutes les variables ( format graphique)
+
+# Installer si besoin
+install.packages(c("tidyverse", "corrplot", "gt"))
+
+# Charger
+library(tidyverse)
+library(corrplot)
+library(gt)
+
+#sélection des variables
+vars <- data_ocde %>%
+  select(moyenne_g, PQSCHOOL, SCHSUST, ST059Q01TA, ST059Q02JA,
+         EXPO21ST, ESCS, HISEI, PA042Q01TA,
+         LEARRES, HOMEPOS, PARINVOL, ST003D03T)
+
+#calcule la matrice des corrélations
+cor_matrix <- cor(vars, use = "complete.obs")
+
+#"extrait les corrélations avec moyenne_g"
+cor_moyenne <- cor_matrix["moyenne_g", ] %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "Variable")
+
+colnames(cor_moyenne)[2] <- "Correlation"
+
+#tableau propre pour le rapport 
+tableau_propre <- cor_moyenne %>%
+  arrange(desc(abs(Correlation))) %>%
+  gt() %>%
+  tab_header(
+    title = "Corrélation avec la variable moyenne_g"
+  ) %>%
+  fmt_number(
+    columns = "Correlation",
+    decimals = 3
+  )
+
+tableau_propre
+
+#heatmap
+
+corrplot(cor_matrix, method = "color", type = "upper",
+         tl.cex = 0.7, number.cex = 0.6)
+
+#tableau des corrélations propres 
+library(dplyr)
+library(tibble)
+library(gt)
+
+cor_moyenne <- data_ocde %>%
+  select(moyenne_g, PQSCHOOL, SCHSUST, ST059Q01TA, ST059Q02JA,
+         EXPO21ST, ESCS, HISEI, PA042Q01TA,
+         LEARRES, HOMEPOS, PARINVOL, ST003D03T) %>%
+  summarise(across(-moyenne_g,
+                   ~ cor(.x, moyenne_g, use = "complete.obs"))) %>%
+  pivot_longer(cols = everything(),
+               names_to = "Variable",
+               values_to = "Correlation")
+
+#le tableau pour le rapport 
+tableau <- cor_moyenne %>%
+  arrange(desc(abs(Correlation))) %>%
+  gt() %>%
+  tab_header(title = "Corrélation des variables avec moyenne_g") %>%
+  fmt_number(columns = "Correlation", decimals = 3)
+
+tableau
+
