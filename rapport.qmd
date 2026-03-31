@@ -120,14 +120,35 @@ Les performances scolaires constituent les variables d'intérêt central. Elles 
 Les comparaisons entre pays seront distinguées grâce à CNT représentant le code pays ISO à trois lettres.
 Les conditions d'enseignement et le système éducatif seront représentés par plusieurs variables dont les actions de soutien aux apprentissages représentant les efforts institutionnels de l’école. Mais aussi la qualité de l'enseignement des mathématiques afin d’observer la pédagogie, le redoublement précoce pouvant traduire des difficultés scolaires précoces. Le nombre d'heures de cours de mathématiques ainsi que la charge horaire totale pour l’intensité de l’enseignement. Enfin l'exposition aux mathématiques du XXIe siècle et le type de programme suivi.
 
-Le statut socio-économique et culturel de l'élève est résumé en grande partie par l'indice ESCS (Economic, Social and Cultural Status), construit à partir du statut professionnel parental, du niveau d'éducation des parents et des ressources du foyer. Cet indice est complété par d’autres mesures comme la richesse matérielle du ménage ainsi que les ressources éducatives à domicile et l’accès aux ressources numériques informant sur la facilité de l’élève à disposer d'objets pouvant l’aider à étudier. Mais aussi le nombre de livres à la maison et les biens culturels disponibles pouvant expliquer les facilités précoces de l’élève .
+Le statut socio-économique et culturel de l'élève est résumé en grande partie par l'indice ESCS (Economic, Social and Cultural Status), construit à partir du statut professionnel parental, du niveau d'éducation des parents et des ressources du foyer.
+
+```{r, echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(pisa_oecd_clean, aes(x = ESCS, y = score_global)) +
+  geom_density_2d_filled(alpha = 0.8) +
+  geom_smooth(method = "lm", color = "red", linewidth = 0.8, se = FALSE) +
+  scale_fill_brewer(palette = "YlOrRd", direction = 1) +
+  labs(
+    title = "Lien entre statut socio-économique (ESCS) et score global",
+    x = "Indice ESCS (statut économique, social et culturel)",
+    y = "Score global moyen",
+    fill = "Densité",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les zones plus foncées indiquent une plus forte concentration d'élèves. La droite rouge représente la tendance linéaire."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
+
+Cet indice est complété par d’autres mesures comme la richesse matérielle du ménage ainsi que les ressources éducatives à domicile et l’accès aux ressources numériques informant sur la facilité de l’élève à disposer d'objets pouvant l’aider à étudier. Mais aussi le nombre de livres à la maison et les biens culturels disponibles pouvant être lié aux facilités précoces de l’élève .
 
 Le rôle de la famille est abordé à travers le niveau d'éducation du père et de la mère pouvant se résumer par le niveau maximal entre les deux parents. Le statut migratoire distinguant natifs, immigrés de première et de deuxième génération. Mais aussi la durée de scolarisation préscolaire permettent d'analyser l'effet de la famille sur la scolarité.
 
 Enfin les caractéristiques individuelles, comprennent le genre de l’élève, l'année de naissance, la satisfaction de vie représentant son bien être subjectif, ses absences prolongées ainsi que le temps consacré au travail scolaire hors établissement.
 
-
-# Les sources des inégalités de niveau scolaire
 
 # Cadrage 
 
@@ -151,9 +172,12 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_maths, color = CNT)) +
   theme_minimal() +
   labs(title = "Inégalités de résultats en Mathématiques (OCDE)",
        x = "Pays",
-       y = "Score Maths") +
+       y = "Score Maths",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+        )
 
 ```
 
@@ -168,9 +192,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_lecture, color = CNT)) +
   theme_minimal() +
   labs(title = "Inégalités de résultats en Lecture (OCDE)",
        x = "Pays",
-       y = "Score Lecture") +
+       y = "Score Lecture",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 ```{r, echo=FALSE}
@@ -184,18 +210,24 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_sciences, color = CNT)) +
   theme_minimal() +
   labs(title = "Inégalités de résultats en Science (OCDE)",
        x = "Pays",
-       y = "Score Science") +
+       y = "Score Science",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
+# Les sources des inégalités de niveau scolaire
 
 ## A — L'influence des variables économiques sur les inégalités de niveau scolaire
 
 ```{r, echo=FALSE, results='hide'}
 library(dplyr)
 
-pisa_oecd_clean=read.table("data_ocde.csv", sep=",", header = TRUE)
+pisa_oecd_clean <- read.table("data_ocde.csv", sep=",", header = TRUE)
+
+pisa_oecd_clean <- pisa_oecd_clean %>%
+  mutate(score_global = (moyenne_maths + moyenne_lecture + moyenne_sciences) / 3)
 
 vars <- c(
   "PQSCHOOL","SCHSUST","ST127Q01TA","ST059Q01TA","ST059Q02JA",
@@ -203,7 +235,6 @@ vars <- c(
   "ESCS","HISEI","HOMEPOS","LEARRES",
   "PARINVOL"
 )
-pisa_oecd_clean
 
 # Variables de résultats
 moyennes <- c("moyenne_lecture", "moyenne_maths", "moyenne_sciences")
@@ -440,9 +471,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = PQSCHOOL, color = CNT)) +
   theme_minimal() +
   labs(title = "Qualité des établissement scolaire",
        x = "Pays",
-       y = "établissement scolaire") +
+       y = "établissement scolaire",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Un score positif indique une qualité perçue supérieure à la moyenne OCDE.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 
 ```
 
@@ -457,9 +490,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = SCHSUST, color = CNT)) +
   theme_minimal() +
   labs(title = "Actions de l’établissement pour soutenir les apprentissages",
        x = "Pays",
-       y = "Aide") +
+       y = "Aide",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Un score positif indique un effort institutionnel supérieur à la moyenne OCDE.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 ```{r, echo=FALSE}
@@ -473,9 +508,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q01TA, color = CNT)) +
   theme_minimal() +
   labs(title = "Nombre d’heures de mathématiques par semaine",
        x = "Pays",
-       y = "nombre d'heure") +
+       y = "nombre d'heure",
+        caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : valeur déclarée par l'élève. Le losange noir indique la médiane par pays.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 ```{r, echo=FALSE}
@@ -489,9 +526,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q02JA, color = CNT)) +
   theme_minimal() +
   labs(title = "Nombre total d’heures de cours par semaine",
        x = "Pays",
-       y = "nombre d'heures") +
+       y = "nombre d'heures",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : valeur déclarée par l'élève. Le losange noir indique la médiane par pays.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 ```{r, echo=FALSE}
@@ -505,9 +544,11 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y =EXPO21ST, color = CNT)) +
   theme_minimal() +
   labs(title = "Exposition aux mathématiques du XXIe siècle",
        x = "Pays",
-       y = "exposition") +
+       y = "exposition",
+       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Mesure l'exposition à des concepts mathématiques contemporains.") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none")
+        legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 ```{r, echo=FALSE}
@@ -583,11 +624,13 @@ ggplot(
     title = "Répartition des filières par pays (OCDE)",
     x = "Pays",
     y = "Proportion",
-    fill = "Type de filière"
+    fill = "Type de filière",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les proportions indiquent la part d'élèves dans chaque filière au sein du pays."
   ) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "bold"),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
   )
 ```
 
@@ -635,190 +678,148 @@ Nous cherchons alors dans cette partie à savoir si cette différence de systèm
 Nous disposons notamment dans le cadre de l’enquête PISA les variables suivantes: PQ SCHOOL qui représente la qualité de l’établissement scolaire, SCHSUST représentant les actions de l’établissement pour soutenir les apprentissages, ST272Q01JA à propos de la qualité d’enseignement des mathématiques. Ces variables vont nous permettre d’en apprendre davantage sur l’impact de la qualité des établissements sur le niveau scolaire des élèves. 
 Nous disposons également de variables décrivant l’environnement scolaire national afin d’en étudier encore une fois l’impact sur la réussite scolaire. Nous avons ST059Q01TA à propos du nombre d’heure de mathématiques par semaine, ST059Q02J représentant le nombre total d’heures de cours par semaine, ainsi que EXPO21ST pour l’exposition aux mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
 
-mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
-Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Une première chose qu’il semble important de remarquer est que l’on constate un coefficient de correction négative entre la qualité de l’établissement scolaire et le niveau scolaire. Cela signifierait que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL       -0.02790187  -0.035165426     -0.030904004. ( voir tableau des corrélations). Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient influencer le niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements permettrait d’améliorer les résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible: 0.19646174   0.229284240      0.210517770
-!!!!ST272Q01JA à propos de la qualité d’enseignement des mathématiques.  pas trouvé dans notre base de données 
-Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas influencer le niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
-Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0 particulièrement pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition. (EXPO21ST       -0.04119653  -0.025791092     -0.031050624). Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. ( coefficient de corrélation de 0,01). Nous alors donc étudier l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alors par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
-Les coefficients de corrélation sont les suivants: -0.06526685  -0.040908051     -0.049262516), encore une fois on découvre une absence de lien. Le nombre d'heures de mathématiques est indépendant de la réussite des élèves mêmes en mathématiques. Étonnement, c’est le nombre d’heure de cours hebdomadaires qui semble davantage influencer la réussite en mathématiques. On retrouve les coefficients de corrélations suivant  0.19646174   0.229284240      0.210517770. C'est même les mathématiques pour lequel le lien entre niveau scolaire et heures d’enseignement est le plus fort, alors que le nombre d’heure de mathématiques lui n’influence pas la réussite. 
-faire PROGN
+
+Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives. Il varie entre -1 et 1 : une valeur proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, et proche de 0 une absence de lien linéaire. On constate ici une corrélation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires (r = -0,03), ce qui suggère l'absence de lien linéaire entre ces deux variables. Cela suggère que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL       -0.02790187  -0.035165426     -0.030904004. ( voir tableau des corrélations). Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements est associé à de meilleurs résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences).
+La variable relative à la qualité de l'enseignement des mathématiques (ST272Q01JA) n'étant pas disponible dans notre base de données, elle n'a pas pu être intégrée à l'analyse.  pas trouvé dans notre base de données 
+Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
+Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0 particulièrement pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition. (r = -0,04 en mathématiques, -0,03 en lecture et -0,03 en sciences). Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. ( coefficient de corrélation de 0,01). Nous alors donc étudier l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alors par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
+Les corrélations observées sont très faibles (r = -0,07 en mathématiques, -0,04 en lecture et -0,05 en sciences), encore une fois on découvre une absence de lien. Le nombre d'heures de mathématiques est indépendant de la réussite des élèves mêmes en mathématiques. Étonnement, c’est le nombre d’heure de cours hebdomadaires qui semble davantage être associé à la réussite en mathématiques.On observe en revanche une corrélation positive modérée avec le nombre total d'heures de cours (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences). C'est même les mathématiques pour lequel le lien entre niveau scolaire et heures d’enseignement est le plus fort, alors que le nombre d’heure de mathématiques lui ne semble pas être associé la réussite. 
+
+
+Le type de filière suivi par l'élève apparaît comme l'un des facteurs les plus fortement associés à la réussite scolaire, comme en témoigne la valeur élevée du coefficient eta dans la matrice. Les élèves en filière générale tendent à obtenir des scores plus élevés que ceux en filière technologique, qui ont des meilleurs scores que les élèves en filière professionnelle. Ce constat est observé dans la quasi-totalité des pays de l'OCDE. Il convient cependant de l'interpréter avec prudence : la filière n'est pas nécessairement la cause des écarts de performance. Elle est souvent le reflet d'une orientation précoce elle-même liée au milieu socio-économique de l'élève. Autrement dit, la filière pourrait davantage cristalliser des inégalités préexistantes que les produire.
 
 
 ## C — Les variables socio-familiales expliquent-elles les inégalités de niveau scolaire 
-Tout d’abord, il semble pertinent de définir ce que l’on entend par caractéristiques sociales et familiales. Les caractéristiques sociales représentent l’ensemble des éléments qui permettent de décrire la place qu’un individu occupe dans la structure de la société. Les caractéristiques familiales désignent quant à elles, désignent l’ensemble des éléments décrivant la situation d’un individu au sein de sa famille ainsi que le milieu familial dans lequel il a grandi. Ainsi nous avons sélectionné les variables suivantes pour traiter de l’influence des caractéristiques sociales et familiales sur les inégalités de niveau scolaire. Il est également important de prendre en compte qu’un certain nombre de variables sociales sont liées à des variables économiques.
+Tout d’abord, il semble pertinent de définir ce que l’on entend par caractéristiques sociales et familiales. Les caractéristiques sociales représentent l’ensemble des éléments qui permettent de décrire la place qu’un individu occupe dans la structure de la société. Les caractéristiques familiales désignent quant à elles, désignent l’ensemble des éléments décrivant la situation d’un individu au sein de sa famille ainsi que le milieu familial dans lequel il a grandi. Ainsi nous avons sélectionné les variables suivantes pour constater l'association des caractéristiques sociales et familiales sur les inégalités de niveau scolaire. Il est également important de prendre en compte qu’un certain nombre de variables sociales sont liées à des variables économiques.
 Dans un premier temps, nous allons étudier l’impact des différences d’accès à des ressources éducatives sur le temps périscolaire sur le niveau scolaire des élèves grâce aux variables suivantes: les ressources éducatives utilisées (LEARRES), le nombre de livre à la maison (ST255Q01JA) et enfin le temps consacré au travail scolaire (ST295Q02JA)
 Dans un second temps nous nous intéresserons à l’impact de l’implication parentale à l’aide des variables suivantes : l’aide familiale après l’école (ST295Q03JA), l’implication parentale(PARINVOL), le niveau d’éducation des parents (HISCED pour le Niveau d’éducation le plus élevé des parents, FISCED pour celui du père et MISCED pour celui de la mère. 
+
 Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublement (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
 
-Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire influence leur réussite scolaire. On remarque en étudiant la matrice des corrélations suivantes que les ressources éducatives utilisées sont indépendantes du niveau scolaire quel que soit le domaine. LEARRES         moyenne_lecture :0.01373328   moyenne_maths 0.009848518      moyenne_sciences;0.005138953. Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n’influence pas sa réussite scolaire. Le niveau global de ressources n’influence pas le niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas influencer la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. On trouve ici une corrélation bien plus importante que précédemment. ( 0.43283798    0.45046214      0.448099458). Ainsi, on peut en conclure, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout expliquer une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. De plus on constate également une corrélation de 0,51 entre la présence de livres et l’indice de niveau économique et social, ainsi la présence de livres est liée au niveau économique de la famille ce qui pourrait plus que le nombre de livres en lui-même expliquer le niveau scolaire. Cela semble cohérent au vu du fait que la présence de livre est corrélé positivement avec la moyenne d’un élève dans tous les domaines. Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. (0.18665609    0.16103674      0.161977375). Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels. 
+Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire seraient liées à leur réussite scolaire. On remarque en étudiant la matrice des corrélations suivantes que les ressources éducatives utilisées sont indépendantes du niveau scolaire quel que soit le domaine. (r = 0,01 dans les trois matières). Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n'est pas forcément lié à sa réussite scolaire. Le niveau global de ressources n’est pas non plus lié au niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas être lié à la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. On trouve ici une corrélation bien plus importante que précédemment.(r = 0,43 en mathématiques, 0,45 en lecture et 0,45 en sciences). Ainsi, on observe que, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout être associé à une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. De plus on constate également une corrélation de 0,51 entre la présence de livres et l’indice de niveau économique et social, ainsi la présence de livres est liée au niveau économique de la famille ce qui pourrait plus que le nombre de livres en lui-même être associé au niveau scolaire. Cela semble cohérent au vu du fait que la présence de livre est corrélé positivement avec la moyenne d’un élève dans tous les domaines. Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. (0.18665609    0.16103674      0.161977375). Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels. 
 
-	Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation influence celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. (voir tableau des corrélations)( niveau le plus élevé, celui du père, celui de la mère). C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
+	Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation est lié à celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. (voir tableau des corrélations)( niveau le plus élevé, celui du père, celui de la mère). C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
 HISCED 	0.26065630    0.27374528      0.264999395
 FISCED          0.28171082    0.30722574      0.290793486
 MISCED          0.26343916    0.27461724      0.265859615
-Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque mêle si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. Elle est similaire dans toutes les matières. (0.08098036    0.08953935      0.085555451). D’autre part, une observation étonnante est issue de la base de donnée l’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela signifie que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. 
+Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque mêle si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. Elle est similaire dans toutes les matières. (r = 0,08 dans les trois matières). D’autre part, une observation étonnante est issue de la base de donnée l’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela suggère que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. 
 
-Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On constate dans un premier temps que le genre influence les résultats des élèves. ( voir graphique ci-dessus). C’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
+Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On constate dans un premier temps que le genre est lié les résultats des élèves. ( voir graphique ci-dessus). C’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
 
+```{r, echo=FALSE, fig.width=6, fig.height=4, message=FALSE, warning=FALSE}
+pisa_oecd_clean %>%
+  filter(!is.na(ST004D01T)) %>%
+  mutate(Genre = recode(factor(ST004D01T),
+    "1" = "Fille",
+    "2" = "Garçon"
+  )) %>%
+  group_by(Genre) %>%
+  summarise(
+    Mathématiques = mean(moyenne_maths, na.rm = TRUE),
+    Lecture       = mean(moyenne_lecture, na.rm = TRUE),
+    Sciences      = mean(moyenne_sciences, na.rm = TRUE)
+  ) %>%
+  tidyr::pivot_longer(-Genre, names_to = "Matière", values_to = "Score") %>%
+  ggplot(aes(x = Matière, y = Score, fill = Genre)) +
+  geom_col(position = "dodge", width = 0.6) +
+  geom_text(aes(label = round(Score, 1)),
+            position = position_dodge(width = 0.6),
+            vjust = -0.5, size = 3.2) +
+  scale_fill_manual(values = c("Fille" = "#d73027", "Garçon" = "#1a9850")) +
+  labs(
+    title = "Score moyen par matière selon le genre",
+    x = NULL, y = "Score moyen", fill = "Genre",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les filles surpassent les garçons en lecture, les garçons surpassent les filles en mathématiques."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
 
+La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. (r = 0,08 dans les trois matières)
+De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion. (r = 0,09 en mathématiques, 0,11 en lecture et 0,09 en sciences)
 
-La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’en conclure un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. (ST295Q03JA      0.08098036    0.08953935      0.085555451)
-De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion. (0.08530051    0.11266479      0.089404379)
+On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait être lié à la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
 
-On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait s’expliquer par la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
-
-
-```{r}
-#moyenne Maths par IMMIG
-library(ggplot2)
-library(dplyr)
-
-data_ocde %>%
+```{r, echo=FALSE}
+pisa_oecd_clean %>%
+  filter(!is.na(IMMIG)) %>%
   group_by(IMMIG) %>%
-  summarise(mean_maths = mean(moyenne_maths, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(IMMIG), y = mean_maths, fill = factor(IMMIG))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Maths par origine (IMMIG)",
-       x = "IMMIG",
-       y = "Moyenne Maths") +
+  summarise(score = mean(score_global, na.rm = TRUE)) %>%
+  mutate(IMMIG = recode(factor(IMMIG),
+    "1" = "Natif",
+    "2" = "2e génération",
+    "3" = "1re génération"
+  )) %>%
+  ggplot(aes(x = IMMIG, y = score, fill = IMMIG)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
+  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
+  labs(
+    title = "Score moyen global selon le statut migratoire",
+    x = "Statut migratoire", y = "Score moyen",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
+  ) +
   theme_minimal() +
-  theme(legend.position = "none")
-```
-
-```{r}
-# Moyenne Lecture par IMMIG
-library(ggplot2)
-library(dplyr)
-
-data_ocde %>%
-  group_by(IMMIG) %>%
-  summarise(mean_lecture = mean(moyenne_lecture, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(IMMIG), y = mean_lecture, fill = factor(IMMIG))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Lecture par origine (IMMIG)",
-       x = "IMMIG",
-       y = "Moyenne Lecture") +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-```{r}
-# Moyenne Sciences par IMMIG
-library(ggplot2)
-library(dplyr)
-
-data_ocde %>%
-  group_by(IMMIG) %>%
-  summarise(mean_sciences = mean(moyenne_sciences, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(IMMIG), y = mean_sciences, fill = factor(IMMIG))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Sciences par origine (IMMIG)",
-       x = "IMMIG",
-       y = "Moyenne Sciences") +
-  theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 
-On s’intéresse désormais au lien entre redoublement et réussite scolaire. Ce lien peut être double, un élève qui redouble est en difficulté, mais l’objectif du redoublement et de lui permettre de réussir. Il est aussi important de noter que certains pays de l’OCDE ne pratiquent pas ou très peu le redoublement. On remarque que les élèves n’ayant jamais redoublé ont en moyenne de meilleures moyennes que ceux qui ont redoublé une fois qui ont eu des meilleures moyennes que ceux qui ont redoublé plusieurs fois. C’est le cas tant en science, qu’en mathématiques et qu’en lecture. 
-```{r}
-library(ggplot2)
-library(dplyr)
-## 3️⃣ Moyenne Sciences par potentiel redoublement
-data_ocde %>%
+
+On s’intéresse désormais au lien entre redoublement et réussite scolaire. Ce lien peut être double, un élève qui redouble est en difficulté, mais l’objectif du redoublement et de lui permettre de réussir. Il est aussi important de noter que certains pays de l’OCDE ne pratiquent pas ou très peu le redoublement. On remarque que les élèves n’ayant jamais redoublé ont en moyenne de meilleures moyennes que ceux qui ont redoublé une fois qui ont eu des meilleures moyennes que ceux qui ont redoublé plusieurs fois. C’est le cas tant en science, qu’en mathématiques et qu’en lecture.
+
+```{r, echo=FALSE}
+pisa_oecd_clean %>%
+  filter(!is.na(ST127Q01TA)) %>%
   group_by(ST127Q01TA) %>%
-  summarise(mean_sciences = mean(moyenne_sciences, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST127Q01TA), y = mean_sciences, fill = factor(ST127Q01TA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Sciences par potentiel redoublement",
-       x = "Potentiel Redoublement (ST127Q01TA)",
-       y = "Moyenne Sciences") +
+  summarise(score = mean(score_global, na.rm = TRUE)) %>%
+  mutate(ST127Q01TA = recode(factor(ST127Q01TA),
+    "1" = "Jamais redoublé",
+    "2" = "Redoublé une fois",
+    "3" = "Redoublé plusieurs fois"
+  )) %>%
+  ggplot(aes(x = ST127Q01TA, y = score, fill = ST127Q01TA)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
+  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
+  labs(
+    title = "Score moyen global selon le redoublement",
+    x = "Redoublement", y = "Score moyen",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
+  ) +
   theme_minimal() +
-  theme(legend.position = "none")
-
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
-
-
-```{r}
-library(ggplot2)
-library(dplyr)
-#Moyenne Maths par potentiel redoublement
-data_ocde %>%
-  group_by(ST127Q01TA) %>%
-  summarise(mean_maths = mean(moyenne_maths, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST127Q01TA), y = mean_maths, fill = factor(ST127Q01TA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Maths par potentiel redoublement",
-       x = "Potentiel Redoublement (ST127Q01TA)",
-       y = "Moyenne Maths") +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-```
-
-
-```{r}
-library(ggplot2)
-library(dplyr)
-# Moyenne Lecture par potentiel redoublement
-data_ocde %>%
-  group_by(ST127Q01TA) %>%
-  summarise(mean_lecture = mean(moyenne_lecture, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST127Q01TA), y = mean_lecture, fill = factor(ST127Q01TA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Lecture par potentiel redoublement",
-       x = "Potentiel Redoublement (ST127Q01TA)",
-       y = "Moyenne Lecture") +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
 
 
 Pour finir, nous nous intéressons à l’impact des absences prolongées sur la réussite scolaire. La valeur 1 signifie que l’élève n’a jamais eu d’absence prolongée, la valeur 2 que c’est arrivé une fois et la valeur 3 que c’est arrivé 2 fois ou plus. La question prend en compte les années de l’ISCED 1, 2 et 3 c'est -à -dire du primaire au lycée. Encore une fois les élèves n’ayant jamais eu d’absence prolongé réussissent mieux que ceux qui en ont eu une qui réussissent mieux que ceux qui en ont eu 2 ou plus. 
 
-```{r}
-# Moyenne Maths par absences prolongées
-data_ocde %>%
+```{r, echo=FALSE}
+pisa_oecd_clean %>%
+  filter(!is.na(ST260Q01JA)) %>%
   group_by(ST260Q01JA) %>%
-  summarise(mean_maths = mean(moyenne_maths, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST260Q01JA), y = mean_maths, fill = factor(ST260Q01JA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Maths par absences prolongées (ST260Q01JA)",
-       x = "ST260Q01JA",
-       y = "Moyenne Maths") +
+  summarise(score = mean(score_global, na.rm = TRUE)) %>%
+  mutate(ST260Q01JA = recode(factor(ST260Q01JA),
+    "1" = "Jamais absent",
+    "2" = "Absent une fois",
+    "3" = "Absent 2 fois ou plus"
+  )) %>%
+  ggplot(aes(x = ST260Q01JA, y = score, fill = ST260Q01JA)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
+  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
+  labs(
+    title = "Score moyen global selon les absences prolongées",
+    x = "Absences prolongées", y = "Score moyen",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
+  ) +
   theme_minimal() +
-  theme(legend.position = "none")
-```
-
-
-```{r}
-# Moyenne Lecture par absences prolongées
-data_ocde %>%
-  group_by(ST260Q01JA) %>%
-  summarise(mean_lecture = mean(moyenne_lecture, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST260Q01JA), y = mean_lecture, fill = factor(ST260Q01JA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Lecture par absences prolongées (ST260Q01JA)",
-       x = "ST260Q01JA",
-       y = "Moyenne Lecture") +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-
-```{r}
-# Moyenne Sciences par absences prolongées
-data_ocde %>%
-  group_by(ST260Q01JA) %>%
-  summarise(mean_sciences = mean(moyenne_sciences, na.rm = TRUE)) %>%
-  ggplot(aes(x = factor(ST260Q01JA), y = mean_sciences, fill = factor(ST260Q01JA))) +
-  geom_bar(stat = "identity") +
-  labs(title = "Moyenne Sciences par absences prolongées (ST260Q01JA)",
-       x = "ST260Q01JA",
-       y = "Moyenne Sciences") +
-  theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
 ```
 
 
@@ -826,7 +827,156 @@ data_ocde %>%
 
 ## A — Les variables explicatives de la réussite ou de l'échec scolaire d'un pays
 
+Jusqu'ici, nous avons analysé les facteurs d'inégalités à l'échelle individuelle. 
+Nous allons désormais changer d'échelle et nous demander si ces mêmes facteurspermettent d'expliquer la réussite ou l'échec scolaire d'un pays dans son ensemble. 
+Pour cela, nous agrégeons les données à l'échelle nationale et comparons les pays entre eux. Nous nous concentrons sur les 5 pays les plus performants, les 5 les moins performants, et la France.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
+library(dplyr)
+library(ggplot2)
+
+# Agrégation par pays
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    nb_eleves       = n(),
+    score_moyen     = mean(score_global, na.rm = TRUE),
+    score_min       = min(score_global, na.rm = TRUE),
+    score_max       = max(score_global, na.rm = TRUE),
+    ecart_type      = sd(score_global, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  arrange(desc(score_moyen)) %>%
+  mutate(rang = row_number())
+
+# Sélection Top5 / Bottom5 / France
+top5    <- niveau_pays %>% slice(1:5)
+bottom5 <- niveau_pays %>% slice((n()-4):n())
+france  <- niveau_pays %>% filter(CNT == "FRA")
+
+selection <- bind_rows(top5, bottom5, france) %>%
+  distinct() %>%
+  mutate(groupe = case_when(
+    CNT == "FRA"          ~ "France",
+    CNT %in% top5$CNT    ~ "Top 5",
+    CNT %in% bottom5$CNT ~ "Bottom 5"
+  ))
+
+# Graphique
+ggplot(selection, aes(x = reorder(CNT, score_moyen),
+                      y = score_moyen,
+                      fill = groupe)) +
+  geom_col() +
+  geom_col(data = subset(selection, CNT == "FRA"), fill = "#e41a1c") +
+  geom_text(aes(label = round(score_moyen, 1)), hjust = -0.1, size = 3) +
+  geom_text(data = subset(selection, CNT == "FRA"),
+            aes(label = paste0("Rang : ", rang)),
+            hjust = 1.2, color = "white", fontface = "bold", size = 3) +
+  scale_fill_manual(values = c("Top 5" = "#1a9850",
+                                "Bottom 5" = "#d73027",
+                                "France" = "#e41a1c")) +
+  coord_flip() +
+  labs(
+    title   = "Classement des pays : Top 5, Bottom 5 et France",
+    x       = NULL, y = "Score moyen global",
+    fill    = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+On observe des écarts importants entre les pays de l'OCDE. Les pays asiatiques comme le Japon (JPN) et la Corée (KOR) dominent le classement avec des scores  moyens supérieurs à 520 points, tandis que les pays d'Amérique latine comme le Mexique (MEX) et la Colombie (COL) se situent en bas du classement avec des scores inférieurs à 420 points. La France se positionne dans la moyenne de l'OCDE. Cet écart de plus de 100 points entre les meilleurs et les moins bons pays traduit des différences structurelles profondes dans les systèmes éducatifs et les contextes socio-économiques nationaux.
+
 ## B — Les variables qui diffèrent pour des pays ayant le même niveau scolaire
+
+Nous avons vu quels facteurs distinguent les pays performants des pays en difficulté. 
+Nous cherchons maintenant à identifier les variables qui ne permettent pas d'expliquer le niveau scolaire d'un pays, c'est-à-dire celles qui varient fortement au sein d'un même groupe de pays de niveau similaire. Pour cela, nous regroupons les pays en trois niveaux (fort, moyen, faible) et observons quelles variables sont hétérogènes au sein de chaque groupe.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Création des groupes de pays
+niveau_pays <- niveau_pays %>%
+  mutate(groupe = case_when(
+    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Fort",
+    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "Faible",
+    TRUE ~ "Moyen"
+  ))
+
+# Ajout du groupe dans la base individuelle
+pisa_oecd_clean <- pisa_oecd_clean %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+# Variables à analyser
+vars_analyse <- c("ESCS", "SCHSUST", "PQSCHOOL", "ST059Q01TA",
+                  "ST059Q02JA", "EXPO21ST", "HISEI", "HOMEPOS",
+                  "LEARRES", "PARINVOL")
+
+# Calcul écart-type intra-groupe par pays puis moyenne
+resultats <- pisa_oecd_clean %>%
+  group_by(CNT, groupe) %>%
+  summarise(across(all_of(vars_analyse),
+                   ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop") %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars_analyse),
+                   ~ sd(.x, na.rm = TRUE)),
+            .groups = "drop")
+
+# Format long
+resultats_long <- resultats %>%
+  pivot_longer(-groupe, names_to = "Variable", values_to = "ecart_type")
+
+# Labels lisibles
+labels_vars <- c(
+  ESCS       = "Statut socio-éco. (ESCS)",
+  SCHSUST    = "Soutien apprentissages",
+  PQSCHOOL   = "Qualité établissement",
+  ST059Q01TA = "Heures maths/semaine",
+  ST059Q02JA = "Heures cours total",
+  EXPO21ST   = "Expo. maths XXIe s.",
+  HISEI      = "Statut prof. parental",
+  HOMEPOS    = "Biens matériels",
+  LEARRES    = "Ressources éducatives",
+  PARINVOL   = "Implication parentale"
+)
+
+resultats_long$Variable <- labels_vars[resultats_long$Variable]
+resultats_long$groupe   <- factor(resultats_long$groupe,
+                                   levels = c("Fort", "Moyen", "Faible"))
+
+# Graphique
+ggplot(resultats_long, aes(x = reorder(Variable, ecart_type),
+                            y = ecart_type,
+                            fill = groupe)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_fill_manual(values = c("Fort"   = "#1a9850",
+                                "Moyen"  = "#fee08b",
+                                "Faible" = "#d73027")) +
+  labs(
+    title   = "Hétérogénéité des variables au sein de chaque groupe de pays",
+    x       = NULL,
+    y       = "Écart-type inter-pays (au sein du groupe)",
+    fill    = "Groupe de pays",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : un écart-type élevé indique que la variable varie beaucoup entre pays d'un même niveau scolaire,\nce qui suggère qu'elle n'est pas déterminante pour expliquer le niveau scolaire d'un pays."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+Les variables dont l'écart-type est élevé au sein d'un même groupe de payssont celles qui ne permettent pas d'expliquer le niveau scolaire global d'un pays. Par exemple, si l'implication parentale (PARINVOL) varie fortement entre des pays pourtant de niveau similaire, cela suggère qu'elle n'est pas un déterminant structurel du niveau scolaire national. À l'inverse, les variables avec un faible écart-type intra-groupe, comme l'indice ESCS, tendent à être plus systématiquement associées au niveau scolaire d'un pays, confirmant les résultats obtenus à l'échelle individuelle en partie I.
 
 ## C — Focus sur un pays ayant des facteurs explicatifs très différents des autres
 
