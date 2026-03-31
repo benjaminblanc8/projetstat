@@ -1,10 +1,6 @@
-
-
 #création moyenne_g
 
 data_ocde$moyenne_g <- rowMeans(data_ocde[, c("moyenne_maths", "moyenne_sciences", "moyenne_lecture")], na.rm = TRUE)
-
-
 
 
 #carte selon réussite scolaire
@@ -32,12 +28,15 @@ map_data_merged <- world_map %>%
   left_join(data_pays, by = "region")
 
 # ── 5. Carte ──────────────────────────────────────────────────────────────────
+library(ggplot2)
+library(grid) # pour unit()
+
 ggplot(map_data_merged, aes(x = long, y = lat, group = group, fill = moyenne_g)) +
-  geom_polygon(color = "white", linewidth = 0.2) +
+  geom_polygon(color = "white", linewidth = 0.2) +  # contours des pays
   scale_fill_gradient(
     low      = "#cfe2f3",
     high     = "#08306b",
-    na.value = "#d9d9d9",
+    na.value = "white",
     name     = "Moyenne générale"
   ) +
   coord_map("mollweide") +
@@ -55,8 +54,10 @@ ggplot(map_data_merged, aes(x = long, y = lat, group = group, fill = moyenne_g))
     legend.title      = element_text(size = 10),
     plot.caption      = element_text(size = 8, color = "grey60")
   )
-
-
+  -----------------
+    
+   
+  
 #graphique de densité conjointe 
 
 # ── Option 1 : Courbes de densité 2D (contours) ──────────────────────────────
@@ -453,3 +454,145 @@ ggplot(graph_data, aes(x = reorder(Variable, ecart_type),
   scale_fill_manual(values = c("Stable" = "steelblue", "Variable" = "tomato")) +
   theme_minimal(base_size = 12) +
   theme(legend.title = element_blank())
+
+
+
+
+
+#tentative d'analyse multivariée
+
+# Packages nécessaires
+install.packages(c("FactoMineR", "factoextra", "dplyr", "ggplot2"))
+
+library(FactoMineR)   # ACM + analyses factorielles
+library(factoextra)   # Visualisations ggplot2-friendly
+library(dplyr)        # Manipulation des données
+library(ggplot2)      # Graphiques personnalisés
+
+# Charger votre base (adapter le chemin)
+data_ocde <- read.csv("data_ocde.csv", stringsAsFactors = TRUE)
+
+# Sélectionner uniquement les variables catégorielles pertinentes
+# Exemples : CSP parents, type établissement, niveau scolaire, etc.
+vars_acm <- c("ST127Q01TA", "ST272Q01JA", "PROGN",
+              "CNT", "ST255Q01JA", "FL170Q02JA","FL170Q03JA","ST294Q01JA","ST295Q04JA","ST295Q03JA","HISCED","FISCED","MISCED","IMMIG","DURECEC","ST016Q01NA","ST260Q01JA","ST267Q02JA","ST295Q02JA","ST307Q01JA","WB150Q01HA")
+
+data_ocde_acm <- data_ocde[, vars_acm]
+
+# Vérifier qu'il n'y a pas de valeurs manquantes
+colSums(is.na(data_ocde_acm))
+
+# Supprimer les lignes avec NA (ou imputer selon vos choix)
+data_ocde_acm <- na.omit(data_ocde_acm)
+
+# S'assurer que toutes les variables sont bien en facteur
+data_ocde_acm <- mutate(data_ocde_acm, across(everything(), as.factor))
+
+
+# ACM avec FactoMineR
+res_acm <- MCA(data_ocde_acm,
+               ncp   = 5,
+               graph = FALSE)
+
+# Valeurs propres et % de variance expliquée
+get_eigenvalue(res_acm)
+
+# Contributions et cos² des modalités aux axes
+res_acm$var$contrib
+res_acm$var$cos2
+
+# Coordonnées des individus sur les axes
+res_acm$ind$coord
+
+
+# ---- A. Éboulis des valeurs propres ----
+fviz_screeplot(res_acm,
+               addlabels = TRUE,
+               ylim      = c(0, 50),
+               title     = "Variance expliquée par axe")
+
+# ---- B. Nuage des modalités (plan 1-2) ----
+fviz_mca_var(res_acm,
+             repel       = TRUE,   # évite les chevauchements
+             col.var     = "cos2", # couleur = qualité de représentation
+             gradient.cols = c("#aaaaaa", "#3B8BD4", "#1D3461"),
+             title       = "ACM — nuage des modalités")
+
+
+
+#nuage des individus 
+# Étape 1 : identifier les lignes complètes sur les variables ACM
+vars_acm <- c("ST127Q01TA", "ST272Q01JA", "PROGN",
+              "CNT", "ST255Q01JA", "FL170Q02JA", "FL170Q03JA",
+              "ST294Q01JA", "ST295Q04JA", "ST295Q03JA", "HISCED",
+              "FISCED", "MISCED", "IMMIG", "DURECEC", "ST016Q01NA",
+              "ST260Q01JA", "ST267Q02JA", "ST295Q02JA", "ST307Q01JA",
+              "WB150Q01HA")
+
+# Alternative avec apply
+lignes_completes <- rowSums(is.na(data_ocde[, vars_acm])) == 0
+# Étape 2 : récupérer moyenne_g sur ces lignes (depuis data_ocde original)
+moyenne_g_filtre <- as.numeric(as.character(data_ocde$moyenne_g[lignes_completes]))
+
+# Étape 3 : discrétiser en 3 niveaux
+library(dplyr)
+
+data_ocde <- data_ocde %>%
+  mutate(
+    niveau = ntile(moyenne_g_filtre, 3),
+    niveau = factor(niveau,
+                    levels = 1:3,
+                    labels = c("Faible", "Moyen", "Fort"))
+  )
+
+
+ #nuage des individus coloré par moyenne_g
+
+library(dplyr)
+
+data_ocde$moyenne_g <- rowMeans(data_ocde[, c("moyenne_maths", "moyenne_sciences", "moyenne_lecture")], na.rm = TRUE)
+
+
+data_acm <- data_ocde %>%
+  select(all_of(vars_acm), moyenne_g) %>%
+  drop_na()
+
+library(FactoMineR)
+
+res_acm <- MCA(data_acm[, vars_acm], graph = FALSE)
+
+library(factoextra)
+
+fviz_mca_ind(res_acm,
+             label = "none",
+             col.ind = data_acm$moyenne_g,
+             gradient.cols = c("red", "yellow", "green"),
+             alpha.ind = 0.5) +
+  labs(color = "Moyenne générale")
+
+
+# ---- D. Biplot individus + modalités ----
+fviz_mca_biplot(res_acm,
+                repel     = TRUE,
+                ggtheme   = theme_minimal(),
+                title     = "Biplot ACM")
+
+# Typologie des individus par CAH sur les axes de l'ACM
+res_hcpc <- HCPC(res_acm,
+                 nb.clust = -1,
+                 graph    = FALSE)
+
+
+# Top 15 modalités qui contribuent le plus à l'axe 1
+fviz_contrib(res_acm,
+             choice = "var",
+             axes   = 1,
+             top    = 15,
+             title  = "Contributions à l'axe 1")
+
+# Idem pour l'axe 2
+fviz_contrib(res_acm,
+             choice = "var",
+             axes   = 2,
+             top    = 15,
+             title  = "Contributions à l'axe 2")
