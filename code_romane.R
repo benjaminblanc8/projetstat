@@ -260,3 +260,196 @@ tableau <- cor_moyenne %>%
 
 tableau
 
+
+
+# pour la partie 2
+#creation de niveau_pays la base de donnée qui regroupe les résultats des élèves en fonction de leur pays 
+library(dplyr)
+
+niveau_pays <- data_ocde %>%
+  group_by(CNT) %>%
+  summarise(
+    nb_eleve = n(),
+    moyenne_min = min(moyenne_g, na.rm = TRUE),
+    moyenne_max = max(moyenne_g, na.rm = TRUE),
+    moyenne_moyenne = mean(moyenne_g, na.rm = TRUE),
+    ecart_type = sd(moyenne_g, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+#trier les variables 
+niveau_pays <- niveau_pays %>%
+  arrange(desc(moyenne_moyenne))
+
+
+#tableau propre pour le rapport
+
+library(gt)
+
+niveau_pays %>%
+  gt() %>%
+  tab_header(title = "Statistiques des scores par pays") %>%
+  fmt_number(columns = -CNT, decimals = 2)
+
+
+#graphique des 5 meilleurs pays des 5 pires et de la france 
+
+library(dplyr)
+library(ggplot2)
+
+
+# 1. Classement global
+niveau_pays <- niveau_pays %>%
+  arrange(desc(moyenne_moyenne)) %>%
+  mutate(rang = row_number())
+
+# 2. Sélections
+top5 <- niveau_pays %>% slice(1:5)
+bottom5 <- niveau_pays %>% slice((n()-4):n())
+france <- niveau_pays %>% filter(CNT == "FRA")
+
+# 3. Fusion
+selection <- bind_rows(top5, bottom5, france) %>%
+  distinct()
+
+# 4. Ajouter type de groupe
+selection <- selection %>%
+  mutate(
+    groupe = case_when(
+      CNT == "FRA" ~ "France",
+      CNT %in% top5$CNT ~ "Top",
+      CNT %in% bottom5$CNT ~ "Bottom"
+    )
+  )
+
+# 5. Graphique
+ggplot(selection, aes(x = reorder(CNT, moyenne_moyenne),
+                      y = moyenne_moyenne,
+                      fill = moyenne_moyenne)) +
+  
+  geom_col() +
+  
+  # Dégradés différents selon groupe
+  scale_fill_gradientn(
+    colours = c("purple", "grey", "green"),
+    guide = "none"
+  ) +
+  
+  # France en rouge par-dessus
+  geom_col(data = subset(selection, CNT == "FRA"),
+           fill = "red") +
+  
+  # Label score
+  geom_text(aes(label = round(moyenne_moyenne, 1)),
+            hjust = -0.1, size = 3) +
+  
+  # Label rang France
+  geom_text(data = subset(selection, CNT == "FRA"),
+            aes(label = paste0("Rang France: ", rang)),
+            hjust = 1.5, color = "white", fontface = "bold") +
+  
+  coord_flip() +
+  
+  labs(
+    title = "Classement des pays (Top 5, Bottom 5 et France)",
+    x = "Pays",
+    y = "Score moyen"
+  ) +
+  
+  theme_minimal()
+
+
+#création de groupe de pays par niveau 
+library(dplyr)
+
+niveau_pays <- niveau_pays %>%
+  mutate(
+    groupe = case_when(
+      moyenne_moyenne >= quantile(moyenne_moyenne, 2/3, na.rm = TRUE) ~ "Fort",
+      moyenne_moyenne <= quantile(moyenne_moyenne, 1/3, na.rm = TRUE) ~ "Faible",
+      TRUE ~ "Moyen"
+    )
+  )
+
+#on l'ajoute dans la base de donnée 
+
+data_ocde <- data_ocde %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+#les variables à analyser 
+vars <- c("PQSCHOOL", "SCHSUST", "ST059Q01TA", "ST059Q02JA",
+          "EXPO21ST", "ESCS", "HISEI", "PA042Q01TA", "LEARRES", "HOMEPOS", "PARINVOL", "ST003D03T")
+
+#identifier les variables similaires dans chaque groupe ( on considère homogèen si son écart type est faible )
+
+resultats <- data_ocde %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars),
+                   list(
+                     moyenne = ~ mean(.x, na.rm = TRUE),
+                     ecart_type = ~ sd(.x, na.rm = TRUE)
+                   ),
+                   .names = "{.col}_{.fn}"))
+
+
+#on transforme pour lire plus facilement les variables homogènes 
+
+library(tidyr)
+homogeneite <- resultats %>%
+  pivot_longer(
+    -groupe,
+    names_to = c("Variable", ".value"),
+    names_pattern = "(.*)_(moyenne|ecart_type)"
+  ) %>%
+  arrange(groupe, ecart_type)
+
+library(dplyr)
+library(tidyr)
+library(gt)
+library(ggplot2)
+
+# --- Variables les plus stables ---
+stables <- homogeneite %>%
+  group_by(groupe) %>%
+  slice_min(ecart_type, n = 5) %>%
+  mutate(Type = "Stable")
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Transformation long
+homogeneite <- resultats %>%
+  pivot_longer(
+    -groupe,
+    names_to = c("Variable", ".value"),
+    names_pattern = "(.*)_(moyenne|ecart_type)"
+  )
+
+# --- Variables les plus stables (écart-type le plus faible intra-groupe)
+stables <- homogeneite %>%
+  group_by(groupe) %>%
+  slice_min(ecart_type, n = 5) %>%
+  mutate(Type = "Stable")
+
+# --- Variables qui varient le plus intra-groupe (écart-type le plus élevé)
+varient <- homogeneite %>%
+  group_by(groupe) %>%
+  slice_max(ecart_type, n = 5) %>%
+  mutate(Type = "Variable")
+
+# --- Fusion pour graphique
+graph_data <- bind_rows(stables, varient)
+
+# --- Graphique
+ggplot(graph_data, aes(x = reorder(Variable, ecart_type), 
+                       y = ecart_type, 
+                       fill = Type)) +
+  geom_col() +
+  facet_wrap(~groupe, scales = "free_y") +
+  coord_flip() +
+  labs(title = "Variables les plus stables et les plus variables par groupe de pays",
+       x = "Variable",
+       y = "Écart-type intra-groupe") +
+  scale_fill_manual(values = c("Stable" = "steelblue", "Variable" = "tomato")) +
+  theme_minimal(base_size = 12) +
+  theme(legend.title = element_blank())
