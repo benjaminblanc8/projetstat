@@ -614,7 +614,7 @@ ggplot(
        x = "Pays",
        y = "Proportion",
        fill = "Catégorie",   caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 25% des élève en Islande mettent une note de 9 ou plus à la qualité de leur enseignement.") +
- +
+ 
   theme(
     axis.text.x = element_text(
       angle = 90,         
