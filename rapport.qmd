@@ -122,27 +122,6 @@ Les conditions d'enseignement et le système éducatif seront représentés par 
 
 Le statut socio-économique et culturel de l'élève est résumé en grande partie par l'indice ESCS (Economic, Social and Cultural Status), construit à partir du statut professionnel parental, du niveau d'éducation des parents et des ressources du foyer.
 
-```{r, echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
-library(ggplot2)
-
-ggplot(pisa_oecd_clean, aes(x = ESCS, y = score_global)) +
-  geom_density_2d_filled(alpha = 0.8) +
-  geom_smooth(method = "lm", color = "red", linewidth = 0.8, se = FALSE) +
-  scale_fill_brewer(palette = "YlOrRd", direction = 1) +
-  labs(
-    title = "Lien entre statut socio-économique (ESCS) et score global",
-    x = "Indice ESCS (statut économique, social et culturel)",
-    y = "Score global moyen",
-    fill = "Densité",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les zones plus foncées indiquent une plus forte concentration d'élèves. La droite rouge représente la tendance linéaire."
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
-  )
-```
-
 Cet indice est complété par d’autres mesures comme la richesse matérielle du ménage ainsi que les ressources éducatives à domicile et l’accès aux ressources numériques informant sur la facilité de l’élève à disposer d'objets pouvant l’aider à étudier. Mais aussi le nombre de livres à la maison et les biens culturels disponibles pouvant être lié aux facilités précoces de l’élève .
 
 Le rôle de la famille est abordé à travers le niveau d'éducation du père et de la mère pouvant se résumer par le niveau maximal entre les deux parents. Le statut migratoire distinguant natifs, immigrés de première et de deuxième génération. Mais aussi la durée de scolarisation préscolaire permettent d'analyser l'effet de la famille sur la scolarité.
@@ -221,10 +200,32 @@ ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_sciences, color = CNT)) +
 
 ## A — L'influence des variables économiques sur les inégalités de niveau scolaire
 
+```{r, echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+library(ggplot2)
+
+ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
+       aes(x = ESCS, y = score_global)) +
+  geom_density_2d_filled(alpha = 0.85, bins = 8) +
+  geom_smooth(method = "lm", color = "red",
+              linewidth = 0.8, se = FALSE) +
+  scale_fill_brewer(palette = "YlOrRd") +
+  labs(
+    title = "Lien entre statut socio-économique (ESCS) et score global",
+    x = "Indice ESCS (statut économique, social et culturel)",
+    y = "Score global moyen",
+    fill = "Densité",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les zones plus foncées indiquent une plus forte concentration d'élèves. La droite rouge représente la tendance linéaire."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title      = element_text(face = "bold", size = 12),
+    plot.caption    = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "none"
+  )
+```
+
 ```{r, echo=FALSE, results='hide'}
 library(dplyr)
-
-pisa_oecd_clean <- read.table("data_ocde.csv", sep=",", header = TRUE)
 
 pisa_oecd_clean <- pisa_oecd_clean %>%
   mutate(score_global = (moyenne_maths + moyenne_lecture + moyenne_sciences) / 3)
