@@ -144,6 +144,7 @@ Enfin, nous avons regroupé les individus d’un même pays grâce à la variabl
 
 ## A — L'influence des variables économiques sur les inégalités de niveau scolaire
 
+Lorsqu'on pense aux inégalités de niveau scolaire, on imagine comme première cause les inégalités économiques. De nombreuses études de l'INSEE montre que dès l'entrée à l'école les enfants issuent de milieux sociaux favorisés ont des acquis supérieurs à ceux issuent de milieux défavorisés. L'indice ESCS est un indice composite crée par l'OCDE afin de mesurer le statut socio-économique d'un individu. Nous allon alors le lien entre la réussite scolaire d'un élève et son statut socio-économique. 
 
 
 ```{r, echo=FALSE, results='hide'}
@@ -259,8 +260,6 @@ library(ggplot2)
 ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
        aes(x = ESCS, y = score_global)) +
   geom_density_2d_filled(alpha = 0.85, bins = 8) +
-  geom_smooth(method = "lm", color = "red",
-              linewidth = 0.8, se = FALSE) +
   scale_fill_brewer(palette = "YlOrRd") +
   labs(
     title = "Lien entre statut socio-économique (ESCS) et score global",
@@ -277,17 +276,13 @@ ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
   )
 ```
 
-Sur ce graphique, on constate un lien entre le score global de l'élève et l'indice ESCS. En effet, on voit que les élèves ayant un indice ESCS plus haut ont tendance à avoir des meilleures notes. 
+Sur ce graphique, on constate un lien entre le score global de l'élève et l'indice ESCS. En effet, on voit que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Cependant cela ne signifie pas que toutes les variables économique sont impactantes quant à la réussite d'un élève. 
 
-Afin de vérifier quels variables parmis celles que nous avons trié dans un premier temps ont le plus d’impact sur la réussite scolaire des élèves, nous avons réalisé une matrice
-de corrélation entre ces variables et les notes en Mathématiques, Lecture et sciences. Il y a 2 matrices,
-une correspondant au coefficient de corrélation (pour les variables quantitatives) et une au rapport de
-corrélation (pour les variables qualitatives). Le but de ces matrices est d’ainsi repérer quels coefficients
-sont les plus importants, et donc de savoir quels liens sont les plus forts entre ces variables et les notes des élèves.
+Pour étudier de manière individuelle l'impact de chaque variable de nature économique, nous avons réalisé deux matrices de corrélation. Une pour les variables quantitatives et une pour les variables qualitatives. 
 
-Le coefficient de corrélation est un indicateur statistique qui permet de mesurer l’intensité et le sens de la relation linéaire entre deux variables quantitatives. Il est compris entre -1 et 1. Plus il est proche de -1 ou de 1, plus la relation est forte (négative ou positive). Lorsqu’il est proche de 0, il n’y a pas de relation linéaire.
+Pour les variables quantitatives nous avons utilisé le coefficient de corrélation. Cet indicateur statistique permet de mesurer l’intensité et le sens de la relation linéaire entre deux variables quantitatives. Il est compris entre -1 et 1. 
 
-Le rapport de corrélation permet de vérifier la même chose entre une variable quantitative et une variable qualitative, mais il est quant à lui compris entre 0 et 1
+Pour les variables qualitatives nous avons utilisé le rapport de corrélation. Il indique quelle part de la variation d'une variable est expliquée par une autre. Il est quant à lui compris entre 0 et 1. 
 
 ```{r, echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE}
 library(ggplot2)
@@ -299,17 +294,13 @@ mat_r_df <- as.data.frame(mat_r)
 mat_r_df$variable <- rownames(mat_r_df)
 
 labels_r <- c(
-  PQSCHOOL   = "Qualité établissement (PQSCHOOL)",
-  SCHSUST    = "Soutien apprentissages (SCHSUST)",
-  ST127Q01TA = "Redoublement (ST127Q01TA)",
-  ST059Q01TA = "Heures maths/semaine",
-  ST059Q02JA = "Heures cours total/semaine",
-  EXPO21ST   = "Expo. maths XXIe s. (EXPO21ST)",
   ESCS       = "Statut socio-éco. (ESCS)",
   HISEI      = "Statut prof. parental (HISEI)",
   HOMEPOS    = "Biens matériels (HOMEPOS)",
-  LEARRES    = "Ressources éducatives (LEARRES)",
-  PARINVOL   = "Implication parentale (PARINVOL)"
+  WEALTH     = "Richesse du ménage",
+  ICTRES     = "Accès aux ressources numériques",
+  CULTPOSS   = "Biens culturels disponibles",
+  LEARRES    = "Ressources éducatives (LEARRES)"
 )
 
 mat_r_long <- melt(mat_r_df, id.vars = "variable",
@@ -349,30 +340,19 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
   )
 ```
 
+```{r}
+
 ```{r, echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 # ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
 labels_eta <- c(
-  ST127Q01TA = "Redoublement",
-  PROGN      = "Type de filière",
-  CNT        = "Pays",
   ST255Q01JA = "Nb livres à la maison",
   FL170Q02JA = "Argent de poche",
   FL170Q03JA = "Travail rémunéré",
   ST294Q01JA = "Petit-déjeuner",
   ST295Q04JA = "Travail pour financer études",
-  ST295Q03JA = "Aide familiale après école",
-  DURECEC    = "Durée scolarisation préscolaire",
   HISCED     = "Niveau éduc. parent (max)",
   FISCED     = "Niveau éduc. père",
   MISCED     = "Niveau éduc. mère",
-  IMMIG      = "Statut migratoire",
-  ST004D01T  = "Genre",
-  ST016Q01NA = "Satisfaction de vie",
-  ST260Q01JA = "Absences prolongées",
-  ST267Q02JA = "Soutien émotionnel enseignants",
-  ST295Q02JA = "Temps travail scolaire",
-  ST307Q01JA = "Persévérance",
-  WB150Q01HA = "État de santé perçu"
 )
 
 mat_eta_df      <- as.data.frame(mat_eta)
@@ -382,13 +362,13 @@ mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
 
 mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
 mat_eta_long$variable  <- factor(mat_eta_long$variable,
-  levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
+                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
 mat_eta_long$label_var <- factor(mat_eta_long$label_var,
-  levels = labels_eta[levels(mat_eta_long$variable)])
+                                 levels = labels_eta[levels(mat_eta_long$variable)])
 mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
-  moyenne_maths    = "Mathématiques",
-  moyenne_lecture  = "Lecture",
-  moyenne_sciences = "Sciences"
+                                 moyenne_maths    = "Mathématiques",
+                                 moyenne_lecture  = "Lecture",
+                                 moyenne_sciences = "Sciences"
 )
 
 ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
@@ -404,7 +384,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
   labs(
     title = "Force du lien entre variables ordinales/qualitatives et scores scolaires (η)",
     x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : η (eta) mesure l'intensité du lien entre une variable qualitative et une variable quantitative. Il varie entre 0 (aucun lien) et 1 (lien parfait)."
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 0,45 : le nombre de livres à la maison est associé à 45% des différences de réussite en mathématiques."
   ) +
   theme_minimal(base_size = 11) +
   theme(
@@ -416,8 +396,13 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
     panel.grid   = element_blank()
   )
 ```
+```
+Dans un premier temps, on constate le statut professionnel des parents ainsi que la possetion de biens matériels sont également corrélés au niveau scolaire. cela s'explique par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Plus une famille est aisé plus elle peut acheter de livres. Ainsi on peut considérer la possession de livre comme signe de richesse. Cependant, une famille moins aisé peut également posséder des livres en quantité importante.  
 
+D'autre part, on constate que la présence de ressources éducatives est indépendantes de la réussite scolaire. On pourrait penser qu'un enfant possédant davantabe de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. 
 
+Quant aux autres variables de nature économiques,leur effet quant à l'explication des inégalités de niveau scolaire reste modéré. 
+  
 
 \`\`\`
 
