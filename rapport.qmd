@@ -123,76 +123,22 @@ C’est de cette enquête qu’est issue la base de données que nous allons uti
 Ainsi la question suivante semble émerger : Les sources des inégalités de niveau scolaire dans les pays de l’OCDE sont-elles les mêmes à l’échelle individuelle qu’à l’échelle nationale ? 
 
 
-
-
 # Cadrage 
 
-Ainsi on remarque à travers les trois disciplines fondamentales, on observe différent profils : 
-Les meilleurs : Des pays comme le Japon (JPN), la Corée (KOR) ou l'Estonie (EST) se distinguent par des médianes de scores élevées, souvent supérieures à 500 points.
-Les pays en difficulté : À l'opposé, le Mexique (MEX), la Colombie (COL) et le Costa Rica (CRI) présentent des médianes plus basses, montrant plus de difficultés dans ces domaines
-Les pays volatiles : Des nations comme la France (FRA) ou l'Allemagne (DEU) montrent une dispersion importante, pouvant provenir d’un système scolaire fortement segmenté.
+Pour répondre à notre problématique, il semble primordial de mesurer le niveau scolaire des élèves scolarisés au sein des pays de l’OCDE. Avant toutes choses, nous avons nettoyé la base de données initiale en retirant les données relatives à tout les pays qui ne faisaient pas partie de l’OCDE. Quant à la mesure du niveau scolaire, nous avons fait le choix de créer une moyenne par matière pour chaque élève. Pour ce faire, nous avons fait la moyenne des 10 valeurs possibles (plausible_values) pour chaque élève par domaine. Ainsi nous avons obtenu les variables moyenne_lecture, la moyenne en lecture des élèves, moyenne_maths, la moyenne en mathématiques des élèves et moyenne_sciences la moyenne en sciences des élèves.  Nous nous sommes rendu compte au cours de l’analyse que les moyennes des élèves en lecture, sciences et mathématiques étaient corrélées. Ainsi pour simplifier le rapport et le rendre davantage compréhensible, nous avons fait le choix de réaliser la plupart des analyses à travers la variable moyenne_g qui correspond à la moyenne générale des élèves (moyenne de moyenne_lecture, moyenne_maths et moyenne_sciences). 
 
-Ce premier classement mondial montre que le succès scolaire est loin d'être uniforme. 
+D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confronter le niveau scolaire des élèves avec différentes variables qui les caractérisent et qui caractérisent leur environnement. Nous avons donc sélectionné les variables qui nous semblaient être les plus pertinentes dans la base de données initiales. Nous les avons ensuite regroupées en trois catégories distinctes: les variables socio-économiques, les variables socio-familiales et celles définissant l’environnement scolaire de l'élève. Nous avons ensuite cherché à comprendre la manière dont étaient construites ces variables. 
 
-```{r, echo=FALSE}
-library(ggplot2)
+-> insérer le tableau des variables ou expliquer comment elles sont faites en annexes ou description de chque catégorie ? 
+ 
+Enfin, nous avons regroupé les individus d’un même pays grâce à la variable CNT qui correspond au code ISO des pays, afin de pouvoir étudier la réussite de ces derniers à l’échelle nationale. Nous avons ainsi pu classer les pays en 2 ou 3 ( à voir si on fait moyen) groupes. ( développer comment on s’y prend concrètement) 
 
-ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_maths, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 16) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Inégalités de résultats en Mathématiques (OCDE)",
-       x = "Pays",
-       y = "Score Maths",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
-        )
 
-```
 
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_lecture, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 17) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Inégalités de résultats en Lecture (OCDE)",
-       x = "Pays",
-       y = "Score Lecture",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
 
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = moyenne_sciences, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Inégalités de résultats en Science (OCDE)",
-       x = "Pays",
-       y = "Score Science",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : chaque boîte représente la distribution des scores d'un pays, le losange noir indique la médiane.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
 
-Nous constatons malgré tout que les résultats en lecture, sciences et mathématiques sont plus ou moins équivalents, en effet les graphiques sont assez ressemblants, indépendament de la matière concerné. Ainsi, par souci de convénience, nous utiliserons une moyenne de ces 3 notes, nommée 'score_global'
+
+
 
 # Les sources des inégalités de niveau scolaire
 
@@ -477,7 +423,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
 
 ## B — L'environnement scolaire est-il vecteur des inégalités de niveau scolaire
 Au sein des pays de l’OCDE, il existe une grande diversité de systèmes éducatifs. La plupart des pays ont un fonctionnement unique qui diffère par les horaires d'enseignement, l’importance relative des matières ou encore par la pratique ou non du redoublement. Au sein d’un même pays, un certain nombre de caractéristiques restent relatives à l’établissement en lui-même ou aux professeurs qui y enseignent. Ainsi, la scolarité de chaque élève diffère selon le pays où il étudie et les établissements qu’il fréquente. 
-Nous cherchons alors dans cette partie à savoir si cette différence de système éducatif et les professeurs qu’aura l’élève au cours de sa scolarité auront un impact sur sa réussite scolaire. Un certain nombre de variables nous permet d’étudier cet impact. 
+Nous cherchons alors dans cette partie à savoir si cette différence de système éducatif et de professeurs qu’aura l’élève au cours de sa scolarité auront un impact sur sa réussite scolaire. Un certain nombre de variables nous permet d’étudier cet impact. 
 Nous disposons notamment dans le cadre de l’enquête PISA les variables suivantes: PQ SCHOOL qui représente la qualité de l’établissement scolaire, SCHSUST représentant les actions de l’établissement pour soutenir les apprentissages, ST272Q01JA à propos de la qualité d’enseignement des mathématiques. Ces variables vont nous permettre d’en apprendre davantage sur l’impact de la qualité des établissements sur le niveau scolaire des élèves. 
 Nous disposons également de variables décrivant l’environnement scolaire national afin d’en étudier encore une fois l’impact sur la réussite scolaire. Nous avons ST059Q01TA à propos du nombre d’heure de mathématiques par semaine, ST059Q02J représentant le nombre total d’heures de cours par semaine, ainsi que EXPO21ST pour l’exposition aux mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
 
