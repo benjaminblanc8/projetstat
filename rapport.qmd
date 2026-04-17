@@ -130,6 +130,7 @@ Pour répondre à notre problématique, il semble primordial de mesurer le nivea
 D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confronter le niveau scolaire des élèves avec différentes variables qui les caractérisent et qui caractérisent leur environnement. Nous avons donc sélectionné les variables qui nous semblaient être les plus pertinentes dans la base de données initiales. Nous les avons ensuite regroupées en trois catégories distinctes: les variables socio-économiques, les variables socio-familiales et celles définissant l’environnement scolaire de l'élève. Nous avons ensuite cherché à comprendre la manière dont étaient construites ces variables. 
 
 -> insérer le tableau des variables ou expliquer comment elles sont faites en annexes ou description de chque catégorie ? 
+-> parler du traitement des valeurs manquantes
  
 Enfin, nous avons regroupé les individus d’un même pays grâce à la variable CNT qui correspond au code ISO des pays, afin de pouvoir étudier la réussite de ces derniers à l’échelle nationale. Nous avons ainsi pu classer les pays en 2 ou 3 ( à voir si on fait moyen) groupes. ( développer comment on s’y prend concrètement) 
 
@@ -254,6 +255,10 @@ mat_r
 
 ```
 
+Avant tout, nous nous sommes intéréssé à ce que l'on pensait être le principal facteur d'inégalité de résultat scolaire: la situation socio-économique de l'élève.
+Sur le graphique ci-dessous, on constate un lien entre le score global de l'élève et l'indice ESCS. L’indice ESCS (Economic, Social and Cultural Status) est un indice composite construit par l'OCDE pour mesurer le statut socio-économique et culturel des élèves. C’est un indice standardisé à l'échelle OCDE. Cela signifie qu’il est construit de telle manière que sa moyenne est de 0 et son écart-type de 1.  Il est formé à partir de trois indices : le statut socioprofessionnel des parents (HISEI), le niveau de formation (PARED) des parents, ainsi que le patrimoine familial (HOMEPOS). Ce dernier indice inclut lui-même un grand nombre de variables parmi lesquelles les ressources culturelles, éducatives ainsi que d’autres ressources.
+On constate, en effet, que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Plus l'individu est aisé, plus il a de chance de réussir à l'école. Cependant cela ne signifie pas que toutes les variables économiques sont impactantes quant à la réussite d'un élève. Ainsi, nous avons choisi d'étudier un certain nombre de variables représentatives, chacune à leur manière d'un certain capital économique. 
+
 ```{r, echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
 library(ggplot2)
 
@@ -276,7 +281,6 @@ ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
   )
 ```
 
-Sur ce graphique, on constate un lien entre le score global de l'élève et l'indice ESCS. En effet, on voit que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Cependant cela ne signifie pas que toutes les variables économique sont impactantes quant à la réussite d'un élève. 
 
 Pour étudier de manière individuelle l'impact de chaque variable de nature économique, nous avons réalisé deux matrices de corrélation. Une pour les variables quantitatives et une pour les variables qualitatives. 
 
@@ -395,11 +399,16 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
   )
 ```
 ```
-Dans un premier temps, on constate le statut professionnel des parents ainsi que la possetion de biens matériels sont également corrélés au niveau scolaire. cela s'explique par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Plus une famille est aisé plus elle peut acheter de livres. Ainsi on peut considérer la possession de livre comme signe de richesse. Cependant, une famille moins aisé peut également posséder des livres en quantité importante.  
+Dans un premier temps, on constate le statut professionnel des parents ainsi que la possession de biens matériels sont également corrélés au niveau scolaire. cela s'explique simplement par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de ce simple fait statistique, on peut facilement penser que la profession des parents impactent celle des enfants. Un effet de reproduction sociale se met en place. Un parent ayant fait de longue étude aura souvent tendance à pousser son enfant à faire de même. 
 
-D'autre part, on constate que la présence de ressources éducatives est indépendantes de la réussite scolaire. On pourrait penser qu'un enfant possédant davantabe de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. 
+Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de siscipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
 
-Quant aux autres variables de nature économiques,leur effet quant à l'explication des inégalités de niveau scolaire reste modéré. 
+D'autre part, on constate que la présence de ressources éducatives est indépendante de la réussite scolaire. On pourrait penser qu'un enfant possédant davantage de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. Pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. On peut alors supposer que la plus part de l'apprentissage se fait lors du temps scolaire ou encore que la présence de ressources éducatives au domicile familial s'il n'est pas associé à des compétences d'enseignement n'est que peu utile.
+
+Quant aux autres variables de nature économiques,leur effet quant à l'explication des inégalités de niveau scolaire reste modéré. Nous en pouvons donc ni en conclure un véritable lien significatif ni en conclure une absence de lien. 
+
+-> rajouter pour les variables quali 
+-> rajouter peut être une analyse avec le genre pour voir si certaines variables impactes plus un genre que l'autre
   
 
 \`\`\`
@@ -540,18 +549,133 @@ Enfin, le type de filière suivi par l'élève apparaît comme le facteur le plu
 
 ## C — Les variables socio-familiales expliquent-elles les inégalités de niveau scolaire 
 Tout d’abord, il semble pertinent de définir ce que l’on entend par caractéristiques sociales et familiales. Les caractéristiques sociales représentent l’ensemble des éléments qui permettent de décrire la place qu’un individu occupe dans la structure de la société. Les caractéristiques familiales désignent quant à elles, désignent l’ensemble des éléments décrivant la situation d’un individu au sein de sa famille ainsi que le milieu familial dans lequel il a grandi. Ainsi nous avons sélectionné les variables suivantes pour constater l'association des caractéristiques sociales et familiales sur les inégalités de niveau scolaire. Il est également important de prendre en compte qu’un certain nombre de variables sociales sont liées à des variables économiques.
-Dans un premier temps, nous allons étudier l’impact des différences d’accès à des ressources éducatives sur le temps périscolaire sur le niveau scolaire des élèves grâce aux variables suivantes: les ressources éducatives utilisées (LEARRES), le nombre de livre à la maison (ST255Q01JA) et enfin le temps consacré au travail scolaire (ST295Q02JA)
-Dans un second temps nous nous intéresserons à l’impact de l’implication parentale à l’aide des variables suivantes : l’aide familiale après l’école (ST295Q03JA), l’implication parentale(PARINVOL), le niveau d’éducation des parents (HISCED pour le Niveau d’éducation le plus élevé des parents, FISCED pour celui du père et MISCED pour celui de la mère. 
 
-Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublement (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
+Dans un premier temps, nous allons étudier l’impact des différences d’accès à des ressources éducatives sur le temps périscolaire sur le niveau scolaire des élèves grâce aux variables suivantes: les ressources éducatives utilisées (LEARRES), le nombre de livre à la maison (ST255Q01JA) et enfin le temps consacré au travail scolaire (ST295Q02JA).
+Dans un second temps, nous nous intéresserons à l’impact de l’implication parentale à l’aide des variables suivantes : l’aide familiale après l’école (ST295Q03JA), l’implication parentale(PARINVOL), le niveau d’éducation des parents (HISCED pour le Niveau d’éducation le plus élevé des parents, FISCED pour celui du père et MISCED pour celui de la mère). 
+Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublements (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
 
-Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire seraient liées à leur réussite scolaire. On remarque en étudiant la matrice des corrélations suivantes que les ressources éducatives utilisées sont indépendantes du niveau scolaire quel que soit le domaine. (r = 0,01 dans les trois matières). Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n'est pas forcément lié à sa réussite scolaire. Le niveau global de ressources n’est pas non plus lié au niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas être lié à la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. On trouve ici une corrélation bien plus importante que précédemment.(r = 0,43 en mathématiques, 0,45 en lecture et 0,45 en sciences). Ainsi, on observe que, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout être associé à une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. De plus on constate également une corrélation de 0,51 entre la présence de livres et l’indice de niveau économique et social, ainsi la présence de livres est liée au niveau économique de la famille ce qui pourrait plus que le nombre de livres en lui-même être associé au niveau scolaire. Cela semble cohérent au vu du fait que la présence de livre est corrélé positivement avec la moyenne d’un élève dans tous les domaines. Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. (0.18665609    0.16103674      0.161977375). Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels. 
+```{r}
+library(ggplot2)
+install.packages("reshape2")
+library(reshape2)
 
-	Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation est lié à celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. (voir tableau des corrélations)( niveau le plus élevé, celui du père, celui de la mère). C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
+# ── Heatmap corrélations (variables quantitatives) ──────────────────────────
+mat_r_df <- as.data.frame(mat_r)
+mat_r_df$variable <- rownames(mat_r_df)
+
+labels_r <- c(
+  LEARRES    = "ressources éducatives utilisés",
+  PARINVOL   = "implication parentale",
+)
+
+mat_r_long <- melt(mat_r_df, id.vars = "variable",
+                   variable.name = "matiere", value.name = "r")
+mat_r_long$variable <- factor(mat_r_long$variable,
+                              levels = rev(names(labels_r)[names(labels_r) %in% unique(mat_r_long$variable)]))
+mat_r_long$label_var <- labels_r[as.character(mat_r_long$variable)]
+mat_r_long$matiere   <- recode(mat_r_long$matiere,
+                               moyenne_maths     = "Mathématiques",
+                               moyenne_lecture   = "Lecture",
+                               moyenne_sciences  = "Sciences"
+)
+
+ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(r, 2)),
+            color = ifelse(abs(mat_r_long$r) > 0.3, "white", "black"),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient2(
+    low = "#d73027", mid = "#f7f7f7", high = "#1a9850",
+    midpoint = 0, limits = c(-0.5, 0.5),
+    name = "Corrélation\n(r de Pearson)"
+  ) +
+  labs(
+    title = "Corrélation entre variables quantitatives et scores scolaires",
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    axis.text.x   = element_text(face = "bold"),
+    axis.text.y   = element_text(size = 9),
+    legend.position = "right",
+    panel.grid    = element_blank()
+  )
+
+
+```
+```{r}
+# ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
+labels_eta <- c(
+  ST255Q01JA = "Nb livres à la maison (ST255Q01JA)",
+  ST295Q02JA = "Temps travail scolaire (ST295Q02JA)",
+  ST307Q01JA = "Persévérance face aux tâches (ST307Q01JA)",
+  WB150Q01HA = "État de santé perçu (WB150Q01HA)",
+  ST295Q03JA = "aide familiale (ST295Q03JA)",
+  HISCED     = "niveau max éducation parent (HISCED)",
+  FISCED     = "niveau éducation père (FISCED)",
+  MISCED     = "niveau éducation mère (MISCED)",
+  ST004D01T  = "genre (ST004D01T)",
+  IMMIG      = "statut migratoire (IMMIG)",
+  ST127Q01TA = "redoublement (ST127Q01TA)",
+  ST260Q01JA = "absences prolongées (ST260Q01JA)"
+)
+
+mat_eta_df      <- as.data.frame(mat_eta)
+mat_eta_df$variable <- rownames(mat_eta_df)
+mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
+                        variable.name = "matiere", value.name = "eta")
+
+mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
+mat_eta_long$variable  <- factor(mat_eta_long$variable,
+                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
+mat_eta_long$label_var <- factor(mat_eta_long$label_var,
+                                 levels = labels_eta[levels(mat_eta_long$variable)])
+mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
+                                 moyenne_maths    = "Mathématiques",
+                                 moyenne_lecture  = "Lecture",
+                                 moyenne_sciences = "Sciences"
+)
+
+ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(eta, 2)),
+            color = ifelse(mat_eta_long$eta > 0.25, "white", "black"),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient(
+    low = "#f7f7f7", high = "#1a9850",
+    limits = c(0, NA),
+    name = "Eta\n(corrélation)"
+  ) +
+  labs(
+    title = "Force du lien entre variables ordinales/qualitatives et scores scolaires (η)",
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : η (eta) mesure l'intensité du lien entre une variable qualitative et une variable quantitative. Il varie entre 0 (aucun lien) et 1 (lien parfait)."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    axis.text.x  = element_text(face = "bold"),
+    axis.text.y  = element_text(size = 9),
+    legend.position = "right",
+    panel.grid   = element_blank()
+  )
+```
+
+
+
+Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire sont liées à leur réussite scolaire. Or, nous avons déja étudier cette possibilité lors de l'étude des variables économiques et n'en avons pas conclut de lien significatif. Au delà de l'aspect économiqe, les ressources mise à disposition de l'enfant représentent également les choix d'investissement des parents quant à la scolarité de leurs enfants.Il nous semblait alors important d'évoquer ce point ici. Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n'est pas forcément lié à sa réussite scolaire. Le niveau global de ressources n’est pas non plus lié au niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas être lié à la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. C'est notamment ce qu'on avait montré à travers la possesion de livre corrélé à la réussite scolaire. On observe que, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout être associé à une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. Or la possession de livre semble davantage être le reflet d'une certaine aisance économique, plus que d'une volonté de transmission à l'enfant.
+
+Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels. 
+
+Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation est lié à celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
  
-Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque mêle si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. Elle est similaire dans toutes les matières. (r = 0,08 dans les trois matières). D’autre part, une observation étonnante est issue de la base de donnée l’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela suggère que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. 
+Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque même si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. D’autre part, une observation étonnante est issue de la base de donnée. L’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela suggère que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. On pourrait interpréter ce résultat de la manière suivante. Des parents voyant que leur enfant réussi, pourrait lui laisser davantage d'autonomie quant à l'accompagnement scolaire.
 
-Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On constate dans un premier temps que le genre est lié les résultats des élèves. ( voir graphique ci-dessus). C’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
+Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On s'intéresse dans un premier temps à l'impact du genre sur la réussire des élève. D'après le graphique ci-dessous, c’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
 
 ```{r, echo=FALSE, fig.width=6, fig.height=4, message=FALSE, warning=FALSE}
 pisa_oecd_clean %>%
@@ -585,8 +709,8 @@ pisa_oecd_clean %>%
   )
 ```
 
-La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. (r = 0,08 dans les trois matières)
-De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion. (r = 0,09 en mathématiques, 0,11 en lecture et 0,09 en sciences)
+La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. 
+De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion, même si il semble au premier abord évident qu'un élève en bonne santé, dispose de meilleures conditions pour performer à l'école.
 
 On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait être lié à la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
 
