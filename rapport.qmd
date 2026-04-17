@@ -412,7 +412,8 @@ Nous disposons également de variables décrivant l’environnement scolaire nat
 
 
 Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
-```{r}
+
+```{r,echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 library(ggplot2)
 install.packages("reshape2")
 library(reshape2)
@@ -422,9 +423,8 @@ mat_r_df <- as.data.frame(mat_r)
 mat_r_df$variable <- rownames(mat_r_df)
 
 labels_r <- c(
-  SCHSUST    = "Soutien apprentissafes (SCHSUST)",
+  SCHSUST    = "Soutien apprentissages (SCHSUST)",
   PQSCHOOL   = "Qualité de l'établissement (PQSCHOOL)",
-  ST127Q01TA = "Redoublement (ST127Q01TA)",
   ST059Q01TA = "Heures maths/semaine (ST059Q01TA)",
   ST059Q02JA = "Heures cours/semaine (ST059Q02JA)",
   EXPO21ST   = "Expo maths XXIe s (EXPO21ST)"
@@ -464,6 +464,7 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
     axis.text.y   = element_text(size = 9),
     legend.position = "right",
     panel.grid    = element_blank()
+)
 
 ```
 
@@ -471,16 +472,10 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
 ```{r, echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 # ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
 labels_eta <- c(
-  ST127Q01TA = "Redoublement",
-  PROGN      = "Type de filière",
-  DURECEC    = "Durée scolarisation préscolaire",
-  HISCED     = "Niveau éduc. parent (max)",
-  FISCED     = "Niveau éduc. père",
-  MISCED     = "Niveau éduc. mère",
-  ST260Q01JA = "Absences prolongées",
-  ST267Q02JA = "Soutien émotionnel enseignants",
-  ST295Q02JA = "Temps travail scolaire",
-  ST307Q01JA = "Persévérance",
+  ST127Q01TA = "Redoublement (ST127Q01TA)",
+  PROGN      = "Type de filière (PROGN)",
+  DURECEC    = "Durée scolarisation préscolaire(DURECEC)",
+  ST267Q02JA = "Soutien émotionnel enseignants(ST267Q02JA)"
 )
 
 mat_eta_df      <- as.data.frame(mat_eta)
@@ -526,38 +521,20 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
 ```
 ```
 
-On constate sur le tableau des corrélations plus haut une corrélation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires (r = -0,03), ce qui suggère l'absence de lien linéaire entre ces deux variables. Cela suggère que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL. Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements est associé à de meilleurs résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences).
-La variable relative à la qualité de l'enseignement des mathématiques (ST272Q01JA) n'étant pas disponible dans notre base de données, elle n'a pas pu être intégrée à l'analyse.  pas trouvé dans notre base de données 
-Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
-Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0 particulièrement pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition. (r = -0,04 en mathématiques, -0,03 en lecture et -0,03 en sciences). Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. ( coefficient de corrélation de 0,01). Nous alors donc étudier l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alors par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
-Les corrélations observées sont très faibles (r = -0,07 en mathématiques, -0,04 en lecture et -0,05 en sciences), encore une fois on découvre une absence de lien. Le nombre d'heures de mathématiques est indépendant de la réussite des élèves mêmes en mathématiques. Étonnement, c’est le nombre d’heure de cours hebdomadaires qui semble davantage être associé à la réussite en mathématiques.On observe en revanche une corrélation positive modérée avec le nombre total d'heures de cours (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences). C'est même les mathématiques pour lequel le lien entre niveau scolaire et heures d’enseignement est le plus fort, alors que le nombre d’heure de mathématiques lui ne semble pas être associé la réussite. 
+On constate sur le tableau des corrélations ci-dessus une relation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires ce qui suggère l'absence de lien linéaire entre ces deux variables. On pourrait penser qu'une bonen qualité d'enseignement favorise la réussite scolaire. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. Au delà de la qualité de l’enseignement, les différentes actions de soutien à l'apprentissage de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Dans le même domaine un soutien emotionnel de la part des enseignant explique environ 10% des écarts de niveau scolaire Ainsi, les efforts de soutien tant émotionnel que scolaire des établissements envers les élèves est associé à de meilleurs résultats scolaires de ses élèves. Ce lien reste faible cependant.Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
+
+Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Dans certains pays, des établissements tel que les crèches sont fréquentés par un grand nombre d'enfant. Cette préscolarisation impacte elle la réussite des élèves. On remarque un faire lien. Cette variable expliquerait environ 10% des inégalités de niveau scolaire. 
+Une autre variable à considérer est celle du redoublement. Le redoublement peut être à la fois considérer comme une variable individuelle mais comme une variable relative au système scolaire. En effet, dans certains pays le redoublement est commun alors qu'il n'existe pas dans d'autres. Même lorsqu'il existe il peut prendre des formes diverses et variées. Toutes formes confondues, il explique 24% des inégalités de niveau scolaire.Cependant, sans avoir le sens du lien il reste difficile à interpréter. D'une part les élèves qui redoublent sont souvent en difficulté, mais le redoublement a pour objectif de permettre leur réussite les années suivantes. Sans connaître le sens du lien on ne peut savoir quel effet prédomine.  
+
+C'est désormais sur les variables portant sur la suite de la scolarité que nous allons nous interroger. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0, en particulier pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition.Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. . 
+
+Etudions l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alons par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
+Les coefficients de corrélations observées sont très faibles, encore une fois on découvre une absence de lien. Le nombre d'heures de mathématiques est indépendant de la réussite des élèves, y compris en mathématiques. Étonnement, c’est le nombre d’heure de cours hebdomadaires qui semble davantage associé à la réussite en mathématiques.On observe en revanche une corrélation positive modérée avec le nombre total d'heures de cours. C'est même les mathématiques pour lequel le lien entre niveau scolaire et heures d’enseignement est le plus fort, alors que le nombre d’heure de mathématiques lui ne semble pas être associé la réussite. Ainsi, la prése,ce d'un élève à l'école semble contribuer à sa réussite quelque soit les matières. Cependant le lien entre réussite scolaire et nombre d'heure hebdomadaire reste faible. 
 
 
-Le type de filière suivi par l'élève apparaît comme l'un des facteurs les plus fortement associés à la réussite scolaire, comme en témoigne la valeur élevée du coefficient eta dans la matrice. Les élèves en filière générale tendent à obtenir des scores plus élevés que ceux en filière technologique, qui ont des meilleurs scores que les élèves en filière professionnelle. Ce constat est observé dans la quasi-totalité des pays de l'OCDE. Il convient cependant de l'interpréter avec prudence : la filière n'est pas nécessairement la cause des écarts de performance. Elle est souvent le reflet d'une orientation précoce elle-même liée au milieu socio-économique de l'élève. Autrement dit, la filière pourrait davantage cristalliser des inégalités préexistantes que les produire.
+Enfin, le type de filière suivi par l'élève apparaît comme le facteur le plus lié à la réussite scolaire.Près de 50% des inégalités de niveau scolaire pourraient être expliquées par les différences de filière. Les élèves en filière générale tendent à obtenir des scores plus élevés que ceux en filière technologique, qui ont des meilleurs scores que les élèves en filière professionnelle. Il convient cependant de l'interpréter avec prudence : la filière n'est pas nécessairement la cause des écarts de performance. Elle est souvent le reflet d'une orientation précoce elle-même liée au milieu socio-économique de l'élève. Autrement dit, la filière pourrait davantage cristalliser des inégalités préexistantes que les produire.
 
 
-Lorsque l’on se penche sur l’investissement des établissements pour soutenir les apprentissages, on constate que les résultats sont globalement assez homogènes entre les pays. La majorité des scores se situe autour de la moyenne de l’OCDE, ce qui montre des niveaux d’effort relativement similaires. On observe toutefois quelques écarts : certains pays présentent des valeurs légèrement supérieures à la moyenne, indiquant un soutien plus important aux élèves, tandis que d’autres se situent en dessous. Par exemple, le Japon apparaît légèrement en retrait, avec des scores négatifs, suggérant un investissement perçu comme plus faible.
-
-
-
-Concernant l’exposition aux mathématiques du XXIe siècle, les résultats apparaissent globalement homogènes entre les pays. La plupart des médianes se situent autour de 0, correspondant à la moyenne de l’OCDE. Il est compliqué de tirer une conclusion de ce graphique, et le lien avec le résultat scolaire semble très faible si l'on se referre ) la matrice de corrélation.
-
-
-
-Sur ce graphique, on observe la répartition de la qualité perçue de l’enseignement selon les pays. Globalement, les catégories intermédiaires (autour de 5 à 7) sont les plus représentées, ce qui suggère que la perception de l’enseignement est plutôt modérée dans la majorité des pays. On observe aussi que les élèves mettant les meilleurs notes sont des pays d'Amérique latine (Colombie, Costa Rica, Mexique, Chili) ou des pays scandinaves (Islande, Finlande).
-
-
-
-
-Sur ce graphique, on observe la répartition des filières d’enseignement selon les pays de l’OCDE. La filière générale apparaît comme dominante dans une majorité de pays, représentant souvent la plus grande proportion des élèves.
-On constate que certains pays semblent faux, comme la France qui contient une majorité de Professionelle, ou les USA avec la fillière technologique.
-
--> remplacer les trucs pas pays au niveau global ça utiliser pour parti 2 
-- qualité des établissements scolaires
-- action de l'établissement pour soutenoir les apprentissages 
-- nombre d'heure de maths 
-- nombre d'heure totale 
-- expo aux maths 
 
 
 
