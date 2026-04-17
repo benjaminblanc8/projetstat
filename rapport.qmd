@@ -857,17 +857,15 @@ library(tibble)
 # ── 1. Variables actives et supplémentaires ──────────────────────────────────
 
 vars_actives <- c(
-  "ESCS",        # Statut socio-éco. composite
-  "HISEI",       # Statut professionnel parental
-  "HOMEPOS",     # Biens matériels du ménage
-  "LEARRES",     # Ressources éducatives à domicile
-  "PARINVOL",    # Implication parentale
-  "PQSCHOOL",    # Qualité perçue de l'établissement
-  "SCHSUST",     # Soutien de l'établissement aux apprentissages
-  "ST059Q01TA",  # Heures de mathématiques / semaine
-  "ST059Q02JA",  # Heures de cours totales / semaine
-  "EXPO21ST"     # Exposition aux maths du XXIe siècle
-)
+  "ESCS",
+  "HISEI",
+  "HOMEPOS",
+  "LEARRES",
+  "SCHSUST",
+  "ST059Q01TA",
+  "ST059Q02JA",
+  "EXPO21ST"
+)   # j'ai enlevé  PARINVOL et PQSCHOOL car ces variables sont disponibles dans seulement 5 pays donc ça nique tout l'ACP
 
 vars_sup <- c("score_global", "moyenne_maths", "moyenne_lecture", "moyenne_sciences")
 
@@ -976,8 +974,6 @@ labels_vars_acp <- c(
   HISEI       = "HISEI (prof. parent.)",
   HOMEPOS     = "HOMEPOS (biens mat.)",
   LEARRES     = "LEARRES (ressources éd.)",
-  PARINVOL    = "PARINVOL (impliq. parent.)",
-  PQSCHOOL    = "PQSCHOOL (qualité étab.)",
   SCHSUST     = "SCHSUST (soutien étab.)",
   ST059Q01TA  = "Heures maths/semaine",
   ST059Q02JA  = "Heures cours/semaine",
