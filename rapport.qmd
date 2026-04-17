@@ -147,7 +147,7 @@ Enfin, nous avons regroupé les individus d’un même pays grâce à la variabl
 Lorsqu'on pense aux inégalités de niveau scolaire, on imagine comme première cause les inégalités économiques. De nombreuses études de l'INSEE montre que dès l'entrée à l'école les enfants issuent de milieux sociaux favorisés ont des acquis supérieurs à ceux issuent de milieux défavorisés. L'indice ESCS est un indice composite crée par l'OCDE afin de mesurer le statut socio-économique d'un individu. Nous allon alors le lien entre la réussite scolaire d'un élève et son statut socio-économique. 
 
 
-```{r, echo=FALSE, results='hide'}
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
 library(dplyr)
 
 pisa_oecd_clean <- pisa_oecd_clean %>%
@@ -325,7 +325,7 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
     name = "Corrélation\n(r de Pearson)"
   ) +
   labs(
-    title = "Corrélation entre variables quantitatives et scores scolaires",
+    title = "Corrélation entre variables quantitatives de nature économique et scores scolaires",
     x = NULL, y = NULL,
     caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
   ) +
@@ -339,8 +339,6 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
     panel.grid    = element_blank()
   )
 ```
-
-```{r}
 
 ```{r, echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 # ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
@@ -382,7 +380,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
     name = "Eta\n(corrélation)"
   ) +
   labs(
-    title = "Force du lien entre variables ordinales/qualitatives et scores scolaires (η)",
+    title = "Force du lien entre variables qualitatives de nature économique et scores scolaires (η)",
     x = NULL, y = NULL,
     caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 0,45 : le nombre de livres à la maison est associé à 45% des différences de réussite en mathématiques."
   ) +
@@ -413,7 +411,122 @@ Nous disposons notamment dans le cadre de l’enquête PISA les variables suivan
 Nous disposons également de variables décrivant l’environnement scolaire national afin d’en étudier encore une fois l’impact sur la réussite scolaire. Nous avons ST059Q01TA à propos du nombre d’heure de mathématiques par semaine, ST059Q02J représentant le nombre total d’heures de cours par semaine, ainsi que EXPO21ST pour l’exposition aux mathématiques du XXIe siècle et enfin PROGN pour Programme national d’études.
 
 
-Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives. On constate sur le tableau des corrélations plus haut une corrélation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires (r = -0,03), ce qui suggère l'absence de lien linéaire entre ces deux variables. Cela suggère que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL. Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements est associé à de meilleurs résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences).
+Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
+```{r}
+library(ggplot2)
+install.packages("reshape2")
+library(reshape2)
+
+# ── Heatmap corrélations (variables quantitatives) ──────────────────────────
+mat_r_df <- as.data.frame(mat_r)
+mat_r_df$variable <- rownames(mat_r_df)
+
+labels_r <- c(
+  SCHSUST    = "Soutien apprentissafes (SCHSUST)",
+  PQSCHOOL   = "Qualité de l'établissement (PQSCHOOL)",
+  ST127Q01TA = "Redoublement (ST127Q01TA)",
+  ST059Q01TA = "Heures maths/semaine (ST059Q01TA)",
+  ST059Q02JA = "Heures cours/semaine (ST059Q02JA)",
+  EXPO21ST   = "Expo maths XXIe s (EXPO21ST)"
+)
+
+mat_r_long <- melt(mat_r_df, id.vars = "variable",
+                   variable.name = "matiere", value.name = "r")
+mat_r_long$variable <- factor(mat_r_long$variable,
+                               levels = rev(names(labels_r)[names(labels_r) %in% unique(mat_r_long$variable)]))
+mat_r_long$label_var <- labels_r[as.character(mat_r_long$variable)]
+mat_r_long$matiere   <- recode(mat_r_long$matiere,
+  moyenne_maths     = "Mathématiques",
+  moyenne_lecture   = "Lecture",
+  moyenne_sciences  = "Sciences"
+)
+
+ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(r, 2)),
+            color = ifelse(abs(mat_r_long$r) > 0.3, "white", "black"),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient2(
+    low = "#d73027", mid = "#f7f7f7", high = "#1a9850",
+    midpoint = 0, limits = c(-0.5, 0.5),
+    name = "Corrélation\n(r de Pearson)"
+  ) +
+  labs(
+    title = "Corrélation entre variables quantitatives de nature scolaire et scores scolaires",
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    axis.text.x   = element_text(face = "bold"),
+    axis.text.y   = element_text(size = 9),
+    legend.position = "right",
+    panel.grid    = element_blank()
+
+```
+
+
+```{r, echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+# ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
+labels_eta <- c(
+  ST127Q01TA = "Redoublement",
+  PROGN      = "Type de filière",
+  DURECEC    = "Durée scolarisation préscolaire",
+  HISCED     = "Niveau éduc. parent (max)",
+  FISCED     = "Niveau éduc. père",
+  MISCED     = "Niveau éduc. mère",
+  ST260Q01JA = "Absences prolongées",
+  ST267Q02JA = "Soutien émotionnel enseignants",
+  ST295Q02JA = "Temps travail scolaire",
+  ST307Q01JA = "Persévérance",
+)
+
+mat_eta_df      <- as.data.frame(mat_eta)
+mat_eta_df$variable <- rownames(mat_eta_df)
+mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
+                        variable.name = "matiere", value.name = "eta")
+
+mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
+mat_eta_long$variable  <- factor(mat_eta_long$variable,
+                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
+mat_eta_long$label_var <- factor(mat_eta_long$label_var,
+                                 levels = labels_eta[levels(mat_eta_long$variable)])
+mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
+                                 moyenne_maths    = "Mathématiques",
+                                 moyenne_lecture  = "Lecture",
+                                 moyenne_sciences = "Sciences"
+)
+
+ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(eta, 2)),
+            color = ifelse(mat_eta_long$eta > 0.25, "white", "black"),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient(
+    low = "#f7f7f7", high = "#1a9850",
+    limits = c(0, NA),
+    name = "Eta\n(corrélation)"
+  ) +
+  labs(
+    title = "Force du lien entre variables qualitatives de nature scolaire et scores scolaires (η)",
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : η (eta) mesure l'intensité du lien entre une variable qualitative et une variable quantitative. Il varie entre 0 (aucun lien) et 1 (lien parfait)."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    axis.text.x  = element_text(face = "bold"),
+    axis.text.y  = element_text(size = 9),
+    legend.position = "right",
+    panel.grid   = element_blank()
+  )
+```
+```
+
+On constate sur le tableau des corrélations plus haut une corrélation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires (r = -0,03), ce qui suggère l'absence de lien linéaire entre ces deux variables. Cela suggère que meilleure est la qualité de l’enseignement, moins les élèves sont bons à l’école ce qui semble paradoxal. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. PQSCHOOL. Au delà de la qualité de l’enseignement, les différentes actions de soutien de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Ainsi, les efforts de soutien effectués par les établissements est associé à de meilleurs résultats scolaires de ses élèves particulièrement en lecture. Or cette corrélation reste faible (r = 0,20 en mathématiques, 0,23 en lecture et 0,21 en sciences).
 La variable relative à la qualité de l'enseignement des mathématiques (ST272Q01JA) n'étant pas disponible dans notre base de données, elle n'a pas pu être intégrée à l'analyse.  pas trouvé dans notre base de données 
 Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
 Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0 particulièrement pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition. (r = -0,04 en mathématiques, -0,03 en lecture et -0,03 en sciences). Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s' il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques. ( coefficient de corrélation de 0,01). Nous alors donc étudier l’impact du nombre d'heure de mathématiques par semaine sur la réussite des élèves. Nous alors par la suite comparé ce nombre d’heure au nombre d’heure hebdomadaires total. 
@@ -423,167 +536,29 @@ Les corrélations observées sont très faibles (r = -0,07 en mathématiques, -0
 Le type de filière suivi par l'élève apparaît comme l'un des facteurs les plus fortement associés à la réussite scolaire, comme en témoigne la valeur élevée du coefficient eta dans la matrice. Les élèves en filière générale tendent à obtenir des scores plus élevés que ceux en filière technologique, qui ont des meilleurs scores que les élèves en filière professionnelle. Ce constat est observé dans la quasi-totalité des pays de l'OCDE. Il convient cependant de l'interpréter avec prudence : la filière n'est pas nécessairement la cause des écarts de performance. Elle est souvent le reflet d'une orientation précoce elle-même liée au milieu socio-économique de l'élève. Autrement dit, la filière pourrait davantage cristalliser des inégalités préexistantes que les produire.
 
 
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = PQSCHOOL, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Qualité des établissement scolaire",
-       x = "Pays",
-       y = "établissement scolaire",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Un score positif indique une qualité perçue supérieure à la moyenne OCDE.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-
-```
-
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = SCHSUST, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Actions de l’établissement pour soutenir les apprentissages",
-       x = "Pays",
-       y = "Aide",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Un score positif indique un effort institutionnel supérieur à la moyenne OCDE.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
 Lorsque l’on se penche sur l’investissement des établissements pour soutenir les apprentissages, on constate que les résultats sont globalement assez homogènes entre les pays. La majorité des scores se situe autour de la moyenne de l’OCDE, ce qui montre des niveaux d’effort relativement similaires. On observe toutefois quelques écarts : certains pays présentent des valeurs légèrement supérieures à la moyenne, indiquant un soutien plus important aux élèves, tandis que d’autres se situent en dessous. Par exemple, le Japon apparaît légèrement en retrait, avec des scores négatifs, suggérant un investissement perçu comme plus faible.
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q01TA, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Nombre d’heures de mathématiques par semaine",
-       x = "Pays",
-       y = "nombre d'heure",
-        caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : valeur déclarée par l'élève. Le losange noir indique la médiane par pays.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
 
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y = ST059Q02JA, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Nombre total d’heures de cours par semaine",
-       x = "Pays",
-       y = "nombre d'heures",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : valeur déclarée par l'élève. Le losange noir indique la médiane par pays.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
-idem
 
-Pour le nombre total d’heures de cours par semaine, on observe une forte hétérogénéité des résultats, notamment au sein même des pays. Les médianes restent toutefois relativement proches, généralement autour de 30 à 35 heures hebdomadaires, ce qui suggère une certaine convergence des systèmes éducatifs. Certains pays, comme le Costa Rica ou la Turquie, se situent légèrement au-dessus de cette moyenne. En revanche, la dispersion varie fortement : des pays comme la Turquie, la Corée du Sud, la Grèce ou le Costa Rica présentent une grande variabilité des horaires, traduisant des différences importantes entre élèves. À l’inverse, d’autres pays comme l’Estonie, l’Espagne ou la Belgique affichent des distributions plus resserrées, indiquant une organisation plus homogène du temps scolaire.
 
-```{r, echo=FALSE}
-ggplot(pisa_oecd_clean, aes(x = CNT, y =EXPO21ST, color = CNT)) +
-  geom_boxplot(fill = NA, size = 0.8, outlier.shape = 15) +
-  stat_summary(fun = median,
-               geom = "point",
-               shape = 18,
-               size = 3,
-               color = "black") +
-  theme_minimal() +
-  labs(title = "Exposition aux mathématiques du XXIe siècle",
-       x = "Pays",
-       y = "exposition",
-       caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : indice standardisé, moyenne 0 et écart-type 1. Mesure l'exposition à des concepts mathématiques contemporains.") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
-        legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
 Concernant l’exposition aux mathématiques du XXIe siècle, les résultats apparaissent globalement homogènes entre les pays. La plupart des médianes se situent autour de 0, correspondant à la moyenne de l’OCDE. Il est compliqué de tirer une conclusion de ce graphique, et le lien avec le résultat scolaire semble très faible si l'on se referre ) la matrice de corrélation.
 
 
 
-```{r, echo=FALSE}
-ggplot(
-  data = subset(pisa_oecd_clean, !is.na(ST272Q01JA) & !is.na(CNT)),
-  aes(x = reorder(CNT, CNT, length), fill = ST272Q01JA)
-) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  scale_fill_brewer(palette = "RdYlGn") +
-  theme_minimal(base_size = 12) +
-  labs(title = "Répartition de la qualité perçue de l'enseignement (OCDE)",
-       x = "Pays",
-       y = "Proportion",
-       fill = "Catégorie",   caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 25% des élève en Islande mettent une note de 9 ou plus à la qualité de leur enseignement.") +
- 
-  theme(
-    axis.text.x = element_text(
-      angle = 90,         
-      hjust = 1,
-      size = 8
-    ),
-    plot.title = element_text(face = "bold")
-  )
-```
 Sur ce graphique, on observe la répartition de la qualité perçue de l’enseignement selon les pays. Globalement, les catégories intermédiaires (autour de 5 à 7) sont les plus représentées, ce qui suggère que la perception de l’enseignement est plutôt modérée dans la majorité des pays. On observe aussi que les élèves mettant les meilleurs notes sont des pays d'Amérique latine (Colombie, Costa Rica, Mexique, Chili) ou des pays scandinaves (Islande, Finlande).
 
 
 
-```{r, echo=FALSE}
-ggplot(
-  data = pisa_oecd_clean, aes(x = CNT, 
-      fill = factor(PROGN %% 10, levels = c("1", "2", "3", "4"))) 
-) +
-  geom_bar(position = "fill") + # "fill" empile les catégories à 100%
-  scale_y_continuous(labels = scales::percent_format()) +
-  scale_fill_manual(
-    values = c(
-      "1" = "#1b9e77",   # En bas
-      "2" = "#d95f02",
-      "3" = "#7570b3",
-      "4" = "#666666"    # En haut
-    ),
-    labels = c(
-      "1" = "Générale",
-      "2" = "Technologique",
-      "3" = "Professionnelle",
-      "4" = "Autres"
-    ),
-    na.value = "#e0e0e0" # Les NA seront tout en haut par défaut
-  ) +
-  theme_minimal(base_size = 8) +
-  labs(
-    title = "Répartition des filières par pays (OCDE)",
-    subtitle = "Catégories ordonnées de 1 (bas) à 4 (haut)",
-    x = "Pays",
-    y = "Proportion",
-    fill = "Type de filière",  caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : Environ 88% des élèves en Australie sont en filière générale.") +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(face = "bold")
-  )
 
-```
 Sur ce graphique, on observe la répartition des filières d’enseignement selon les pays de l’OCDE. La filière générale apparaît comme dominante dans une majorité de pays, représentant souvent la plus grande proportion des élèves.
 On constate que certains pays semblent faux, comme la France qui contient une majorité de Professionelle, ou les USA avec la fillière technologique.
+
+-> remplacer les trucs pas pays au niveau global ça utiliser pour parti 2 
+- qualité des établissements scolaires
+- action de l'établissement pour soutenoir les apprentissages 
+- nombre d'heure de maths 
+- nombre d'heure totale 
+- expo aux maths 
+
 
 
 ## C — Les variables socio-familiales expliquent-elles les inégalités de niveau scolaire 
@@ -875,4 +850,10 @@ Les variables dont l'écart-type est élevé au sein d'un même groupe de paysso
 
 ## C — Focus sur un pays ayant des facteurs explicatifs très différents des autres
 
+
+#III- 
+
+##A- 
+
+##B-
 
