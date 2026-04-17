@@ -1,4 +1,4 @@
-data=read.csv("data_ocde", sep=",",header=TRUE)
+data=read.csv2("data_ocde.csv", sep=",",header=TRUE)
 setwd()
 data_ocde <- read_csv("projet_stat/data_ocde.csv")
 summary(data_ocde$PQSCHOOL)

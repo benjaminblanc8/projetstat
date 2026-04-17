@@ -827,7 +827,399 @@ Les variables dont l'écart-type est élevé au sein d'un même groupe de paysso
 
 ## C — Focus sur un pays ayant des facteurs explicatifs très différents des autres
 
+# III — Analyse en Composantes Principales
 
+## A — Construction de l'ACP : axes et dimensions
+
+L'Analyse en Composantes Principales (ACP) est une méthode de réduction de
+dimension qui permet de synthétiser un grand nombre de variables en un petit
+nombre d'axes non corrélés, appelés composantes principales. Chaque axe capture
+une part de la variance totale du nuage de points. L'ACP est ici réalisée à
+l'échelle nationale : chaque individu statistique est un pays de l'OCDE,
+caractérisé par la moyenne de ses élèves sur l'ensemble des variables retenues.
+Les scores scolaires (mathématiques, lecture, sciences et score global) sont
+introduits en variables **supplémentaires** : ils ne participent pas à la
+construction des axes mais sont projetés a posteriori, ce qui permet d'évaluer
+dans quelle mesure les dimensions structurelles identifiées par l'ACP
+correspondent aux inégalités de performance scolaire.
+
+```{r acp-prep, echo=FALSE, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(FactoMineR)
+library(factoextra)
+library(ggplot2)
+library(ggrepel)
+library(knitr)
+library(kableExtra)
+library(tibble)
+
+# ── 1. Variables actives et supplémentaires ──────────────────────────────────
+
+vars_actives <- c(
+  "ESCS",        # Statut socio-éco. composite
+  "HISEI",       # Statut professionnel parental
+  "HOMEPOS",     # Biens matériels du ménage
+  "LEARRES",     # Ressources éducatives à domicile
+  "PARINVOL",    # Implication parentale
+  "PQSCHOOL",    # Qualité perçue de l'établissement
+  "SCHSUST",     # Soutien de l'établissement aux apprentissages
+  "ST059Q01TA",  # Heures de mathématiques / semaine
+  "ST059Q02JA",  # Heures de cours totales / semaine
+  "EXPO21ST"     # Exposition aux maths du XXIe siècle
+)
+
+vars_sup <- c("score_global", "moyenne_maths", "moyenne_lecture", "moyenne_sciences")
+
+# ── 2. Agrégation par pays ───────────────────────────────────────────────────
+
+pays_acp <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(across(all_of(c(vars_actives, vars_sup)),
+                   ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop") %>%
+  filter(if_all(all_of(vars_actives), ~ !is.na(.x))) %>%
+  column_to_rownames("CNT")
+
+# ── 3. ACP avec FactoMineR ───────────────────────────────────────────────────
+
+idx_actives <- 1:length(vars_actives)
+idx_sup     <- (length(vars_actives) + 1):(length(vars_actives) + length(vars_sup))
+
+res_acp <- PCA(
+  pays_acp,
+  scale.unit  = TRUE,
+  quanti.sup  = idx_sup,
+  graph       = FALSE,
+  ncp         = 5
+)
+```
+
+### Choix du nombre d'axes retenus
+
+Le graphique des valeurs propres (dit « éboulis ») permet de déterminer combien
+de composantes principales il est pertinent de retenir. On retient généralement
+les axes dont la valeur propre est supérieure à 1 (règle de Kaiser) et/ou ceux
+situés avant le « coude » dans la courbe décroissante.
+
+```{r acp-scree, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+
+# Tableau des valeurs propres
+vp <- as.data.frame(res_acp$eig)
+colnames(vp) <- c("Valeur propre", "% variance", "% cumulé")
+vp$Axe <- paste0("Dim.", 1:nrow(vp))
+vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
+
+kable(
+  head(vp, 5),
+  digits  = 2,
+  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
+  booktabs = TRUE
+) %>%
+  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
+  row_spec(which(head(vp$`Valeur propre`, 5) >= 1), bold = TRUE)
+```
+
+```{r acp-eig-plot, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+
+fviz_eig(
+  res_acp,
+  addlabels  = TRUE,
+  ylim       = c(0, 70),
+  barfill    = "#1a9850",
+  barcolor   = "#1a9850",
+  linecolor  = "#d73027",
+  ncp        = 5
+) +
+  labs(
+    title   = "Éboulis des valeurs propres",
+    x       = "Composante principale",
+    y       = "Pourcentage de variance expliquée (%)",
+    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : la ligne rouge indique le seuil de 1 (règle de Kaiser)."
+  ) +
+  geom_hline(yintercept = 100 / nrow(res_acp$eig),
+             linetype = "dashed", color = "#d73027", linewidth = 0.6) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
+
+```{r acp-choix-axes, echo=FALSE, results='asis'}
+# Texte automatique selon les vraies valeurs propres
+n_axes <- sum(res_acp$eig[, 1] >= 1)
+var_2ax <- round(res_acp$eig[2, 3], 1)   # % cumulé axe 2
+
+cat(paste0(
+  "On retient **", n_axes, " axes** dont la valeur propre est supérieure à 1. ",
+  "Les deux premiers axes expliquent à eux seuls **", var_2ax, "% de la variance totale**, ",
+  "ce qui autorise une lecture du plan factoriel (Dim.1 × Dim.2) comme représentation ",
+  "synthétique de la structure des pays de l'OCDE."
+))
+```
+
+### Interprétation des axes — cercle des corrélations
+
+Le cercle des corrélations représente les variables actives dans le plan des deux
+premières composantes. La corrélation entre une variable et un axe est d'autant
+plus forte que la flèche est longue et proche de l'axe. Des variables pointant
+dans la même direction sont positivement corrélées entre elles ; des variables à
+angle droit sont indépendantes ; des variables en sens opposé sont négativement
+corrélées.
+
+```{r acp-cercle, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+
+# Labels lisibles pour les variables
+labels_vars_acp <- c(
+  ESCS        = "ESCS (socio-éco.)",
+  HISEI       = "HISEI (prof. parent.)",
+  HOMEPOS     = "HOMEPOS (biens mat.)",
+  LEARRES     = "LEARRES (ressources éd.)",
+  PARINVOL    = "PARINVOL (impliq. parent.)",
+  PQSCHOOL    = "PQSCHOOL (qualité étab.)",
+  SCHSUST     = "SCHSUST (soutien étab.)",
+  ST059Q01TA  = "Heures maths/semaine",
+  ST059Q02JA  = "Heures cours/semaine",
+  EXPO21ST    = "EXPO21ST (maths XXIe s.)"
+)
+
+# Coordonnées des variables actives
+coord_var <- as.data.frame(res_acp$var$coord[, 1:2])
+colnames(coord_var) <- c("Dim1", "Dim2")
+coord_var$label <- labels_vars_acp[rownames(coord_var)]
+coord_var$cos2  <- rowSums(res_acp$var$cos2[, 1:2])   # qualité de représentation
+
+# Coordonnées variables supplémentaires
+coord_sup <- as.data.frame(res_acp$quanti.sup$coord[, 1:2])
+colnames(coord_sup) <- c("Dim1", "Dim2")
+coord_sup$label <- c("Score global", "Mathématiques", "Lecture", "Sciences")
+
+pct <- round(res_acp$eig[1:2, 2], 1)
+
+ggplot() +
+  # Cercle unité
+  annotate("path",
+           x = cos(seq(0, 2*pi, length.out = 300)),
+           y = sin(seq(0, 2*pi, length.out = 300)),
+           color = "grey70", linewidth = 0.4) +
+  # Axes centraux
+  geom_hline(yintercept = 0, color = "grey60", linewidth = 0.3) +
+  geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
+  # Flèches variables actives (colorées par cos²)
+  geom_segment(data = coord_var,
+               aes(x = 0, y = 0, xend = Dim1, yend = Dim2, color = cos2),
+               arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+               linewidth = 0.8) +
+  scale_color_gradient2(
+    low = "#d73027", mid = "#fee08b", high = "#1a9850",
+    midpoint = 0.5,
+    name = "Cos² (qualité\nde représentation)",
+    limits = c(0, 1)
+  ) +
+  # Labels variables actives
+  geom_text_repel(data = coord_var,
+                  aes(x = Dim1, y = Dim2, label = label),
+                  size = 3, color = "grey20",
+                  box.padding = 0.4, max.overlaps = 20) +
+  # Flèches variables supplémentaires (scores) en rouge tirets
+  geom_segment(data = coord_sup,
+               aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
+               arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+               color = "#d73027", linewidth = 0.9, linetype = "dashed") +
+  geom_text_repel(data = coord_sup,
+                  aes(x = Dim1, y = Dim2, label = label),
+                  size = 3, color = "#a50026", fontface = "bold",
+                  box.padding = 0.5, max.overlaps = 20) +
+  labs(
+    title   = "Cercle des corrélations — plan Dim.1 × Dim.2",
+    subtitle = "Flèches rouges en pointillés : scores scolaires (variables supplémentaires)",
+    x       = paste0("Dim.1 (", pct[1], "% de variance)"),
+    y       = paste0("Dim.2 (", pct[2], "% de variance)"),
+    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : la longueur et l'orientation des flèches indiquent la corrélation avec chaque axe.\nLes variables supplémentaires (scores) ne participent pas à la construction des axes."
+  ) +
+  coord_equal(xlim = c(-1.15, 1.15), ylim = c(-1.15, 1.15)) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(size = 9, color = "grey40"),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "right"
+  )
+```
+
+```{r acp-contrib, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+# Contributions des variables aux deux premiers axes
+contrib <- as.data.frame(res_acp$var$contrib[, 1:2])
+colnames(contrib) <- c("Dim.1", "Dim.2")
+contrib$variable <- labels_vars_acp[rownames(contrib)]
+
+# Format long
+contrib_long <- tidyr::pivot_longer(contrib, -variable,
+                                     names_to = "Axe", values_to = "contrib")
+
+ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe)) +
+  geom_col(position = "dodge") +
+  geom_hline(yintercept = 100 / nrow(res_acp$var$contrib),
+             linetype = "dashed", color = "grey40", linewidth = 0.5) +
+  coord_flip() +
+  scale_fill_manual(values = c("Dim.1" = "#1a9850", "Dim.2" = "#4393c3")) +
+  labs(
+    title   = "Contribution des variables aux axes 1 et 2 (%)",
+    x       = NULL, y       = "Contribution (%)",
+    fill    = NULL,
+    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : la ligne pointillée indique la contribution moyenne attendue si toutes les variables contribuaient également."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
+
+Le premier axe (Dim.1) oppose les pays où le statut socio-économique des élèves
+(ESCS, HISEI, HOMEPOS) est élevé, à ceux où il est faible. Il synthétise la
+dimension de **capital économique et culturel familial** : c'est le gradient
+socio-économique des systèmes éducatifs nationaux. Les scores scolaires
+(variables supplémentaires) sont très fortement corrélés à cet axe, ce qui
+confirme que le premier facteur structurant des inégalités entre pays est
+d'ordre socio-économique.
+
+Le deuxième axe (Dim.2) capte une dimension davantage liée aux **caractéristiques
+institutionnelles** : le nombre d'heures de cours, l'exposition aux
+mathématiques et les variables de soutien scolaire. Il distingue des pays dont
+les systèmes éducatifs sont intensifs en temps d'enseignement de ceux où
+l'organisation scolaire est plus légère.
+
+---
+
+## B — Interprétation des résultats : projection des pays
+
+### Positionnement des pays dans le plan factoriel
+
+```{r acp-individus, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+
+# Coordonnées des individus (pays)
+coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
+colnames(coord_ind) <- c("Dim1", "Dim2")
+coord_ind$CNT <- rownames(coord_ind)
+
+# Rattacher groupe (fort / moyen / faible) depuis niveau_pays
+# (niveau_pays doit exister dans l'environnement — calculé en partie II)
+coord_ind <- coord_ind %>%
+  left_join(niveau_pays %>% select(CNT, groupe, score_moyen), by = "CNT")
+
+# Couleurs groupe
+couleurs_groupe <- c(
+  "Fort"   = "#1a9850",
+  "Moyen"  = "#fee08b",
+  "Faible" = "#d73027"
+)
+
+ggplot(coord_ind, aes(x = Dim1, y = Dim2, color = groupe, label = CNT)) +
+  geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
+  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
+  geom_point(aes(size = score_moyen), alpha = 0.85) +
+  geom_text_repel(size = 3, fontface = "bold",
+                  box.padding = 0.4, max.overlaps = 30) +
+  scale_color_manual(values = couleurs_groupe, name = "Groupe (niveau)") +
+  scale_size_continuous(range = c(2, 6), guide = "none") +
+  labs(
+    title   = "Projection des pays de l'OCDE dans le plan factoriel (Dim.1 × Dim.2)",
+    subtitle = "Taille des points proportionnelle au score moyen. Codes ISO 3 lettres.",
+    x       = paste0("Dim.1 — Capital socio-économique (", pct[1], "% de variance)"),
+    y       = paste0("Dim.2 — Intensité institutionnelle (", pct[2], "% de variance)"),
+    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : chaque point représente un pays. Les groupes (fort / moyen / faible)\nsont définis par tiers sur la base du score moyen global."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(size = 9, color = "grey40"),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+### Qualité de représentation des pays (cos²)
+
+```{r acp-cos2, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+
+cos2_ind <- as.data.frame(res_acp$ind$cos2[, 1:2])
+colnames(cos2_ind) <- c("Dim1", "Dim2")
+cos2_ind$CNT   <- rownames(cos2_ind)
+cos2_ind$total <- cos2_ind$Dim1 + cos2_ind$Dim2
+
+# Top 10 mieux représentés et bottom 5
+cos2_ind <- cos2_ind %>% arrange(desc(total))
+
+ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
+                     fill = ifelse(total >= 0.7, "Bien représenté", "Repr. partielle"))) +
+  geom_col() +
+  geom_hline(yintercept = 0.7, linetype = "dashed", color = "grey40", linewidth = 0.5) +
+  coord_flip() +
+  scale_fill_manual(values = c("Bien représenté" = "#1a9850",
+                                "Repr. partielle" = "#fee08b"),
+                    name = NULL) +
+  labs(
+    title   = "Qualité de représentation des pays dans le plan Dim.1 × Dim.2 (cos²)",
+    x       = NULL, y = "Cos² (Dim.1 + Dim.2)",
+    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : un cos² > 0,7 (ligne pointillée) indique une bonne représentation du pays dans le plan factoriel.\nUn cos² faible signifie que le pays est mieux décrit par les axes suivants."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 11),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+### Synthèse : l'ACP confirme-t-elle les résultats de la partie I ?
+
+```{r acp-synthese, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+
+# Corrélations entre coordonnées Dim.1 et scores scolaires
+corr_dim1_score <- cor(coord_ind$Dim1, coord_ind$score_moyen, use = "complete.obs")
+corr_dim2_score <- cor(coord_ind$Dim2, coord_ind$score_moyen, use = "complete.obs")
+
+# Scatter Dim1 vs score_moyen avec droite de régression
+ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
+  geom_smooth(method = "lm", se = TRUE, color = "grey50",
+              linewidth = 0.8, linetype = "dashed", fill = "grey90") +
+  geom_point(size = 3, alpha = 0.9) +
+  geom_text_repel(size = 3, fontface = "bold",
+                  box.padding = 0.4, max.overlaps = 25) +
+  scale_color_manual(values = couleurs_groupe, name = "Groupe") +
+  labs(
+    title   = "Lien entre l'axe 1 de l'ACP et le score moyen national",
+    subtitle = paste0("r de Pearson = ", round(corr_dim1_score, 2)),
+    x       = "Dim.1 — Capital socio-économique",
+    y       = "Score moyen national (PISA 2022)",
+    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : plus un pays est à droite (capital socio-éco. élevé), plus son score moyen tend à être élevé."
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+```{r acp-synthese-texte, echo=FALSE, results='asis'}
+cat(paste0(
+  "La corrélation entre le premier axe de l'ACP et le score moyen national est de **r = ",
+  round(corr_dim1_score, 2),
+  "**. Ce résultat confirme que la structure socio-économique nationale, ",
+  "synthétisée par la Dim.1, est le principal facteur explicatif des différences ",
+  "de performance entre pays de l'OCDE — en cohérence avec les analyses de corrélation ",
+  "réalisées à l'échelle individuelle en partie I. ",
+  "En revanche, la corrélation entre le deuxième axe (dimension institutionnelle) ",
+  "et les scores est plus faible (r = ",
+  round(corr_dim2_score, 2),
+  "), confirmant que l'intensité scolaire nationale n'est pas, à elle seule, ",
+  "un déterminant structurel des inégalités de niveau entre pays."
+))
+```
 #III- 
 
 ##A- 
