@@ -132,15 +132,68 @@ D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confront
 -> insérer le tableau des variables ou expliquer comment elles sont faites en annexes ou description de chque catégorie ? 
 -> parler du traitement des valeurs manquantes
  
-Enfin, nous avons regroupé les individus d’un même pays grâce à la variable CNT qui correspond au code ISO des pays, afin de pouvoir étudier la réussite de ces derniers à l’échelle nationale. Nous avons ainsi pu classer les pays en 2 ou 3 ( à voir si on fait moyen) groupes. ( développer comment on s’y prend concrètement) 
+Enfin, nous avons regroupé les individus d’un même pays dans une nouvelle base de données niveau_pays. Cela a été possible grace à la variable CNT qui correspond au code ISO des pays. Cette manipulation a pour objectif d'étudier la réussite de ces derniers à l’échelle nationale. Nous avons ensuite regrouper ces pays en 3 groupes : les forts, les moyens et les faibles. Pour se faire, nous avons créer la variable score_moyen qui correspond à la moyenne de la variable score_global de l'ensemble des élèves d'un même pays. Elle nous a ainsi permis de classer les pays par niveau. Voici les groupes que nous avons obtenus. Une autre méthode d'analyse que nous avons mis en place est de se concentrer que les 5 pays les plus performants et les 5 qui le sont le moins. Le graphique ci dessous les mets en avant.  
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
+library(dplyr)
+library(ggplot2)
+
+# Agrégation par pays
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    nb_eleves       = n(),
+    score_moyen     = mean(score_global, na.rm = TRUE),
+    score_min       = min(score_global, na.rm = TRUE),
+    score_max       = max(score_global, na.rm = TRUE),
+    ecart_type      = sd(score_global, na.rm = TRUE)
+  ) %>%
+  ungroup() %>%
+  arrange(desc(score_moyen)) %>%
+  mutate(rang = row_number())
+
+# Sélection Top5 / Bottom5 / France
+top5    <- niveau_pays %>% slice(1:5)
+bottom5 <- niveau_pays %>% slice((n()-4):n())
+france  <- niveau_pays %>% filter(CNT == "FRA")
+
+selection <- bind_rows(top5, bottom5, france) %>%
+  distinct() %>%
+  mutate(groupe = case_when(
+    CNT == "FRA"          ~ "France",
+    CNT %in% top5$CNT    ~ "Top 5",
+    CNT %in% bottom5$CNT ~ "Bottom 5"
+  ))
+
+# Graphique
+ggplot(selection, aes(x = reorder(CNT, score_moyen),
+                      y = score_moyen,
+                      fill = groupe)) +
+  geom_col() +
+  geom_col(data = subset(selection, CNT == "FRA"), fill = "#e41a1c") +
+  geom_text(aes(label = round(score_moyen, 1)), hjust = -0.1, size = 3) +
+  geom_text(data = subset(selection, CNT == "FRA"),
+            aes(label = paste0("Rang : ", rang)),
+            hjust = 1.2, color = "white", fontface = "bold", size = 3) +
+  scale_fill_manual(values = c("Top 5" = "#1a9850",
+                                "Bottom 5" = "#d73027",
+                                "France" = "#e41a1c")) +
+  coord_flip() +
+  labs(
+    title   = "Classement des pays : Top 5, Bottom 5 et France",
+    x       = NULL, y = "Score moyen global",
+    fill    = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
 
 
-
-
-
-
-
-
+```
 # Les sources des inégalités de niveau scolaire
 
 ## A — L'influence des variables économiques sur les inégalités de niveau scolaire
@@ -401,7 +454,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
 ```
 Dans un premier temps, on constate le statut professionnel des parents ainsi que la possession de biens matériels sont également corrélés au niveau scolaire. cela s'explique simplement par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de ce simple fait statistique, on peut facilement penser que la profession des parents impactent celle des enfants. Un effet de reproduction sociale se met en place. Un parent ayant fait de longue étude aura souvent tendance à pousser son enfant à faire de même. 
 
-Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de siscipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
+Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de discipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
 
 D'autre part, on constate que la présence de ressources éducatives est indépendante de la réussite scolaire. On pourrait penser qu'un enfant possédant davantage de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. Pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. On peut alors supposer que la plus part de l'apprentissage se fait lors du temps scolaire ou encore que la présence de ressources éducatives au domicile familial s'il n'est pas associé à des compétences d'enseignement n'est que peu utile.
 
@@ -794,13 +847,49 @@ pisa_oecd_clean %>%
 ```
 
 
-# II — Les vecteurs d'inégalités scolaires sont-ils les mêmes dans tous les pays de l'OCDE
+# II — Les vecteurs d'inégalités scolaires sont-ils les mêmes au sein de tous les pays de l'OCDE
 
-## A — Les variables explicatives de la réussite ou de l'échec scolaire d'un pays
+Nous avons identifié à l'échelle individuelle les variables qui affecte la trajectoire scolaire d'un élève étudiant dans un pays de l'OCDE. Désormais, nous allons changer d'échelle.Nous souhaitons vérifier si à l'échelle nationale ce sont les mêmes caractéristiques qui définissent le niveau scolaire d'un pays sur la scène internationale. Ainsi nous avons regrouper les pays en trois catégories : fort, moyen et faible selon les résultats des élèves qui y étudient. 
 
-Jusqu'ici, nous avons analysé les facteurs d'inégalités à l'échelle individuelle. 
-Nous allons désormais changer d'échelle et nous demander si ces mêmes facteurspermettent d'expliquer la réussite ou l'échec scolaire d'un pays dans son ensemble. 
-Pour cela, nous agrégeons les données à l'échelle nationale et comparons les pays entre eux. Nous nous concentrons sur les 5 pays les plus performants, les 5 les moins performants, et la France.
+
+```{r}
+library(dplyr)
+library(gt)
+
+niveau_pays <- niveau_pays %>%
+  mutate(groupe = case_when(
+    score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
+    score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
+    TRUE ~ "Faible"
+  ))
+
+niveau_pays %>%
+  gt() %>%
+  tab_header(title = "Statistiques des scores par pays") %>%
+  fmt_number(columns = c(score_min, score_max, score_moyen, ecart_type), decimals = 2) %>%
+  tab_style(
+    style = cell_fill(color = "#2ecc71"),
+    locations = cells_body(rows = groupe == "Fort")
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#f39c12"),
+    locations = cells_body(rows = groupe == "Moyen")
+  ) %>%
+  tab_style(
+    style = cell_fill(color = "#e74c3c"),
+    locations = cells_body(rows = groupe == "Faible")
+  ) %>%
+  tab_style(
+    style = list(
+      cell_borders(sides = "all", color = "black", weight = px(2)),
+      cell_text(weight = "bold")
+    ),
+    locations = cells_body(rows = CNT == "FRA")
+  )
+```
+
+## A — Le capital économique affecte-t-il la réussite scolaire uniformément au sein de l'OCDE
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
 library(dplyr)
@@ -861,100 +950,17 @@ ggplot(selection, aes(x = reorder(CNT, score_moyen),
   )
 ```
 
-On observe des écarts importants entre les pays de l'OCDE. Les pays asiatiques comme le Japon (JPN) et la Corée (KOR) dominent le classement avec des scores  moyens supérieurs à 520 points, tandis que les pays d'Amérique latine comme le Mexique (MEX) et la Colombie (COL) se situent en bas du classement avec des scores inférieurs à 420 points. La France se positionne dans la moyenne de l'OCDE. Cet écart de plus de 100 points entre les meilleurs et les moins bons pays traduit des différences structurelles profondes dans les systèmes éducatifs et les contextes socio-économiques nationaux.
 
-## B — Les variables qui diffèrent pour des pays ayant le même niveau scolaire
-
-Nous avons vu quels facteurs distinguent les pays performants des pays en difficulté. 
-Nous cherchons maintenant à identifier les variables qui ne permettent pas d'expliquer le niveau scolaire d'un pays, c'est-à-dire celles qui varient fortement au sein d'un même groupe de pays de niveau similaire. Pour cela, nous regroupons les pays en trois niveaux (fort, moyen, faible) et observons quelles variables sont hétérogènes au sein de chaque groupe.
-
-```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=6}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Création des groupes de pays
-niveau_pays <- niveau_pays %>%
-  mutate(groupe = case_when(
-    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Fort",
-    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "Faible",
-    TRUE ~ "Moyen"
-  ))
-
-# Ajout du groupe dans la base individuelle
-pisa_oecd_clean <- pisa_oecd_clean %>%
-  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
-
-# Variables à analyser
-vars_analyse <- c("ESCS", "SCHSUST", "PQSCHOOL", "ST059Q01TA",
-                  "ST059Q02JA", "EXPO21ST", "HISEI", "HOMEPOS",
-                  "LEARRES", "PARINVOL")
-
-# Calcul écart-type intra-groupe par pays puis moyenne
-resultats <- pisa_oecd_clean %>%
-  group_by(CNT, groupe) %>%
-  summarise(across(all_of(vars_analyse),
-                   ~ mean(.x, na.rm = TRUE)),
-            .groups = "drop") %>%
-  group_by(groupe) %>%
-  summarise(across(all_of(vars_analyse),
-                   ~ sd(.x, na.rm = TRUE)),
-            .groups = "drop")
-
-# Format long
-resultats_long <- resultats %>%
-  pivot_longer(-groupe, names_to = "Variable", values_to = "ecart_type")
-
-# Labels lisibles
-labels_vars <- c(
-  ESCS       = "Statut socio-éco. (ESCS)",
-  SCHSUST    = "Soutien apprentissages",
-  PQSCHOOL   = "Qualité établissement",
-  ST059Q01TA = "Heures maths/semaine",
-  ST059Q02JA = "Heures cours total",
-  EXPO21ST   = "Expo. maths XXIe s.",
-  HISEI      = "Statut prof. parental",
-  HOMEPOS    = "Biens matériels",
-  LEARRES    = "Ressources éducatives",
-  PARINVOL   = "Implication parentale"
-)
-
-resultats_long$Variable <- labels_vars[resultats_long$Variable]
-resultats_long$groupe   <- factor(resultats_long$groupe,
-                                   levels = c("Fort", "Moyen", "Faible"))
-
-# Graphique
-ggplot(resultats_long, aes(x = reorder(Variable, ecart_type),
-                            y = ecart_type,
-                            fill = groupe)) +
-  geom_col(position = "dodge") +
-  coord_flip() +
-  scale_fill_manual(values = c("Fort"   = "#1a9850",
-                                "Moyen"  = "#fee08b",
-                                "Faible" = "#d73027")) +
-  labs(
-    title   = "Hétérogénéité des variables au sein de chaque groupe de pays",
-    x       = NULL,
-    y       = "Écart-type inter-pays (au sein du groupe)",
-    fill    = "Groupe de pays",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : un écart-type élevé indique que la variable varie beaucoup entre pays d'un même niveau scolaire,\nce qui suggère qu'elle n'est pas déterminante pour expliquer le niveau scolaire d'un pays."
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
-    legend.position = "bottom"
-  )
-```
-
-Les variables dont l'écart-type est élevé au sein d'un même groupe de payssont celles qui ne permettent pas d'expliquer le niveau scolaire global d'un pays. Par exemple, si l'implication parentale (PARINVOL) varie fortement entre des pays pourtant de niveau similaire, cela suggère qu'elle n'est pas un déterminant structurel du niveau scolaire national. À l'inverse, les variables avec un faible écart-type intra-groupe, comme l'indice ESCS, tendent à être plus systématiquement associées au niveau scolaire d'un pays, confirmant les résultats obtenus à l'échelle individuelle en partie I.
-
-## C — Focus sur un pays ayant des facteurs explicatifs très différents des autres
+## B — L'environnement scolaire national est il vecteur des réussites ?
 
 
-#III- 
+## C — Les caractéristiques socio-familiales d'un élève prennet-elle une place plus importance selon le pays dans lequel il étudie
 
-##A- 
 
-##B-
+
+#III- ACP (à renommer)
+
+##A- Comment on l'a construit, interprétation des axes et dimensions (à renommer)
+
+##B-interprétation des résultats + graphique des indiv ( à renommer)
 
