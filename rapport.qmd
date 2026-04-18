@@ -106,8 +106,19 @@ Louis GERVILLE-REACHE\\
 
 ```{r, echo=FALSE,results='hide'}
 pisa_oecd_clean=read.table("data_ocde.csv",header = TRUE,sep=",")
+library(reshape2)
 library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggrepel)
+library(FactoMineR)
+library(factoextra)
+library(knitr)
+library(kableExtra)
+library(tibble)
 
+pisa_oecd_clean <- pisa_oecd_clean %>%
+  mutate(score_global = (moyenne_maths + moyenne_lecture + moyenne_sciences) / 3)
 ```
 
 
@@ -135,8 +146,6 @@ D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confront
 Enfin, nous avons regroupé les individus d’un même pays dans une nouvelle base de données niveau_pays. Cela a été possible grace à la variable CNT qui correspond au code ISO des pays. Cette manipulation a pour objectif d'étudier la réussite de ces derniers à l’échelle nationale. Nous avons ensuite regrouper ces pays en 3 groupes : les forts, les moyens et les faibles. Pour se faire, nous avons créer la variable score_moyen qui correspond à la moyenne de la variable score_global de l'ensemble des élèves d'un même pays. Elle nous a ainsi permis de classer les pays par niveau. Voici les groupes que nous avons obtenus. Une autre méthode d'analyse que nous avons mis en place est de se concentrer que les 5 pays les plus performants et les 5 qui le sont le moins. Le graphique ci dessous les mets en avant.  
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
-library(dplyr)
-library(ggplot2)
 
 # Agrégation par pays
 niveau_pays <- pisa_oecd_clean %>%
@@ -202,7 +211,7 @@ Lorsqu'on pense aux inégalités de niveau scolaire, on imagine comme première 
 
 
 ```{r, echo=FALSE,message=FALSE,warning=FALSE}
-library(dplyr)
+
 
 pisa_oecd_clean <- pisa_oecd_clean %>%
   mutate(score_global = (moyenne_maths + moyenne_lecture + moyenne_sciences) / 3)
@@ -313,7 +322,6 @@ Sur le graphique ci-dessous, on constate un lien entre le score global de l'él�
 On constate, en effet, que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Plus l'individu est aisé, plus il a de chance de réussir à l'école. Cependant cela ne signifie pas que toutes les variables économiques sont impactantes quant à la réussite d'un élève. Ainsi, nous avons choisi d'étudier un certain nombre de variables représentatives, chacune à leur manière d'un certain capital économique. 
 
 ```{r, echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
-library(ggplot2)
 
 ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
        aes(x = ESCS, y = score_global)) +
@@ -342,9 +350,6 @@ Pour les variables quantitatives nous avons utilisé le coefficient de corrélat
 Pour les variables qualitatives nous avons utilisé le rapport de corrélation. Il indique quelle part de la variation d'une variable est expliquée par une autre. Il est quant à lui compris entre 0 et 1. 
 
 ```{r, echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE}
-library(ggplot2)
-install.packages("reshape2")
-library(reshape2)
 
 # ── Heatmap corrélations (variables quantitatives) ──────────────────────────
 mat_r_df <- as.data.frame(mat_r)
@@ -476,9 +481,6 @@ Nous disposons également de variables décrivant l’environnement scolaire nat
 Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
 
 ```{r,echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
-library(ggplot2)
-install.packages("reshape2")
-library(reshape2)
 
 # ── Heatmap corrélations (variables quantitatives) ──────────────────────────
 mat_r_df <- as.data.frame(mat_r)
@@ -608,9 +610,6 @@ Dans un second temps, nous nous intéresserons à l’impact de l’implication 
 Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublements (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
 
 ```{r}
-library(ggplot2)
-install.packages("reshape2")
-library(reshape2)
 
 # ── Heatmap corrélations (variables quantitatives) ──────────────────────────
 mat_r_df <- as.data.frame(mat_r)
@@ -618,7 +617,7 @@ mat_r_df$variable <- rownames(mat_r_df)
 
 labels_r <- c(
   LEARRES    = "ressources éducatives utilisés",
-  PARINVOL   = "implication parentale",
+  PARINVOL   = "implication parentale"
 )
 
 mat_r_long <- melt(mat_r_df, id.vars = "variable",
@@ -852,10 +851,7 @@ pisa_oecd_clean %>%
 Nous avons identifié à l'échelle individuelle les variables qui affecte la trajectoire scolaire d'un élève étudiant dans un pays de l'OCDE. Désormais, nous allons changer d'échelle.Nous souhaitons vérifier si à l'échelle nationale ce sont les mêmes caractéristiques qui définissent le niveau scolaire d'un pays sur la scène internationale. Ainsi nous avons regrouper les pays en trois catégories : fort, moyen et faible selon les résultats des élèves qui y étudient. 
 
 
-```{r}
-library(dplyr)
-library(gt)
-
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
 niveau_pays <- niveau_pays %>%
   mutate(groupe = case_when(
     score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
@@ -863,35 +859,18 @@ niveau_pays <- niveau_pays %>%
     TRUE ~ "Faible"
   ))
 
-niveau_pays %>%
-  gt() %>%
-  tab_header(title = "Statistiques des scores par pays") %>%
-  fmt_number(columns = c(score_min, score_max, score_moyen, ecart_type), decimals = 2) %>%
-  tab_style(
-    style = cell_fill(color = "#2ecc71"),
-    locations = cells_body(rows = groupe == "Fort")
-  ) %>%
-  tab_style(
-    style = cell_fill(color = "#f39c12"),
-    locations = cells_body(rows = groupe == "Moyen")
-  ) %>%
-  tab_style(
-    style = cell_fill(color = "#e74c3c"),
-    locations = cells_body(rows = groupe == "Faible")
-  ) %>%
-  tab_style(
-    style = list(
-      cell_borders(sides = "all", color = "black", weight = px(2)),
-      cell_text(weight = "bold")
-    ),
-    locations = cells_body(rows = CNT == "FRA")
-  )
+kable(niveau_pays, digits = 2,
+      caption = "Statistiques des scores par pays",
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(which(niveau_pays$groupe == "Fort"),   background = "#d4edda") %>%
+  row_spec(which(niveau_pays$groupe == "Moyen"),  background = "#fff3cd") %>%
+  row_spec(which(niveau_pays$groupe == "Faible"), background = "#f8d7da") %>%
+  row_spec(which(niveau_pays$CNT == "FRA"),       bold = TRUE, background = "#cce5ff")
 ```
 
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
-library(dplyr)
-library(ggplot2)
 
 # Agrégation par pays
 niveau_pays <- pisa_oecd_clean %>%
@@ -954,45 +933,35 @@ ggplot(selection, aes(x = reorder(CNT, score_moyen),
 
 
 Nous avons vu dans la première partie qu'à l'échelle individuelle certaines variables économiques étaient liées à la réussite scolaire d'un élève. Nous voulons maintenant savoir si ces mêmes variables influencent le niveau scolaire d'un pays par rapport aux autres dans l'OCDE. Ainsi, nous avons calculer la moyenne pour chaque groupe de pays des variables significatives à l'échelle individuelles. 
-```{r}
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(score_moyen = mean(score_global, na.rm = TRUE), .groups = "drop") %>%
+  mutate(groupe = case_when(
+    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Fort",
+    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "Faible",
+    TRUE ~ "Moyen"
+  ))
 
-#tableau avec les moyennes des variables économiques significatives par niveau de pays 
-library(gt)
+vars_analyse <- intersect(
+  c("ESCS", "SCHSUST", "PQSCHOOL", "ST059Q01TA",
+    "ST059Q02JA", "EXPO21ST", "HISEI", "HOMEPOS", "LEARRES", "PARINVOL"),
+  names(pisa_oecd_clean)
+)
 
-moyennes_groupe %>%
-  gt() %>%
-  tab_header(title = "Moyennes des variables par groupe de pays") %>%
-  fmt_number(columns = -groupe, decimals = 2) %>%
-  tab_style(
-    style = cell_fill(color = "#2ecc71"),
-    locations = cells_body(rows = groupe == "Fort")
-  ) %>%
-  tab_style(
-    style = cell_fill(color = "#f39c12"),
-    locations = cells_body(rows = groupe == "Moyen")
-  ) %>%
-  tab_style(
-    style = cell_fill(color = "#e74c3c"),
-    locations = cells_body(rows = groupe == "Faible")
-  )
+moyennes_groupe <- pisa_oecd_clean %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT") %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars_analyse), ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop")
 
-
-library(ggplot2)
-library(tidyr)
-
-# Passage en format long pour ggplot
-moyennes_long <- moyennes_groupe %>%
-  pivot_longer(cols = -groupe, names_to = "variable", values_to = "moyenne")
-
-ggplot(moyennes_long, aes(x = variable, y = moyenne, fill = groupe)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  scale_fill_manual(values = c("Fort" = "#2ecc71", "Moyen" = "#f39c12", "Faible" = "#e74c3c")) +
-  labs(title = "Moyenne des variables par groupe de pays",
-       x = "Variable", y = "Moyenne", fill = "Groupe") +
-  theme_minimal()
-
-
-
+kable(moyennes_groupe, digits = 2,
+      caption = "Moyennes des variables par groupe de pays",
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(which(moyennes_groupe$groupe == "Fort"),   background = "#d4edda") %>%
+  row_spec(which(moyennes_groupe$groupe == "Moyen"),  background = "#fff3cd") %>%
+  row_spec(which(moyennes_groupe$groupe == "Faible"), background = "#f8d7da")
 ```
 
 Afin de rendre l'analyse du tableau ci dessus plus claire, il est important de rappeler que ESCS est composé d'HOMEPOS et que ces deux variables ainsi que LEARRES sont des variables standardisées. L'indice ESCS est à l'échelle individuelle fortement lié au niveau scolaire. Il est important de prendre des pincettes lors de l'analyse à l'échelle macroéconomque puisqu'on efface les inégalités au sein d'un même pays. On constate à cette échelle qu'une relation existe bel et bien. Il existe un écart de 0,48 point entre le groupe faible et le groupe fort, ce qui reste modeste pour un indice standardisé. On constate également une asymétrie. L'écart entre le groupe faible et moyen est prés de 4 fois supérieur à celui entre le groupe moyen et fort. On peut en conclure que le statut socio-économique joue surtout par le bas. Un faible niveau ESCS semble davantage pénalisant qu'un indice élevé est bénéfique. Ainsi, la pauvreté des milieux scolaires serait un frein plus puissant que la richesse n'en serait un accélérateur. On pourrait aussi imaginer un effet de seuil. Au-delà d'un certain niveau socio-économique, l'ESCS cesse d'être le facteur déterminant du niveau scolaire d'un pays. 
@@ -1005,36 +974,23 @@ Quant à l'indice LEARRES, il peut être à la fois interpréter comme résultan
 
 ## B — L'environnement scolaire national est il vecteur des réussites ?
 
+
+
+
 # III — Analyse en Composantes Principales
 
-<<<<<<< HEAD
-## C — Les caractéristiques socio-familiales d'un élève prennet-elle une place plus importance selon le pays dans lequel il étudie
 
-=======
 ## A — Construction de l'ACP : axes et dimensions
 
-L'Analyse en Composantes Principales (ACP) est une méthode de réduction de
-dimension qui permet de synthétiser un grand nombre de variables en un petit
-nombre d'axes non corrélés, appelés composantes principales. Chaque axe capture
-une part de la variance totale du nuage de points. L'ACP est ici réalisée à
-l'échelle nationale : chaque individu statistique est un pays de l'OCDE,
-caractérisé par la moyenne de ses élèves sur l'ensemble des variables retenues.
-Les scores scolaires (mathématiques, lecture, sciences et score global) sont
-introduits en variables **supplémentaires** : ils ne participent pas à la
-construction des axes mais sont projetés a posteriori, ce qui permet d'évaluer
-dans quelle mesure les dimensions structurelles identifiées par l'ACP
-correspondent aux inégalités de performance scolaire.
+Avant de présenter les résultats, il convient d'expliciter un choix méthodologique important qui conditionne la construction de l'ACP. Parmi l'ensemble des variables retenues dans les parties précédentes, deux d'entre elles — l'implication parentale (PARINVOL) et la qualité perçue de l'établissement (PQSCHOOL) — ne sont pas renseignées pour 28 pays sur les 37 que compte notre échantillon. Les inclure dans l'ACP aurait contraint à n'analyser que les 9 pays disposant de données complètes sur ces variables, ce qui aurait rendu l'analyse statistiquement non pertinente et géographiquement peu représentative de l'OCDE.
+
+Nous avons donc fait le choix de les exclure des variables actives et de travailler sur les huit variables suivantes : l'indice socio-économique composite (ESCS), le statut professionnel parental (HISEI), les biens matériels du ménage (HOMEPOS), les ressources éducatives à domicile (LEARRES), le soutien de l'établissement aux apprentissages (SCHSUST), le nombre d'heures de mathématiques par semaine (ST059Q01TA), le nombre d'heures de cours total par semaine (ST059Q02JA) et l'exposition aux mathématiques du XXIe siècle (EXPO21ST). Cet arbitrage permet de conserver l'intégralité des 37 pays membres de l'OCDE présents dans notre base de données, ce qui est un prérequis pour que l'ACP soit interprétable et représentative.
+
+Les scores scolaires (score global, mathématiques, lecture, sciences) sont introduits en **variables supplémentaires** : ils ne participent pas à la construction des axes mais sont projetés a posteriori dans le plan factoriel. Ce choix est délibéré : il s'agit d'évaluer dans quelle mesure les structures que l'ACP identifie à partir des seules variables contextuelles correspondent aux inégalités de performance scolaire, sans que ces dernières n'influencent la géométrie de l'analyse.
+
+L'Analyse en Composantes Principales est une méthode de réduction de dimension qui synthétise un ensemble de variables corrélées en un nombre réduit d'axes orthogonaux, appelés composantes principales. Chaque axe capture une fraction de la variance totale du nuage de points-pays. Les variables sont normalisées avant l'analyse (centrage-réduction), ce qui garantit que les différences d'échelle entre indices standardisés et variables brutes n'introduisent pas de biais dans la construction des axes.
 
 ```{r acp-prep, echo=FALSE, message=FALSE, warning=FALSE}
-
-library(dplyr)
-library(FactoMineR)
-library(factoextra)
-library(ggplot2)
-library(ggrepel)
-library(knitr)
-library(kableExtra)
-library(tibble)
 
 # ── 1. Variables actives et supplémentaires ──────────────────────────────────
 
@@ -1077,10 +1033,13 @@ res_acp <- PCA(
 
 ### Choix du nombre d'axes retenus
 
-Le graphique des valeurs propres (dit « éboulis ») permet de déterminer combien
-de composantes principales il est pertinent de retenir. On retient généralement
-les axes dont la valeur propre est supérieure à 1 (règle de Kaiser) et/ou ceux
-situés avant le « coude » dans la courbe décroissante.
+```{r acp-scree-texte, echo=FALSE, message=FALSE, warning=FALSE}
+n_axes <- sum(res_acp$eig[, 1] >= 1)
+var_2ax <- round(res_acp$eig[2, 3], 1)
+var_3ax <- round(res_acp$eig[3, 3], 1)
+```
+
+L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 — seuil en deçà duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
 ```{r acp-scree, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
@@ -1141,12 +1100,7 @@ cat(paste0(
 
 ### Interprétation des axes — cercle des corrélations
 
-Le cercle des corrélations représente les variables actives dans le plan des deux
-premières composantes. La corrélation entre une variable et un axe est d'autant
-plus forte que la flèche est longue et proche de l'axe. Des variables pointant
-dans la même direction sont positivement corrélées entre elles ; des variables à
-angle droit sont indépendantes ; des variables en sens opposé sont négativement
-corrélées.
+Le cercle des corrélations représente les variables actives dans le plan Dim.1 × Dim.2. La longueur d'une flèche indique la qualité de représentation de la variable dans ce plan (cos²) : plus elle est proche du cercle unité, mieux la variable est captée par les deux premiers axes. L'orientation indique la corrélation avec chaque dimension. Les variables pointant dans la même direction sont positivement corrélées entre elles dans cet espace ; des variables à angle droit sont indépendantes dans ce plan.
 
 ```{r acp-cercle, echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
 
@@ -1255,25 +1209,21 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
   )
 ```
 
-Le premier axe (Dim.1) oppose les pays où le statut socio-économique des élèves
-(ESCS, HISEI, HOMEPOS) est élevé, à ceux où il est faible. Il synthétise la
-dimension de **capital économique et culturel familial** : c'est le gradient
-socio-économique des systèmes éducatifs nationaux. Les scores scolaires
-(variables supplémentaires) sont très fortement corrélés à cet axe, ce qui
-confirme que le premier facteur structurant des inégalités entre pays est
-d'ordre socio-économique.
+**La première dimension (41,2 % de variance)** structure les pays selon leur niveau de **capital socio-économique**. ESCS, HOMEPOS et HISEI contribuent fortement à cet axe et pointent tous trois dans la même direction, ce qui traduit leur forte intercorrélation — cohérente avec le fait qu'ESCS est lui-même construit à partir des deux autres. Les variables supplémentaires de scores scolaires (score global, mathématiques, lecture, sciences) sont projetées dans cette même direction et très proches du cercle unité, ce qui suggère une association forte entre capital socio-économique national et performance scolaire. Autrement dit, les pays se distinguent en premier lieu les uns des autres par le niveau socio-économique moyen de leurs élèves, et c'est précisément ce gradient qui semble le plus lié aux écarts de performance observés.
 
-Le deuxième axe (Dim.2) capte une dimension davantage liée aux **caractéristiques
-institutionnelles** : le nombre d'heures de cours, l'exposition aux
-mathématiques et les variables de soutien scolaire. Il distingue des pays dont
-les systèmes éducatifs sont intensifs en temps d'enseignement de ceux où
-l'organisation scolaire est plus légère.
+À l'opposé sur cet axe, la variable LEARRES (ressources éducatives) pointe dans la direction inverse, suggérant que les pays disposant en moyenne d'un indice ESCS élevé ne sont pas nécessairement ceux où les ressources éducatives à domicile sont les plus importantes. Ce résultat peut sembler contre-intuitif, mais il avait déjà été identifié à l'échelle individuelle en partie I : LEARRES ne semble pas fonctionner comme un indicateur simple de richesse ou de réussite.
+
+**La deuxième dimension (25,2 % de variance)** capture une logique davantage **institutionnelle et organisationnelle**. Le nombre d'heures de mathématiques par semaine et le nombre d'heures de cours total pointent vers le bas (valeurs négatives sur Dim.2), tandis que SCHSUST (soutien de l'établissement) et EXPO21ST (exposition aux mathématiques du XXIe siècle) pointent vers le haut. Cet axe oppose donc des systèmes éducatifs à forte intensité horaire à ceux qui privilégient d'autres formes d'accompagnement scolaire. Il serait toutefois hasardeux d'interpréter cette dimension comme un opposant simple entre « quantité » et « qualité » de l'enseignement — elle traduit avant tout une diversité organisationnelle entre les systèmes éducatifs de l'OCDE.
+
+Un point méthodologique mérite attention : les variables supplémentaires (scores scolaires) sont quasi-orthogonales à la Dim.2, ce qui signifie que cette dimension institutionnelle n'est pas ou peu associée aux différences de performance entre pays. Nous reviendrons sur cette observation dans la partie B.
 
 ---
 
 ## B — Interprétation des résultats : projection des pays
 
 ### Positionnement des pays dans le plan factoriel
+
+La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (fort, moyen, faible) défini en partie II.
 
 ```{r acp-individus, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
 
@@ -1318,6 +1268,18 @@ ggplot(coord_ind, aes(x = Dim1, y = Dim2, color = groupe, label = CNT)) +
   )
 ```
 
+Plusieurs configurations émergent de cette projection :
+
+**Les pays à fort capital socio-économique et forte performance** (quadrant droit) regroupent des pays comme la Corée (KOR), la Suisse (CHE), la Belgique (BEL) ou la Slovénie (SVN). Ils se situent dans les valeurs positives de Dim.1, confirmant que leur niveau scolaire élevé s'accompagne d'un contexte socio-économique favorable. Israël (ISR) et l'Islande (ISL) se trouvent également dans ce quadrant, avec des performances plus contrastées — ISR étant considéré comme « fort » malgré une forte dispersion interne, et ISL classé dans le groupe « faible » malgré un ESCS élevé, ce qui en fait un cas atypique sur lequel nous reviendrons.
+
+**Les pays à faible capital socio-économique et faible performance** (quadrant gauche) comprennent le Mexique (MEX), la Colombie (COL) et le Chili (CHL). Leur position nettement négative sur Dim.1 est cohérente avec leur classement en bas du tableau des scores. La Turquie (TUR) occupe une position particulière : très négative sur les deux axes, elle combine un faible capital socio-économique et une intensité horaire élevée (valeur basse sur Dim.2), sans que cette dernière ne semble compenser le premier facteur.
+
+**Les pays anglophones à organisation scolaire légère** (quadrant supérieur droit) comme le Canada (CAN), l'Irlande (IRL), l'Australie (AUS) et la Nouvelle-Zélande (NZL) présentent un capital socio-économique élevé combiné à des valeurs positives sur Dim.2, associées à davantage de soutien institutionnel et moins d'heures formelles. Ce groupe présente des performances solides, ce qui ne permet pas de conclure que la réduction du volume horaire est préjudiciable à la réussite.
+
+**Le Japon (JPN)** occupe une position singulière en bas à droite du plan : capital socio-économique élevé, mais Dim.2 très négative, suggérant un système à forte intensité horaire. C'est l'un des pays les mieux notés de l'OCDE, ce qui illustre qu'un système peut combiner rigueur institutionnelle et excellence académique.
+
+**La France (FRA)** se positionne légèrement à droite de l'axe central (Dim.1 modérément positive) et proche de zéro sur Dim.2, ce qui la place dans une configuration assez médiane. Son classement au 27e rang sur 37 suggère que son capital socio-économique moyen, bien que supérieur à celui des pays les moins favorisés, ne suffit pas à compenser d'autres facteurs — notamment une forte dispersion interne des résultats, qui n'est pas captée par cette ACP réalisée sur des moyennes nationales.
+
 ### Qualité de représentation des pays (cos²)
 
 ```{r acp-cos2, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
@@ -1351,6 +1313,12 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
   )
 ```
 
+Tous les pays ne sont pas également bien représentés dans le plan Dim.1 × Dim.2. Le cos², compris entre 0 et 1, mesure la part de la variabilité d'un pays qui est expliquée par les deux premières dimensions. Un cos² supérieur à 0,7 est généralement considéré comme satisfaisant.
+
+La Turquie (TUR), la Colombie (COL), le Mexique (MEX) et plusieurs autres pays sont très bien représentés dans ce plan, ce qui signifie que leur positionnement dans l'OCDE est essentiellement déterminé par les deux grandes dimensions identifiées — capital socio-économique d'une part, organisation institutionnelle de l'autre.
+
+À l'inverse, des pays comme la France (FRA), la Lituanie (LTU), la Hongrie (HUN) ou l'Espagne (ESP) présentent des cos² plus faibles, inférieurs à 0,3. Cela signifie que leur profil est davantage structuré par les axes suivants (Dim.3 et au-delà), non représentés ici. Ces pays échappent partiellement à la logique binaire capital socio-économique / intensité institutionnelle, et mériteraient une analyse complémentaire sur les dimensions suivantes pour comprendre ce qui les distingue réellement.
+
 ### Synthèse : l'ACP confirme-t-elle les résultats de la partie I ?
 
 ```{r acp-synthese, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
@@ -1383,26 +1351,13 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
   )
 ```
 
-```{r acp-synthese-texte, echo=FALSE, results='asis'}
-cat(paste0(
-  "La corrélation entre le premier axe de l'ACP et le score moyen national est de **r = ",
-  round(corr_dim1_score, 2),
-  "**. Ce résultat confirme que la structure socio-économique nationale, ",
-  "synthétisée par la Dim.1, est le principal facteur explicatif des différences ",
-  "de performance entre pays de l'OCDE — en cohérence avec les analyses de corrélation ",
-  "réalisées à l'échelle individuelle en partie I. ",
-  "En revanche, la corrélation entre le deuxième axe (dimension institutionnelle) ",
-  "et les scores est plus faible (r = ",
-  round(corr_dim2_score, 2),
-  "), confirmant que l'intensité scolaire nationale n'est pas, à elle seule, ",
-  "un déterminant structurel des inégalités de niveau entre pays."
-))
-```
-<<<<<<< HEAD
+Le graphique de synthèse confronte directement la position de chaque pays sur l'axe 1 de l'ACP à son score moyen national. La corrélation observée est de **r = 0,71**, ce qui constitue un résultat notable : le premier axe de l'ACP — construit sans aucune information sur les scores scolaires — reproduit à lui seul 50 % de la variance des performances nationales (r² ≈ 0,50).
 
-=======
-#III- 
-donc c'est le goat c'est carré 
-##A- 
->>>>>>> 40dcd4edd131e9e316660d2835625d1c0d7cc657
->>>>>>> 860c53406a5aa19352c95edfe25f16a10b526a74
+Ce résultat vient confirmer, à l'échelle nationale et par une méthode multivariée, ce que les analyses de corrélation de la partie I avaient mis en évidence à l'échelle individuelle : le capital socio-économique des familles est le facteur structural le plus fortement associé aux inégalités de niveau scolaire au sein de l'OCDE. Ce n'est pas un facteur parmi d'autres — c'est la première dimension de différenciation entre les systèmes éducatifs nationaux.
+
+En revanche, la corrélation entre la deuxième dimension (intensité institutionnelle) et les scores est quasi nulle (**r = 0,04**). Ce résultat invite à la prudence quant aux discours qui font de l'intensité scolaire — volume horaire, exposition aux mathématiques — un levier principal de la performance nationale. À l'échelle de l'OCDE, cette dimension distingue certes les pays entre eux, mais elle ne semble pas structurellement liée à leurs résultats moyens. Cela ne signifie pas que ces facteurs sont sans effet — ils peuvent jouer à d'autres niveaux d'analyse (individuel, local) ou interagir avec d'autres variables non captées ici — mais ils ne constituent pas, à eux seuls, un déterminant national de la performance scolaire.
+
+Enfin, il convient de rappeler les limites inhérentes à cette ACP. Travailler sur des moyennes nationales efface la variabilité interne à chaque pays, qui peut être considérable. Un pays peut afficher un ESCS moyen élevé tout en présentant de fortes inégalités internes — or c'est précisément cette dispersion qui détermine les inégalités scolaires au sens propre. L'ACP nationale donne une image de la structure entre pays, non de la structure au sein des pays. Les deux niveaux d'analyse sont complémentaires et doivent être lus conjointement pour répondre pleinement à notre problématique.
+
+
+### Conclusion
