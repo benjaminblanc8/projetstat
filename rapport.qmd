@@ -350,7 +350,7 @@ labels_eta <- c(
   ST295Q04JA = "Travail pour financer études",
   HISCED     = "Niveau éduc. parent (max)",
   FISCED     = "Niveau éduc. père",
-  MISCED     = "Niveau éduc. mère",
+  MISCED     = "Niveau éduc. mère"
 )
 
 mat_eta_df      <- as.data.frame(mat_eta)
@@ -1216,9 +1216,4 @@ cat(paste0(
   "un déterminant structurel des inégalités de niveau entre pays."
 ))
 ```
-#III- 
-donc c'est le goat c'est carré 
-##A- 
-
-##B-
 
