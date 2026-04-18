@@ -203,7 +203,7 @@ ggplot(selection, aes(x = reorder(CNT, score_moyen),
 
 
 ```
-# Les sources des inégalités de niveau scolaire
+# I — Les sources des inégalités de niveau scolaire
 
 ## A — L'influence des variables économiques sur les inégalités de niveau scolaire
 
@@ -449,7 +449,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
     panel.grid   = element_blank()
   )
 ```
-```
+
 Dans un premier temps, on constate le statut professionnel des parents ainsi que la possession de biens matériels sont également corrélés au niveau scolaire. cela s'explique simplement par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de ce simple fait statistique, on peut facilement penser que la profession des parents impactent celle des enfants. Un effet de reproduction sociale se met en place. Un parent ayant fait de longue étude aura souvent tendance à pousser son enfant à faire de même. 
 
 Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de discipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
@@ -460,11 +460,9 @@ Quant aux autres variables de nature économiques,leur effet quant à l'explicat
 
 -> rajouter pour les variables quali 
 -> rajouter peut être une analyse avec le genre pour voir si certaines variables impactes plus un genre que l'autre
-  
 
-\`\`\`
 
-## B — L'environnement scolaire est-il vecteur des inégalités de niveau scolaire
+## B — L'environnement scolaire est-il vecteur des inégalités de niveau scolaire 
 Au sein des pays de l’OCDE, il existe une grande diversité de systèmes éducatifs. La plupart des pays ont un fonctionnement unique qui diffère par les horaires d'enseignement, l’importance relative des matières ou encore par la pratique ou non du redoublement. Au sein d’un même pays, un certain nombre de caractéristiques restent relatives à l’établissement en lui-même ou aux professeurs qui y enseignent. Ainsi, la scolarité de chaque élève diffère selon le pays où il étudie et les établissements qu’il fréquente. 
 Nous cherchons alors dans cette partie à savoir si cette différence de système éducatif et de professeurs qu’aura l’élève au cours de sa scolarité auront un impact sur sa réussite scolaire. Un certain nombre de variables nous permet d’étudier cet impact. 
 Nous disposons notamment dans le cadre de l’enquête PISA les variables suivantes: PQ SCHOOL qui représente la qualité de l’établissement scolaire, SCHSUST représentant les actions de l’établissement pour soutenir les apprentissages, ST272Q01JA à propos de la qualité d’enseignement des mathématiques. Ces variables vont nous permettre d’en apprendre davantage sur l’impact de la qualité des établissements sur le niveau scolaire des élèves. 
@@ -576,7 +574,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
     panel.grid   = element_blank()
   )
 ```
-```
+
 
 On constate sur le tableau des corrélations ci-dessus une relation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires ce qui suggère l'absence de lien linéaire entre ces deux variables. On pourrait penser qu'une bonen qualité d'enseignement favorise la réussite scolaire. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélations entre la qualité de l’enseignement et les résultats scolaires. Au delà de la qualité de l’enseignement, les différentes actions de soutien à l'apprentissage de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Dans le même domaine un soutien emotionnel de la part des enseignant explique environ 10% des écarts de niveau scolaire Ainsi, les efforts de soutien tant émotionnel que scolaire des établissements envers les élèves est associé à de meilleurs résultats scolaires de ses élèves. Ce lien reste faible cependant.Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. la qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
 
@@ -1353,4 +1351,4 @@ En revanche, la corrélation entre la deuxième dimension (intensité institutio
 Enfin, il convient de rappeler les limites inhérentes à cette ACP. Travailler sur des moyennes nationales efface la variabilité interne à chaque pays, qui peut être considérable. Un pays peut afficher un ESCS moyen élevé tout en présentant de fortes inégalités internes — or c'est précisément cette dispersion qui détermine les inégalités scolaires au sens propre. L'ACP nationale donne une image de la structure entre pays, non de la structure au sein des pays. Les deux niveaux d'analyse sont complémentaires et doivent être lus conjointement pour répondre pleinement à notre problématique.
 
 
-### Conclusion
+# Conclusion
