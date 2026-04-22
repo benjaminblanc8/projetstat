@@ -967,11 +967,308 @@ Quant à l'indice LEARRES, il peut être à la fois interpréter comme résultan
 
 ## B — L'environnement scolaire national est il vecteur des réussites ?
 
+Dans la première Partie, nous avons vu que certaines variables liées à l'environnement scolaire de l'élève avaient en effet un impact sur la qualité de ses notes. Pour constater cela au niveau des pays, nous avons décidé de nous pencher à nouveau sur les pays forts et les pays faibles, mais en nous penchant maintenant sur la différence entre certains indicateurs pour les 2 types de pays.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, results='hide'}
+
+# Variables de la partie B (sans DURECEC et ST267Q02JA)
+vars_analyse_b <- intersect(
+  c("PQSCHOOL", "SCHSUST", "ST272Q01JA", "ST059Q01TA",
+    "ST059Q02JA", "EXPO21ST"),
+  names(pisa_oecd_clean)
+)
+
+# Calcul des moyennes par groupe
+moyennes_groupe_b <- pisa_oecd_clean %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT") %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars_analyse_b), ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop") %>%
+  mutate(groupe = factor(groupe, levels = c("Faible", "Moyen", "Fort"))) %>%
+  arrange(groupe) %>%
+  rename(
+    "Groupe de pays" = groupe,
+    "Qualité établissement" = PQSCHOOL,
+    "Soutien apprentissages" = SCHSUST,
+    "Qualité enseignement maths" = ST272Q01JA,
+    "Heures de maths/semaine" = ST059Q01TA,
+    "Heures de cours/semaine" = ST059Q02JA,
+    "Exposition maths XXIe s." = EXPO21ST
+  )
+
+# Affichage du tableau
+kable(moyennes_groupe_b, digits = 2,
+      caption = "Moyennes des variables d’environnement scolaire par groupe de pays",
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Fort"),   background = "#d4edda") %>%
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Moyen"),  background = "#fff3cd") %>%
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Faible"), background = "#f8d7da")
+
+```
 
 
-## C- Les caractéristiques socio-familiales et ingélaites entre les pays 
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+# Variables de la partie B (sans les 2 dernières)
+vars_b <- intersect(
+  c("PQSCHOOL", "SCHSUST", "ST272Q01JA", "ST059Q01TA",
+    "ST059Q02JA", "EXPO21ST"),
+  names(pisa_oecd_clean)
+)
+
+# 1. Standardisation au niveau élève
+pisa_std <- pisa_oecd_clean %>%
+  mutate(across(all_of(vars_b), ~ as.numeric(scale(.x))))
+
+# 2. Ajout du groupe de pays
+pisa_std <- pisa_std %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+# 3. Moyennes par groupe
+moyennes_std <- pisa_std %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars_b), ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop")
+
+# 4. Labels propres
+labels_b <- c(
+  PQSCHOOL   = "Qualité établissement",
+  SCHSUST    = "Soutien apprentissages",
+  ST272Q01JA = "Qualité enseignement maths",
+  ST059Q01TA = "Heures de maths/semaine",
+  ST059Q02JA = "Heures de cours/semaine",
+  EXPO21ST   = "Exposition maths XXIe s."
+)
+
+# Passage en format long
+moyennes_long_std <- moyennes_std %>%
+  pivot_longer(
+    cols = -groupe,
+    names_to = "Variable",
+    values_to = "Valeur_std"
+  ) %>%
+  mutate(Variable = recode(Variable, !!!labels_b))
+
+# 5. Différence Fort - Faible
+diff_std <- moyennes_long_std %>%
+  filter(groupe %in% c("Faible", "Fort")) %>%
+  pivot_wider(names_from = groupe, values_from = Valeur_std) %>%
+  mutate(diff = Fort - Faible) %>%
+  arrange(diff)
+
+# 6. Graphique
+ggplot(diff_std,
+       aes(x = reorder(Variable, diff), y = diff, fill = diff > 0)) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_manual(values = c("TRUE" = "#1a9850", "FALSE" = "#d73027"),
+                    guide = "none") +
+  labs(
+    title = "Écart standardisé entre pays forts et faibles",
+    x = NULL,
+    y = "Différence standardisée (Fort - Faible)",
+    caption = "Variables centrées-réduites au niveau élève avant agrégation"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+
+```
+
+On constate sur ce graphique que les résultats sont contre-intuitifs. En effet, la qualité de l'établissement semble avoir un gros effet négatif sur la réussite d'un pays, ainsi que le nombre d'heures de cours par semaine. Le premier point est compliqué à expliquer :  Ce dernier point peut peut être s'expliquer par le fait que les pays de l'OCDE sont globalement des pays dévellopés avec un nombre décent d'heures de cours par semaine. Ainsi, il serait faux de dire que moins il y a d'heure de cours, meilleurs sont les résultats. En effet, il est fort probable qu'un pays hors OCDE avec très peu d'heures de cours par semaine ait de bien moins bon résultats qu'un pays de l'OCDE. Seulement, cette différence s'explique peut être par le fait que les élèves sont plus épanouis avec moins d'heures de cours, et ont donc de meilleurs résultats. On peut par exemple prendre le cas de l'Allemagne, qui n'a le cours que le matin et laisse l'après-midi libre pour des activités sportives par exemple. Moins d'heure de cours peut aussi dire plus de travail personnel, ce qui expliquerait aussi les meilleurs résultats. Enfin, le soutien de l'aprentissage semble être une caractéristique des pays forts, en effet accompagner tout type d'élèves ne peut que être bénéfique sur la réussite globale du pays.
+
+Afin d'approfondir le lien entre pays et résultats, nous pouvons aussi étudier le nuage de points suivant : 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+# Moyenne des heures de cours par pays
+heures_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    moyenne=mean(score_global,na.rm=TRUE),
+    heures_moy = mean(ST059Q02JA, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+# Boxplot + points + labels
+ggplot(heures_pays, 
+       aes(x = moyenne, y = heures_moy, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(values = c(
+    "Faible" = "#d73027",
+    "Moyen"  = "#fee08b",
+    "Fort"   = "#1a9850"
+  )) +
+  labs(
+    title = "Lien entre niveau scolaire moyen et nombre d’heures de cours",
+    x = "Score moyen global",
+    y = "Heures de cours par semaine",
+    color = "Groupe de pays",
+    caption = "Source : PISA 2022 — OCDE"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+
+On peut voir ici que à part le Mexique, tout les pays faibles ont un nombre élevé d'heures de cours par semaine, tandis que dans les pays forts, il y a des pays tels que le Canada, la Nouvelle-Zelande ou l'Australie avec un volume horaire faible. Ainsi, ce nuage de points nous montre que l'augmentation du temps de travail et les résultats n'ont pas une relation linéaire, et même l'inverse (Le Costa Rica ne réussit pas bien malgré un très gros volume horaire, tandis que à part le Mexique, les pays avec un faible volume horaire résusissent bien). Ce n'est pas non plus décoréllé, car des pays comme la Pologne ou l'Estonie ont un nombre important d'heures par semaine, et sont quand même dans les pays forts.
+
+Ainsi, à l’échelle des pays, les variables de l’environnement scolaire ne présentent pas de lien clair avec la réussite moyenne. En particulier, le volume horaire ne semble pas déterminant, comme le montre l’absence de relation linéaire dans le nuage de points. Ces résultats, parfois contre-intuitifs, suggèrent que la quantité d’enseignement importe moins que sa qualité. Ils mettent en évidence des mécanismes différents de ceux observés à l’échelle individuelle.
+
+## C- Les caractéristiques socio-familiales et inégalités entre les pays 
+
+Dans la première partie, nous avons constaté que le niveau d'études des parents était un facteur très important dans la réussite de l'élève. Afin d'étudier cette variable au niveau des pays, nous avons pris le mode de cette variable par pays, c'est à dire la modalité la plus representé au sein de ce pays.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+# Fonction pour calculer le mode
+mode_stat <- function(x) {
+  ux <- na.omit(unique(x))
+  ux[which.max(tabulate(match(x, ux)))]
+}
+
+# Agrégation au niveau pays
+hisced_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    hisced_mode = mode_stat(HISCED),
+    .groups = "drop"
+  ) %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+# Nuage de points
+ggplot(hisced_pays,
+       aes(x = hisced_mode, y = score_moyen, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_color_manual(values = c(
+    "Faible" = "#d73027",
+    "Moyen"  = "#fee08b",
+    "Fort"   = "#1a9850"
+  )) +
+  labs(
+    title = "Lien entre niveau d’éducation parental (mode) et performance des pays",
+    x = "Niveau d’éducation parental le plus fréquent (HISCED)",
+    y = "Score moyen global",
+    color = "Groupe de pays",
+    caption = "Source : PISA 2022 — OCDE"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
 
 
+```
+Tout d'abord, on constate que touts les pays ont un niveau élevé à HISCED, le plus bas étant à 3, ce qui correspond à l'équivalent du baccalauréat. De plus, les pays performants ne sont pas necessairement ceux avec les niveaux d'études des parents les plus hauts. On peut par exemple prendre l'exemple de la République Tchèque, l'Autriche ou la Suisse. Il reste toutetfois compliqué d'analyser ce graphique car la grande majorité des pays se situent au même niveau (8 et 9), ce qui laisse peu de dispersion pour étudier les différences.
+
+
+Désormais, penchons-nous sur les effets de l'immigration. Pour cela, nous allons nous intéresser à la proportion de migrants de première et deuxième génération parmis les élèves.
+
+```{r}
+immig_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    prop_immig = mean(IMMIG %in% c(2,3), na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+library(ggplot2)
+library(ggrepel)
+
+ggplot(immig_pays, 
+       aes(x = prop_immig, y = score_moyen, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(values = c(
+    "Faible" = "#d73027",
+    "Moyen"  = "#fee08b",
+    "Fort"   = "#1a9850"
+  )) +
+  labs(
+    title = "Lien entre proportion d’élèves issus de l’immigration et performance des pays",
+    x = "Proportion d'élèves issus de l'immigration",
+    y = "Score moyen global",
+    color = "Groupe de pays",
+    caption = "Source : PISA 2022 — OCDE"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+On constate que la part d'immigrés a très peu d'impact sur les résultats. Parmis les pays forts, il existe des pays avec très peu et beuacoup d'immigration (Japon et Suisse par exemple). Parmis les pays faibles, il y a moins d'immigration, ce qui est lié à l'attractivité plus faible de ces pays, comme par exemple le Mexique et la Colombie.
+
+Pour les absences, nous allons nous intéresser à la proportion d'élèves ayant au moins une absence prolongée
+```{r}
+absence_pays <- pisa_oecd_clean %>%
+  mutate(ST260Q01JA = as.numeric(as.character(ST260Q01JA))) %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    prop_absence = mean(ST260Q01JA >= 2, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
+
+library(ggplot2)
+library(ggrepel)
+
+ggplot(absence_pays, 
+       aes(x = prop_absence, y = score_moyen, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(values = c(
+    "Faible" = "#d73027",
+    "Moyen"  = "#fee08b",
+    "Fort"   = "#1a9850"
+  )) +
+  labs(
+    title = "Lien entre absences prolongées et performance des pays",
+    x = "Proportion d'élèves avec absences prolongées",
+    y = "Score moyen global",
+    color = "Groupe de pays",
+    caption = "Source : PISA 2022 — OCDE"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
+  )
+```
+Ici, le lien semble être plus clair. En effet, la plupart des pays faibles ont une proportion plus élevée d’absentéisme, tandis que les pays les plus performants présentent globalement des taux d’absences plus faibles. La tendance négative observée suggère que l’assiduité des élèves joue un rôle important dans la réussite scolaire à l’échelle nationale. Contrairement à certaines variables étudiées précédemment, l’absentéisme apparaît donc comme un facteur plus directement associé aux écarts de performance entre pays, même si quelques exceptions subsistent.
+
+
+Ainsi, contrairement aux variables liées à l’environnement scolaire, certaines caractéristiques socio-familiales apparaissent davantage liées aux écarts de performance entre pays. Si le niveau d’éducation des parents est difficile à exploiter ici en raison d’un manque de dispersion, d’autres facteurs comme l’absentéisme montrent un lien plus clair avec la réussite scolaire. À l’inverse, la part d’élèves issus de l’immigration ne semble pas constituer un facteur déterminant à elle seule. Dans l’ensemble, ces résultats suggèrent que les inégalités entre pays s’expliquent en partie par des facteurs sociaux et comportementaux, plus que par les seules caractéristiques du système éducatif.
 # III — Analyse en Composantes Principales
 
 
