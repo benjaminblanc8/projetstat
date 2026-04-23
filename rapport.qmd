@@ -350,8 +350,6 @@ labels_r <- c(
   ESCS       = "Statut socio-éco. (ESCS)",
   HISEI      = "Statut prof. parental (HISEI)",
   HOMEPOS    = "Biens matériels (HOMEPOS)",
-  WEALTH     = "Richesse du ménage",
-  ICTRES     = "Accès aux ressources numériques",
   CULTPOSS   = "Biens culturels disponibles",
   LEARRES    = "Ressources éducatives (LEARRES)"
 )
@@ -1684,3 +1682,246 @@ Enfin, il convient de rappeler les limites inhérentes à cette ACP. Travailler 
 
 
 # Conclusion
+
+
+#Annexe 
+
+---
+title: "Tableau des variables PISA"
+output:
+  word_document:
+    reference_docx: NULL
+  html_document:
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+
+install.packages("flextable")
+install.packages("officer")
+library(flextable)
+library(officer)
+library(dplyr)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+install.packages("flextable")
+install.packages("officer")
+library(flextable)
+library(officer)
+library(dplyr)
+
+df <- data.frame(
+  Catégorie = c(
+    # Résultats (4)
+    rep("Résultats", 4),
+    
+    # Environnement scolaire (8)
+    rep("Environnement scolaire", 8),
+    
+    # Environnement économique (10)
+    rep("Environnement économique", 10),
+    
+    # Caractéristiques individuelles et environnement familial (13)
+    rep("Caractéristiques individuelles\net environnement familial", 13)
+  ),
+  Variable = c(
+    # Résultats
+    "moyenne_maths", "moyenne_lecture", "moyenne_sciences", "score_global",
+    
+    # Environnement scolaire
+    "PQSCHOOL", "SCHSUST", "ST127Q01TA", "ST272Q01JA",
+    "ST059Q01TA", "ST059Q02JA", "EXPO21ST", "PROGN",
+    
+    # Environnement économique
+    "CNT", "ESCS", "HISEI", "HOMEPOS",
+    "LEARRES", "ST255Q01JA",
+    "ST294Q01JA", "ST295Q04JA", "ST295Q03JA", "ST295Q02JA",
+    
+    # Caractéristiques individuelles et environnement familial
+    "ST003D03T", "ST004D01T", "HISCED", "FISCED", "MISCED",
+    "IMMIG", "DURECEC", "ST016Q01NA", "ST260Q01JA",
+    "ST267Q02JA", "ST307Q01JA", "WB150Q01HA", "PARINVOL"
+  ),
+  Description = c(
+    # Résultats
+    "Moyenne des 10 plausible values en mathématiques",
+    "Moyenne des 10 plausible values en lecture",
+    "Moyenne des 10 plausible values en science",
+    "Moyenne des moyennes en maths, sciences et lecture",
+    
+    # Environnement scolaire
+    "Qualité de l'établissement scolaire",
+    "Actions de l'établissement pour soutenir les apprentissages",
+    "Redoublement à l'ISCED 1",
+    "Qualité de l'enseignement des mathématiques",
+    "Nombre d'heures de mathématiques par semaine",
+    "Nombre total d'heures de cours par semaine",
+    "Exposition aux mathématiques du XXIe siècle",
+    "Programme national d'études",
+    
+    # Environnement économique
+    "Pays de l'élève",
+    "Indice économique, social et culturel",
+    "Statut professionnel parental",
+    "Biens matériels à domicile",
+    "Ressources éducatives utilisées",
+    "Nombre de livres à la maison",
+    "Nombre de jours avec petit-déjeuner",
+    "Travail pour financer les études",
+    "Aide familiale après l'école",
+    "Temps consacré au travail scolaire",
+    
+    # Caractéristiques individuelles et environnement familial
+    "Année de naissance",
+    "Genre",
+    "Niveau d'éducation le plus élevé des parents",
+    "Niveau d'éducation du père",
+    "Niveau d'éducation de la mère",
+    "Statut migratoire",
+    "Durée en éducation préscolaire",
+    "Satisfaction de vie",
+    "Absence prolongée de l'école",
+    "Soutien émotionnel des enseignants",
+    "Persévérance face aux tâches",
+    "État de santé perçu",
+    "Implication parentale / suivi scolaire"
+  ),
+  Type = c(
+    # Résultats
+    "Quantitative", "Quantitative", "Quantitative", "Quantitative",
+    
+    # Scolaire
+    "Indice standardisé", "Indice standardisé",
+    "Qualitative ordinale", "Qualitative ordinale",
+    "Quantitative", "Quantitative",
+    "Indice standardisé", "Qualitative",
+    
+    # Économique
+    "Qualitative nominale",
+    "Indice standardisé", "Quantitative continue",
+    "Indice standardisé", "Indice standardisé",
+    "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale",
+    
+    # Familial
+    "Quantitative",
+    "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale", "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale",
+    "Qualitative ordinale", "Qualitative ordinale",
+    "Qualitative ordinale", "Indice standardisé"
+  ),
+  Issues_possibles = c(
+    # Résultats
+    "Continue (~150-850)",
+    "Continue (~150-850)",
+    "Continue (~150-850)",
+    "Continue (~150-850)",
+    
+    # Scolaire
+    "Continue, moy=0, sd=1",
+    "Continue, moy=0, sd=1",
+    "1=Non ; 2=Oui 1 fois ; 3=Oui 2 fois+",
+    "Echelle 1 a 10",
+    "Reponse libre (nb heures)",
+    "Reponse libre (nb heures)",
+    "Continue, moy=0, sd=1",
+    "1=General ; 2=Techno ; 3=Pro ; 4=Autre",
+    
+    # Économique
+    "Code ISO 3 lettres",
+    "Continue, moy=0, sd=1",
+    "Continue (11-89, ISEI)",
+    "Continue, moy=0, sd=1",
+    "Continue, moy=0, sd=1",
+    "1=0 livre ; 2=1-10 ; 3=11-25 ; 4=26-100 ; 5=101-200 ; 6=201-500 ; 7=>500",
+    "1=0j ; 2=1j ; 3=2j ; 4=3j ; 5=4j ; 6=5j+",
+    "1=0j ; 2=1j ; 3=2j ; 4=3j ; 5=4j ; 6=5j+",
+    "1=0j ; 2=1j ; 3=2j ; 4=3j ; 5=4j ; 6=5j+",
+    "1=0j ; 2=1j ; 3=2j ; 4=3j ; 5=4j ; 6=5j+",
+    
+    # Familial
+    "Annee (ex. 2007)",
+    "1=Femme ; 2=Homme",
+    "1 a 10 (ISCED-11)",
+    "1 a 10 (ISCED-11)",
+    "1 a 10 (ISCED-11)",
+    "1=Natif ; 2=2e gen. ; 3=1re gen.",
+    "1=Jamais/<1an ; 2=1an ; 3=2ans ; 4=3ans+",
+    "Echelle 1 a 10",
+    "1=Non ; 2=Oui 1 fois ; 3=Oui 2 fois+",
+    "1=Fort desaccord ; 2=Desaccord ; 3=Accord ; 4=Fort accord",
+    "1=Fort desaccord ... 5=Fort accord",
+    "1=Excellent ; 2=Bon ; 3=Passable ; 4=Mauvais",
+    "Continue, moy=0, sd=1"
+  ),
+  valeurs_manquantes = c(
+    "0%","0%","0%","0%",
+    "84%","35%","9%","16%","10%","15%","14%","0%",
+    "0%","6%","12%","3%","52%","3%","7%","9%","7%","7%",
+    "4%","0%","7%","10%","8%","8","27%","25%","27%","47%","57%","79%","84%"
+  )
+)
+
+flextable(df) |>
+  set_header_labels(
+    Catégorie        = "Catégorie",
+    Variable         = "Variable",
+    Description      = "Description",
+    Type             = "Type",
+    Issues_possibles = "Issues possibles",
+    valeurs_manquantes   = "% valeurs\nmanquantes"
+  ) |>
+  font(fontname = "Arial", part = "all") |>
+  fontsize(size = 8,  part = "body") |>
+  fontsize(size = 9,  part = "header") |>
+  bold(part = "header") |>
+  color(color = "white", part = "header") |>
+  bg(bg = "#2E4057", part = "header") |>
+  align(align = "center", part = "header") |>
+  align(j = c("Variable", "Type", "valeurs_manquantes"), align = "center", part = "body") |>
+  align(j = c("Catégorie", "Description", "Issues_possibles"), align = "left", part = "body") |>
+  valign(valign = "center", part = "all") |>
+  width(j = "Catégorie",        width = 1.4) |>
+  width(j = "Variable",         width = 1.2) |>
+  width(j = "Description",      width = 2.4) |>
+  width(j = "Type",             width = 1.2) |>
+  width(j = "Issues_possibles", width = 2.2) |>
+  width(j = "valeurs_manquantes",   width = 0.9) |>
+  
+  bg(i = ~ Catégorie == "Résultats", bg = "#D6E4F0", part = "body") |>
+  bg(i = ~ Catégorie == "Environnement économique", bg = "#E2EFDA", part = "body") |>
+  bg(i = ~ Catégorie == "Environnement scolaire", bg = "#FCE4D6", part = "body") |>
+  bg(i = ~ Catégorie == "Caractéristiques individuelles\net environnement familial", bg = "#E8DFF5", part = "body") |>
+  
+  bold(j = "Catégorie", part = "body") |>
+  
+  color(j = "Catégorie",
+        i = ~ Catégorie == "Résultats",
+        color = "#1F4E79") |>
+  color(j = "Catégorie",
+        i = ~ Catégorie == "Environnement économique",
+        color = "#375623") |>
+  color(j = "Catégorie",
+        i = ~ Catégorie == "Environnement scolaire",
+        color = "#7B2C2C") |>
+  color(j = "Catégorie",
+        i = ~ Catégorie == "Caractéristiques individuelles\net environnement familial",
+        color = "#5B2C6F") |>
+  
+  merge_v(j = "Catégorie") |>
+  border_outer(border = fp_border(color = "#2E4057", width = 1.5)) |>
+  border_inner_h(border = fp_border(color = "#AAAAAA", width = 0.5)) |>
+  border_inner_v(border = fp_border(color = "#AAAAAA", width = 0.5)) |>
+  height_all(height = 0.35, part = "body") |>
+  height_all(height = 0.45, part = "header") |>
+  set_caption("Tableau 1 – Description des variables retenues") |>
+  set_table_properties(layout = "autofit")
