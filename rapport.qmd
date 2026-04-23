@@ -1728,7 +1728,7 @@ df <- data.frame(
     rep("Environnement économique", 10),
     
     # Caractéristiques individuelles et environnement familial (13)
-    rep("Caractéristiques individuelles\net environnement familial", 13)
+    rep("Caractéristiques individuelles et environnement familial", 13)
   ),
   Variable = c(
     # Résultats
@@ -1878,7 +1878,7 @@ flextable(df) |>
     Description      = "Description",
     Type             = "Type",
     Issues_possibles = "Issues possibles",
-    valeurs_manquantes   = "% valeurs\nmanquantes"
+    valeurs_manquantes   = "% valeurs manquantes"
   ) |>
   font(fontname = "Arial", part = "all") |>
   fontsize(size = 8,  part = "body") |>
@@ -1900,7 +1900,7 @@ flextable(df) |>
   bg(i = ~ Catégorie == "Résultats", bg = "#D6E4F0", part = "body") |>
   bg(i = ~ Catégorie == "Environnement économique", bg = "#E2EFDA", part = "body") |>
   bg(i = ~ Catégorie == "Environnement scolaire", bg = "#FCE4D6", part = "body") |>
-  bg(i = ~ Catégorie == "Caractéristiques individuelles\net environnement familial", bg = "#E8DFF5", part = "body") |>
+  bg(i = ~ Catégorie == "Caractéristiques individuelles et environnement familial", bg = "#E8DFF5", part = "body") |>
   
   bold(j = "Catégorie", part = "body") |>
   
@@ -1914,7 +1914,7 @@ flextable(df) |>
         i = ~ Catégorie == "Environnement scolaire",
         color = "#7B2C2C") |>
   color(j = "Catégorie",
-        i = ~ Catégorie == "Caractéristiques individuelles\net environnement familial",
+        i = ~ Catégorie == "Caractéristiques individuelles et environnement familial",
         color = "#5B2C6F") |>
   
   merge_v(j = "Catégorie") |>
