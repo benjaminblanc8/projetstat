@@ -616,7 +616,55 @@ Dans un premier temps, nous allons étudier l’impact des différences d’acc�
 Dans un second temps, nous nous intéresserons à l’impact de l’implication parentale à l’aide des variables suivantes : l’aide familiale après l’école (ST295Q03JA), l’implication parentale(PARINVOL), le niveau d’éducation des parents (HISCED pour le Niveau d’éducation le plus élevé des parents, FISCED pour celui du père et MISCED pour celui de la mère). 
 Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublements (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
 
+```{r, label="fig-9", fig.cap="Corrélation entre variables quantitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE}
 
+# ── Heatmap corrélations (variables quantitatives) ──────────────────────────
+mat_r_df <- as.data.frame(mat_r)
+mat_r_df$variable <- rownames(mat_r_df)
+
+labels_r <- c(
+  LEARRES    = "ressources éducatives utilisés",
+  PARINVOL   = "implication parentale"
+)
+
+mat_r_long <- melt(mat_r_df, id.vars = "variable",
+                   variable.name = "matiere", value.name = "r")
+mat_r_long$variable <- factor(mat_r_long$variable,
+                              levels = rev(names(labels_r)[names(labels_r) %in% unique(mat_r_long$variable)]))
+mat_r_long$label_var <- labels_r[as.character(mat_r_long$variable)]
+mat_r_long <- mat_r_long[!is.na(mat_r_long$label_var), ]
+mat_r_long$matiere   <- recode(mat_r_long$matiere,
+                               moyenne_maths     = "Mathématiques",
+                               moyenne_lecture   = "Lecture",
+                               moyenne_sciences  = "Sciences"
+)
+
+ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = round(r, 2)),
+            color = ifelse(abs(mat_r_long$r) > 0.3, "white", "black"),
+            size = 3.5, fontface = "bold") +
+  scale_fill_gradient2(
+    low = "#d73027", mid = "#f7f7f7", high = "#1a9850",
+    midpoint = 0, limits = c(-0.5, 0.5),
+    name = "Corrélation\n(r de Pearson)"
+  ) +
+  labs(
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture :le coefficient de corrélation entre l'implication parentale \n et le score global et de -0,18"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
+    axis.text.x   = element_text(face = "bold"),
+    axis.text.y   = element_text(size = 9),
+    legend.position = "right",
+    panel.grid    = element_blank()
+  )
+
+
+```
 
 
 ```{r, label="fig-10", fig.width=6, fig.height=4, echo=FALSE, message=FALSE, warning=FALSE }
