@@ -107,7 +107,6 @@ Louis GERVILLE-REACHE\\
 
 ```{r, echo=FALSE,results='hide'}
 pisa_oecd_clean=read.table("data_ocde.csv",header = TRUE,sep=",")
-install.packages("reshape2")
 library(reshape2)
 library(dplyr)
 library(tidyr)
@@ -169,11 +168,10 @@ france  <- niveau_pays %>% filter(CNT == "FRA")
 selection <- bind_rows(top3, bottom3, france) %>%
   distinct() %>%
   mutate(groupe = case_when(
-    mDim1 < -1                     ~ "Systèmes sous contrainte",
-    mDim1 > 0.5  & mDim2 > 0.5    ~ "Modèles anglophones\net nordiques",
-    mDim1 > 0.5  & mDim2 < -0.5   ~ "Systèmes exigeants\nà capital élevé",
-    TRUE                            ~ "Europe continentale\net Amérique du Sud"
-  ))
+  score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
+  score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
+  TRUE ~ "Faible"
+))
 # Position de la France dans le graphique
 pos_fr <- which(levels(reorder(selection$CNT, selection$score_moyen)) == "FRA")
 
@@ -1501,7 +1499,7 @@ var_3ax <- round(res_acp$eig[3, 3], 1)
 Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
 
-```{r, label="fig-25", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 fviz_eig(
   res_acp,
@@ -1531,7 +1529,7 @@ fviz_eig(
 
 Le cercle des corrélations représente les variables actives dans le plan Dim.1 × Dim.2. La longueur d'une flèche indique la qualité de représentation de la variable dans ce plan (cos²) : plus elle est proche du cercle unité, mieux la variable est captée par les deux premiers axes. L'orientation indique la corrélation avec chaque dimension. Les variables pointant dans la même direction sont positivement corrélées entre elles dans cet espace ; des variables à angle droit sont indépendantes dans ce plan.
 
-```{r, label="fig-26", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+```{r, label="fig-25", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
 
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
@@ -1762,7 +1760,7 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 # Annexe 
 
-```{r, label="fig-28", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-27", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 labels_vars_contrib <- c(
   ESCS       = "Statut socio-économique (ESCS)",
@@ -1804,7 +1802,7 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
 ```
 
 
-```{r, label="fig-29", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-28", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
 cos2_ind <- as.data.frame(res_acp$ind$cos2[, 1:2])
 colnames(cos2_ind) <- c("Dim1", "Dim2")
@@ -1838,7 +1836,7 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
 
 
 
-```{r, label="fig-30", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-29", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
 coord_ind <- coord_ind %>%
   left_join(niveau_pays %>% select(CNT, score_moyen), by = "CNT")
@@ -1878,7 +1876,7 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) 
   )
 ```
 
-```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-30", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 # Tableau des valeurs propres
 vp <- as.data.frame(res_acp$eig)
