@@ -392,7 +392,7 @@ ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
 
 Pour étudier de manière individuelle l'impact de chaque variable de nature économique, nous avons réalisé deux matrices de corrélation. Une pour les variables quantitatives et une pour les variables qualitatives. Pour les variables quantitatives nous avons utilisé le coefficient de corrélation. Cet indicateur statistique permet de mesurer l’intensité et le sens de la relation linéaire entre deux variables quantitatives. Il est compris entre -1 et 1. Pour les variables qualitatives nous avons utilisé le rapport de corrélation. Il indique quelle part de la variation d'une variable est expliquée par une autre. Il est quant à lui compris entre 0 et 1. 
 
-```{r, label="fig-4", fig.cap="Corrélation entre variables quantitatives économique et score global", echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE}
+```{r, label="fig-4", fig.cap="Corrélation entre variables quantitatives économique et score global", echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE, fig.pos="H"}
 # ============================================================
 # FIGURE 3 → Lollipop chart avec gradient de couleur
 # ============================================================
@@ -443,7 +443,7 @@ print(fig3)
 ```
 
 
-```{r, label="fig-5", fig.cap="Force du lien entre variables qualitatives de nature économique et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+```{r, label="fig-5", fig.cap="Force du lien entre variables qualitatives de nature économique et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
 # ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
 labels_eta <- c(
   ST255Q01JA = "Nb livres à la maison",
@@ -517,7 +517,7 @@ Nous disposons également de variables décrivant l’environnement scolaire nat
 
 
 Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
-```{r, label="fig-8", fig.cap="Variables scolaires et lien avec le score global", echo=FALSE, fig.width=10, fig.height=8, message=FALSE, warning=FALSE}
+```{r, label="fig-8", fig.cap="Variables scolaires et lien avec le score global", echo=FALSE, fig.width=10, fig.height=8, message=FALSE, warning=FALSE, fig.pos="H"}
 # ============================================================
 # FIGURES 5 + 6 → Cleveland dot plot avec gradient
 # ============================================================
