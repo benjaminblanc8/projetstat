@@ -107,7 +107,6 @@ Louis GERVILLE-REACHE\\
 
 ```{r, echo=FALSE,results='hide'}
 pisa_oecd_clean=read.table("data_ocde.csv",header = TRUE,sep=",")
-install.packages("reshape2")
 library(reshape2)
 library(dplyr)
 library(tidyr)
@@ -169,10 +168,10 @@ france  <- niveau_pays %>% filter(CNT == "FRA")
 selection <- bind_rows(top3, bottom3, france) %>%
   distinct() %>%
   mutate(groupe = case_when(
-    CNT == "FRA"          ~ "France",
-    CNT %in% top3$CNT    ~ "Top 3",
-    CNT %in% bottom3$CNT ~ "Bottom 3"
-  ))
+  score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
+  score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
+  TRUE ~ "Faible"
+))
 # Position de la France dans le graphique
 pos_fr <- which(levels(reorder(selection$CNT, selection$score_moyen)) == "FRA")
 
@@ -1493,7 +1492,7 @@ Ainsi, contrairement aux variables liées à l’environnement scolaire, certain
 # III — Mise en évidence des facteurs structurants des inégalités scolaires : une approche par ACP
 
 
-## A —  Un axe structuré par le capital socio-économique (ESCS, HISEI, HOMEPOS)
+## A —  Un axe structuré par le capital socio-économique
 
 Avant de présenter les résultats, il convient d'expliciter un choix 
 méthodologique qui conditionne la construction de l'ACP. Parmi les 
@@ -1502,7 +1501,7 @@ sont pas renseignées pour 28 pays sur les 37 que compte notre échantillon.
 Les inclure aurait contraint à n'analyser qu'une poignée de pays, ce qui 
 aurait rendu l'analyse à la fois statistiquement fragile et géographiquement 
 peu représentative de l'OCDE. Nous avons donc fait le choix de les exclure 
-des variables actives, au profit d'un échantillon de 25 pays.
+des variables actives, au profit d'un échantillon de 25 pays.Les variables actives retenues pour l'ACP ont été sélectionnées de manière à couvrir les trois dimensions explorées en partie I, tout en privilégiant celles qui caractérisent le contexte national plutôt que le profil individuel de l'élève. On y retrouve ainsi des indicateurs du capital économique et culturel des familles, des variables décrivant l'organisation et l'intensité du système scolaire, ainsi qu'un indicateur de ressources éducatives à domicile, conservé malgré sa faible corrélation individuelle pour tester si son rôle diffère à l'échelle nationale.
 
 Les scores scolaires sont quant à eux introduits en variables 
 supplémentaires : ils ne participent pas à la construction des axes mais 
@@ -1513,7 +1512,7 @@ performance scolaire, sans que ces dernières n'influencent l'analyse.
 
 L'ACP est une méthode de réduction de dimension qui synthétise un ensemble 
 de variables corrélées en un nombre réduit d'axes orthogonaux, appelés 
-**composantes principales**. Chaque axe capture une fraction de la variance 
+composantes principales. Chaque axe capture une fraction de la variance 
 totale du nuage de points. Les variables sont normalisées avant 
 l'analyse, ce qui garantit que les différences d'échelle entre indices 
 standardisés et variables brutes n'introduisent pas de biais dans la 
@@ -1568,27 +1567,10 @@ var_2ax <- round(res_acp$eig[2, 3], 1)
 var_3ax <- round(res_acp$eig[3, 3], 1)
 ```
 
-L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
+Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
-```{r, label="fig-24", fig.cap="acp-scree", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
-# Tableau des valeurs propres
-vp <- as.data.frame(res_acp$eig)
-colnames(vp) <- c("Valeur propre", "% variance", "% cumulé")
-vp$Axe <- paste0("Dim.", 1:nrow(vp))
-vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
-
-kable(
-  head(vp, 5),
-  digits  = 2,
-  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
-  booktabs = TRUE
-) %>%
-  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
-  row_spec(which(head(vp$`Valeur propre`, 5) >= 1), bold = TRUE)
-```
-
-```{r, label="fig-25", fig.cap="-acp-eig-plot", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 fviz_eig(
   res_acp,
@@ -1618,7 +1600,7 @@ fviz_eig(
 
 Le cercle des corrélations représente les variables actives dans le plan Dim.1 × Dim.2. La longueur d'une flèche indique la qualité de représentation de la variable dans ce plan (cos²) : plus elle est proche du cercle unité, mieux la variable est captée par les deux premiers axes. L'orientation indique la corrélation avec chaque dimension. Les variables pointant dans la même direction sont positivement corrélées entre elles dans cet espace ; des variables à angle droit sont indépendantes dans ce plan.
 
-```{r, label="fig-26", fig.cap="-acp-cercle", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+```{r, label="fig-25", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
 
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
@@ -1672,13 +1654,13 @@ ggplot() +
                   box.padding = 0.4, max.overlaps = 20) +
   # Flèches variables supplémentaires (scores) en rouge tirets
   geom_segment(data = coord_sup,
-               aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
-               arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
-               color = "#d73027", linewidth = 0.9, linetype = "dashed") +
+             aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
+             arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+             color = "grey40", linewidth = 0.9, linetype = "dashed") +
   geom_text_repel(data = coord_sup,
-                  aes(x = Dim1, y = Dim2, label = label),
-                  size = 3, color = "#a50026", fontface = "bold",
-                  box.padding = 0.5, max.overlaps = 20) +
+                aes(x = Dim1, y = Dim2, label = label),
+                size = 3, color = "grey40", fontface = "bold",
+                box.padding = 0.5, max.overlaps = 20) +
   labs(
     title   = "Cercle des corrélations — plan Dim.1 × Dim.2",
     subtitle = "Flèches rouges en pointillés : scores scolaires (variables supplémentaires)",
@@ -1725,76 +1707,117 @@ Nous reviendrons sur cette observation dans la partie suivante.
 
 La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (fort, moyen, faible) défini en partie II.
 
-```{r, label="fig-27", fig.cap="-acp-individus", echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+```{r, label="fig-26", fig.cap="Projection des pays — clustering K-means (k = 4)", acp-clustering, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6}
 
-# Coordonnées des individus (pays)
+# ── Coordonnées des pays ─────────────────────────────────────────────────────
 coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
 colnames(coord_ind) <- c("Dim1", "Dim2")
 coord_ind$CNT <- rownames(coord_ind)
 
-# Rattacher groupe (fort / moyen / faible) depuis niveau_pays
-# (niveau_pays doit exister dans l'environnement — calculé en partie II)
-coord_ind <- coord_ind %>%
-  left_join(niveau_pays %>% select(CNT, groupe, score_moyen), by = "CNT")
+# ── Méthode du coude (graphique → annexe) ───────────────────────────────────
+set.seed(42)
+inertie <- sapply(1:8, function(k) {
+  kmeans(coord_ind[, c("Dim1", "Dim2")],
+         centers = k, nstart = 25, iter.max = 100)$tot.withinss
+})
 
-# Couleurs groupe
-couleurs_groupe <- c(
-  "Fort"   = "#1a9850",
-  "Moyen"  = "#fee08b",
-  "Faible" = "#d73027"
+# ── K-means k=4 ─────────────────────────────────────────────────────────────
+set.seed(42)
+km <- kmeans(coord_ind[, c("Dim1", "Dim2")],
+             centers = 4, nstart = 25, iter.max = 100)
+
+coord_ind$cluster <- factor(km$cluster)
+
+# ── Identifier chaque cluster par son centroïde ──────────────────────────────
+centres <- coord_ind %>%
+  group_by(cluster) %>%
+  summarise(mDim1 = mean(Dim1), mDim2 = mean(Dim2), .groups = "drop")
+
+# Nommer selon position (on ajuste après avoir vu les résultats)
+centres <- centres %>%
+  mutate(nom = case_when(
+    mDim1 < -1                      ~ "Systèmes sous contrainte",
+    mDim1 > 0.5  & mDim2 > 0.5     ~ "Capital élevé,\nsoutien fort",
+    mDim1 > 0.5  & mDim2 < -0.5    ~ "Capital élevé,\nintensité horaire forte",
+    TRUE                             ~ "Profil intermédiaire"
+  ))
+
+coord_ind <- coord_ind %>%
+  left_join(centres %>% select(cluster, nom), by = "cluster")
+
+# ── Couleurs fixes par cluster ───────────────────────────────────────────────
+couleurs_clusters <- c(
+  "1" = "#1a9850",
+  "2" = "#4393c3",
+  "3" = "#d73027",
+  "4" = "#f4a582"
 )
 
-ggplot(coord_ind, aes(x = Dim1, y = Dim2, color = groupe, label = CNT)) +
+pct <- round(res_acp$eig[1:2, 2], 1)
+
+# Centroïdes pour labels sur le graphique
+centres_plot <- coord_ind %>%
+  group_by(cluster, nom) %>%
+  summarise(Dim1 = mean(Dim1), Dim2 = mean(Dim2), .groups = "drop")
+
+# ── Biplot avec clusters ─────────────────────────────────────────────────────
+ggplot(coord_ind, aes(x = Dim1, y = Dim2,
+                      color = cluster, fill = cluster,
+                      label = CNT)) +
   geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
   geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
-  geom_point(aes(size = score_moyen), alpha = 0.85) +
-  geom_text_repel(size = 3, fontface = "bold",
-                  box.padding = 0.4, max.overlaps = 30) +
-  scale_color_manual(values = couleurs_groupe, name = "Groupe (niveau)") +
-  scale_size_continuous(range = c(2, 6), guide = "none") +
+  stat_ellipse(aes(group = cluster),
+               geom = "polygon", alpha = 0.07,
+               level = 0.75, show.legend = FALSE) +
+  geom_point(size = 3.5, alpha = 0.9) +
+  geom_text_repel(size = 2.8, fontface = "bold",
+                  box.padding = 0.4, max.overlaps = 30,
+                  min.segment.length = 0,
+                  show.legend = FALSE) +
+  annotate("label",
+         x = c(-3.75, 0, 1.8, 0),
+         y = c(0.1, 1.67, -2.8, -0.67),
+         label = c("Systèmes sous\ncontrainte",
+                   "Modèles anglophones\net nordiques",
+                   "Systèmes exigeants\nà capital élevé",
+                   "Europe continentale\net Amérique du Sud"),
+         color = c("#4393c3", "#d73027", "#f4a582", "#1a9850"),
+             size = 2.6, fontface = "italic",
+             fill = "white", alpha = 0.85, label.size = 0.3,
+             show.legend = FALSE) +
+  scale_color_manual(values = couleurs_clusters, guide = "none") +
+  scale_fill_manual(values  = couleurs_clusters, guide = "none") +
   labs(
-    title   = "Projection des pays de l'OCDE dans le plan factoriel (Dim.1 × Dim.2)",
-    subtitle = "Taille des points proportionnelle au score moyen. Codes ISO 3 lettres.",
+    title   = "Projection des pays de l'OCDE dans le plan factoriel — clustering K-means (k = 4)",
+    subtitle = "Les ellipses représentent les zones de concentration à 75 % de chaque cluster.",
     x       = paste0("Dim.1 — Capital socio-économique (", pct[1], "% de variance)"),
     y       = paste0("Dim.2 — Intensité institutionnelle (", pct[2], "% de variance)"),
-    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : chaque point représente un pays. Les groupes (fort / moyen / faible)\nsont définis par tiers sur la base du score moyen global."
+    caption = paste0(
+      "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\n",
+      "Note de lecture : la Turquie présente une coordonnée de −2,3 sur Dim.1, ",
+      "ce qui la place parmi les pays au capital socio-économique le plus faible de l'échantillon."
+    )
   ) +
   theme_minimal(base_size = 11) +
   theme(
     plot.title    = element_text(face = "bold", size = 12),
     plot.subtitle = element_text(size = 9, color = "grey40"),
-    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
-    legend.position = "bottom"
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0)
   )
+
+# Afficher les pays par cluster pour ajuster les noms
+print(coord_ind %>% arrange(cluster) %>% select(CNT, cluster, nom))
 ```
 
-Plusieurs configurations émergent de cette projection :
+La classification en quatre groupes révèle des profils nationaux contrastés que le seul classement par score moyen ne permettait pas de faire apparaître.
 
-**Les pays à fort capital socio-économique et forte performance** (quadrant droit) regroupent des pays comme la Corée (KOR), la Suisse (CHE), la Belgique (BEL) ou la Slovénie (SVN). Ils se situent dans les valeurs positives de Dim.1, confirmant que leur niveau scolaire élevé s'accompagne d'un contexte socio-économique favorable. Mais Israël (ISR) et l'Islande (ISL) se trouvent également dans ce quadrant, avec des performances plus contrastées. Israël étant considéré comme « fort » malgré une forte dispersion interne, et l'Islance classé dans le groupe « faible » malgré un ESCS élevé, ce qui en fait un cas atypique sur lequel nous reviendrons.
+Le premier groupe, le plus large, rassemble onze pays dont la majorité appartient l'Europe continentale, auxquels s'ajoute le Chili, bien que ce dernier se distingue par une position plus excentrée, témoignant d'un profil socio-économique plus contraint que ses homologues européens du groupe.. Leur position centrale dans le plan factoriel — ni fortement positifs ni fortement négatifs sur les deux axes — traduit un profil intermédiaire : un capital socio-économique modéré et une organisation scolaire sans singularité marquée. C'est dans ce groupe que se situe la France, dont la médiocrité relative du classement PISA ne s'explique pas par un déficit flagrant sur l'un ou l'autre axe, mais plutôt par l'absence d'un avantage structurel clairement identifiable.
 
-**Les pays à faible capital socio-économique et faible performance** (quadrant gauche) comprennent le Mexique (MEX), la Colombie (COL) et le Chili (CHL). Leur position nettement négative sur Dim.1 est cohérente avec leur classement en bas du tableau des scores. La Turquie (TUR) occupe une position particulière : très négative sur les deux axes, elle combine un faible capital socio-économique et une intensité horaire élevée (valeur basse sur Dim.2), sans que cette dernière ne semble compenser le premier facteur.
+Le deuxième groupe, le plus homogène, réunit la Colombie, le Mexique et la Turquie. Ces trois pays partagent un capital socio-économique nettement inférieur à la moyenne de l'OCDE, ce qui les place à l'extrémité gauche du premier axe. Leur regroupement confirme que les contraintes structurelles pesant sur ces systèmes éducatifs sont d'abord d'ordre économique.
 
-**Les pays anglophones à organisation scolaire légère** (quadrant supérieur droit) comme le Canada (CAN), l'Irlande (IRL), l'Australie (AUS) et la Nouvelle-Zélande (NZL) présentent un capital socio-économique élevé combiné à des valeurs positives sur Dim.2, associées à davantage de soutien institutionnel et moins d'heures formelles. Ce groupe présente des performances solides, ce qui ne permet pas de conclure que la réduction du volume horaire est préjudiciable à la réussite.
+Le troisième groupe rassemble les grandes démocraties anglophones — Canada, Australie, Irlande, Nouvelle-Zélande, États-Unis — ainsi que la Finlande et, de façon plus surprenante, le Portugal. Ces pays partagent un capital socio-économique élevé combiné à des systèmes qui privilégient le soutien institutionnel sur le volume horaire. Leurs performances solides suggèrent qu'un accompagnement qualitatif peut se substituer efficacement à l'intensité horaire.
 
-**Le Japon (JPN)** occupe une position singulière en bas à droite du plan : capital socio-économique élevé, mais Dim.2 très négative, suggérant un système à forte intensité horaire. C'est l'un des pays les mieux notés de l'OCDE, ce qui illustre qu'un système peut combiner rigueur institutionnelle et excellence académique.
-
-**La France (FRA)** se positionne légèrement à droite de l'axe central (Dim.1 modérément positive) et proche de zéro sur Dim.2, ce qui la place dans une configuration assez médiane. Son classement au 27e rang sur 37 suggère que son capital socio-économique moyen, bien que supérieur à celui des pays les moins favorisés, ne suffit pas à compenser d'autres facteurs — notamment une forte dispersion interne des résultats, qui n'est pas captée par cette ACP réalisée sur des moyennes nationales.
-
-
-D'après le graphique de qualité de représentation des pays en annexe, tous les pays ne sont pas également bien représentés dans le plan Dim.1 × Dim.2. Le cos², compris entre 0 et 1, mesure la part de la variabilité d'un pays qui est expliquée par les deux premières dimensions. Un cos² supérieur à 0,7 est généralement considéré comme satisfaisant.
-
-La Turquie, la Colombie, le Mexique et plusieurs autres pays sont très bien représentés dans ce plan, ce qui signifie que leur positionnement dans l'OCDE est essentiellement déterminé par les deux grandes dimensions identifiées.
-
-À l'inverse, des pays comme la France, la Lituanie, la Hongrie ou l'Espagne présentent des cos² plus faibles, inférieurs à 0,3. Cela signifie que leur profil est davantage structuré par les axes suivants (Dim.3 et au-delà), non représentés ici. Ces pays échappent partiellement à la logique binaire capital socio-économique / intensité institutionnelle, et mériteraient une analyse complémentaire sur les dimensions suivantes pour comprendre ce qui les distingue réellement.
-
-
-Le graphique de synthèse intitulé "Lien entre l'axe 1 et le score moyen national" confronte directement la position de chaque pays sur l'axe 1 de l'ACP à son score moyen national. La corrélation observée est de **r = 0,71**, ce qui constitue un résultat notable : le premier axe de l'ACP étant construit sans aucune information sur les scores scolaires — reproduit à lui seul 50 % de la variance des performances nationales (r² ≈ 0,50).
-
-Ce résultat vient confirmer, à l'échelle nationale et par une méthode multivariée, ce que les analyses de corrélation de la partie I avaient mis en évidence à l'échelle individuelle : le capital socio-économique des familles est le facteur structural le plus fortement associé aux inégalités de niveau scolaire au sein de l'OCDE. Ce n'est pas un facteur parmi d'autres — c'est la première dimension de différenciation entre les systèmes éducatifs nationaux.
-
-En revanche, la corrélation entre la deuxième dimension (intensité institutionnelle) et les scores est quasi nulle (**r = 0,04**). Ce résultat invite à la prudence quant aux discours qui font de l'intensité scolaire un levier principal de la performance nationale. À l'échelle de l'OCDE, cette dimension distingue certes les pays entre eux, mais elle ne semble pas structurellement liée à leurs résultats moyens. Cela ne signifie pas que ces facteurs sont sans effet. Ils peuvent jouer à d'autres niveaux d'analyse (individuel, local) ou interagir avec d'autres variables non captées ici mais ils ne constituent pas, à eux seuls, un déterminant national de la performance scolaire.
-
-Enfin, il convient de rappeler les limites inhérentes à cette ACP. Travailler sur des moyennes nationales efface la variabilité interne à chaque pays, qui peut être considérable. Un pays peut afficher un ESCS moyen élevé tout en présentant de fortes inégalités internes — or c'est précisément cette dispersion qui détermine les inégalités scolaires au sens propre. L'ACP nationale donne une image de la structure entre pays, non de la structure au sein des pays. Les deux niveaux d'analyse sont complémentaires et doivent être lus conjointement pour répondre pleinement à notre problématique.
+Le quatrième groupe, enfin, regroupe le Japon, la Corée, Israël et l'Islande. Les trois premiers sont parmi les mieux classés de l'OCDE et combinent un capital socio-économique élevé avec une forte intensité horaire — ce qui illustre qu'un système exigeant peut, dans certains contextes, amplifier les effets d'un capital familial déjà favorable. L'Islande constitue toutefois un cas atypique au sein de ce groupe : malgré un profil similaire sur les deux axes, son score moyen la place parmi les pays les moins performants de l'échantillon, ce qui suggère que d'autres facteurs, non captés par ces deux dimensions, jouent un rôle déterminant dans son cas.
 
 
 # Conclusion
@@ -1808,7 +1831,7 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 # Annexe 
 
-```{r, label="fig-28", fig.cap="-acp-contrib", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-27", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 labels_vars_contrib <- c(
   ESCS       = "Statut socio-économique (ESCS)",
@@ -1850,7 +1873,7 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
 ```
 
 
-```{r, label="fig-29", fig.cap="-acp-cos2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-28", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
 cos2_ind <- as.data.frame(res_acp$ind$cos2[, 1:2])
 colnames(cos2_ind) <- c("Dim1", "Dim2")
@@ -1884,20 +1907,30 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
 
 
 
-```{r, label="fig-30", fig.cap="-acp-synthese", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-29", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
+coord_ind <- coord_ind %>%
+  left_join(niveau_pays %>% select(CNT, score_moyen), by = "CNT")
 # Corrélations entre coordonnées Dim.1 et scores scolaires
 corr_dim1_score <- cor(coord_ind$Dim1, coord_ind$score_moyen, use = "complete.obs")
 corr_dim2_score <- cor(coord_ind$Dim2, coord_ind$score_moyen, use = "complete.obs")
 
 # Scatter Dim1 vs score_moyen avec droite de régression
-ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
+ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) +
   geom_smooth(method = "lm", se = TRUE, color = "grey50",
               linewidth = 0.8, linetype = "dashed", fill = "grey90") +
   geom_point(size = 3, alpha = 0.9) +
   geom_text_repel(size = 3, fontface = "bold",
                   box.padding = 0.4, max.overlaps = 25) +
-  scale_color_manual(values = couleurs_groupe, name = "Groupe") +
+  scale_color_manual(values = c("1" = "#1a9850",
+                               "2" = "#4393c3",
+                               "3" = "#d73027",
+                               "4" = "#f4a582"),
+                   name = "Cluster",
+                   labels = c("1" = "Europe continentale et Amérique du Sud",
+                              "2" = "Systèmes sous contrainte",
+                              "3" = "Modèles anglophones et nordiques",
+                              "4" = "Systèmes exigeants à capital élevé")) +
   labs(
     title   = "Lien entre l'axe 1 de l'ACP et le score moyen national",
     subtitle = paste0("r de Pearson = ", round(corr_dim1_score, 2)),
@@ -1912,4 +1945,22 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
     plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
     legend.position = "bottom"
   )
+```
+
+```{r, label="fig-30", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+
+# Tableau des valeurs propres
+vp <- as.data.frame(res_acp$eig)
+colnames(vp) <- c("Valeur propre", "% variance", "% cumulé")
+vp$Axe <- paste0("Dim.", 1:nrow(vp))
+vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
+
+kable(
+  head(vp, 5),
+  digits  = 2,
+  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
+  booktabs = TRUE
+) %>%
+  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
+  row_spec(which(head(vp$`Valeur propre`, 5) >= 1), bold = TRUE)
 ```
