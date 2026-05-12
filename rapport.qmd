@@ -992,8 +992,6 @@ fig_facettes <- ggplot(data_facettes,
 
 print(fig_facettes)
 ```
-d
-
 
 On s’intéresse désormais au lien entre redoublement et réussite scolaire. Ce lien peut être double, un élève qui redouble est en difficulté, mais l’objectif du redoublement et de lui permettre de réussir. Il est aussi important de noter que certains pays de l’OCDE ne pratiquent pas ou très peu le redoublement. On remarque que les élèves n’ayant jamais redoublé ont en moyenne de meilleures moyennes que ceux qui ont redoublé une fois qui ont eu des meilleures moyennes que ceux qui ont redoublé plusieurs fois. C’est le cas tant en science, qu’en mathématiques et qu’en lecture.
 
