@@ -244,7 +244,7 @@ Au sein des pays de l'OCDE, les résultats scolaires très diversifié. Les rés
 Lorsqu'on pense aux inégalités de niveau scolaire, on imagine comme première cause les inégalités économiques. De nombreuses études de l'INSEE montre que dès l'entrée à l'école les enfants issuent de milieux sociaux favorisés ont des acquis supérieurs à ceux issuent de milieux défavorisés. L'indice ESCS est un indice composite crée par l'OCDE afin de mesurer le statut socio-économique d'un individu. Nous allon alors le lien entre la réussite scolaire d'un élève et son statut socio-économique. 
 
 
-```{r, label="fig-2", echo=FALSE,message=FALSE,warning=FALSE}
+```{r, echo=FALSE, results='hide', fig.show='hide', message=FALSE,warning=FALSE}
 # Création de la moyenne globale
 pisa_oecd_clean <- pisa_oecd_clean %>%
   mutate(score_global = (
@@ -366,7 +366,7 @@ Avant tout, nous nous sommes intéréssé à ce que l'on pensait être le princi
 Sur le graphique ci-dessous, on constate un lien entre le score global de l'élève et l'indice ESCS. L’indice ESCS (Economic, Social and Cultural Status) est un indice composite construit par l'OCDE pour mesurer le statut socio-économique et culturel des élèves. C’est un indice standardisé à l'échelle OCDE. Cela signifie qu’il est construit de telle manière que sa moyenne est de 0 et son écart-type de 1.  Il est formé à partir de trois indices : le statut socioprofessionnel des parents (HISEI), le niveau de formation (PARED) des parents, ainsi que le patrimoine familial (HOMEPOS). Ce dernier indice inclut lui-même un grand nombre de variables parmi lesquelles les ressources culturelles, éducatives ainsi que d’autres ressources.
 On constate, en effet, que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Plus l'individu est aisé, plus il a de chance de réussir à l'école. Cependant cela ne signifie pas que toutes les variables économiques sont impactantes quant à la réussite d'un élève. Ainsi, nous avons choisi d'étudier un certain nombre de variables représentatives, chacune à leur manière d'un certain capital économique. 
 
-```{r, label="fig-3", fig.cap="Lien entre statut socio-économique (ESCS) et score global", echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+```{r, label="fig-3", fig.cap="Lien entre statut socio-économique (ESCS) et score global", echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE, fig.pos="H"}
 
 
 ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
@@ -747,7 +747,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
 
 
 
-```{r, label="fig-11", fig.cap="Tableau des 5 vairables les plus liées au score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+```{r, label="tbl-11", tab.cap="Tableau des 5 vairables les plus liées au score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 # ─────────────────────────────────────────────────────────────
 # Tableau des 5 variables les plus liées au score global
 # ─────────────────────────────────────────────────────────────
