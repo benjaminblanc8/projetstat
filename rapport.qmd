@@ -169,9 +169,9 @@ france  <- niveau_pays %>% filter(CNT == "FRA")
 selection <- bind_rows(top3, bottom3, france) %>%
   distinct() %>%
   mutate(groupe = case_when(
-  score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
-  score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
-  TRUE ~ "Faible"
+  score_moyen >= quantile(score_moyen, 0.66) ~ "Top 3",
+  score_moyen >= quantile(score_moyen, 0.36) ~ "France",
+  TRUE ~ "Bottom 3"
 ))
 # Position de la France dans le graphique
 pos_fr <- which(levels(reorder(selection$CNT, selection$score_moyen)) == "FRA")
@@ -1636,6 +1636,135 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 
 # Annexe 
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# =========================
+# Variables quantitatives
+# =========================
+vars_quanti <- c(
+  "PQSCHOOL",
+  "SCHSUST",
+  "ST059Q01TA",
+  "ST059Q02JA",
+  "EXPO21ST",
+  "ESCS",
+  "HISEI",
+  "HOMEPOS",
+  "LEARRES"
+)
+
+# =========================
+# Labels
+# =========================
+labels_quanti <- c(
+  PQSCHOOL       = "Qualité de l'établissement scolaire",
+  SCHSUST    = "Soutient de l'établissement",
+  ST059Q01TA     = "Séances Maths",
+  ST059Q02JA    = "Séances Cours",
+  EXPO21ST     = "Modernité système éducatif",
+  ESCS    = "Indice éco-social",
+  HISEI   = "Statut professionel parental",
+  HOMEPOS = "Bien matériels à domicile",
+  LEARRES     = "Ressources éducatives"
+  )
+
+# =========================
+# Création moyenne générale
+# =========================
+pisa_oecd_clean$score_global <- rowMeans(
+  pisa_oecd_clean[, c(
+    "moyenne_maths",
+    "moyenne_lecture",
+    "moyenne_sciences"
+  )],
+  na.rm = TRUE
+)
+
+# =========================
+# Corrélations avec moyenne
+# =========================
+pisa_oecd_clean[vars_quanti] <- lapply(
+  pisa_oecd_clean[vars_quanti],
+  function(x) as.numeric(as.character(x))
+)
+
+corrs <- sapply(
+  vars_quanti,
+  function(v){
+    cor(
+      pisa_oecd_clean[[v]],
+      pisa_oecd_clean$score_global,
+      use = "pairwise.complete.obs",
+      method = "pearson"
+    )
+  }
+)
+
+# transformation dataframe
+corr_df <- data.frame(
+  variable = names(corrs),
+  corr = as.numeric(corrs)
+)
+
+# labels
+corr_df$label_var <- labels_quanti[corr_df$variable]
+
+# tri
+corr_df <- corr_df %>%
+  arrange(desc(corr))
+
+corr_df$label_var <- factor(
+  corr_df$label_var,
+  levels = rev(corr_df$label_var)
+)
+
+# =========================
+# Graphique
+# =========================
+ggplot(
+  corr_df,
+  aes(x = "Moyenne générale", y = label_var, fill = corr)
+) +
+ 
+  geom_tile(color = "white", linewidth = 0.5) +
+ 
+  geom_text(
+    aes(label = round(corr, 2)),
+    color = "black",
+    size = 4,
+    fontface = "bold"
+  ) +
+ 
+  scale_fill_gradient2(
+    low = "#d73027",
+    mid = "white",
+    high = "#1a9850",
+    midpoint = 0,
+    limits = c(-1, 1),
+    name = "Corrélation\n(Pearson)"
+  ) +
+ 
+  labs(
+    x = NULL,
+    y = NULL,
+    caption = "Source : PISA 2022 — OCDE."
+  ) +
+ 
+  theme_minimal(base_size = 11) +
+ 
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(face = "bold"),
+    axis.text.y = element_text(size = 9),
+    legend.position = "right",
+    plot.caption = element_text(
+      size = 8,
+      color = "grey40",
+      hjust = 0
+    )
+  )
+
+```
+
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
