@@ -1455,7 +1455,7 @@ ggplot(hisced_pays,
   )
 ```
 
-
+d
 
 Tout d'abord, on constate que touts les pays ont un niveau élevé à HISCED, le plus bas étant à 3, ce qui correspond à l'équivalent du baccalauréat. De plus, les pays performants ne sont pas necessairement ceux avec les niveaux d'études des parents les plus hauts. On peut par exemple prendre l'exemple de la République Tchèque, l'Autriche ou la Suisse. Il reste toutetfois compliqué d'analyser ce graphique car la grande majorité des pays se situent au même niveau (8 et 9), ce qui laisse peu de dispersion pour étudier les différences.
 
