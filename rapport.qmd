@@ -1578,54 +1578,63 @@ construction des axes.
 
 ```{r, label="fig-22", fig.cap="acp-prep", echo=FALSE, message=FALSE, warning=FALSE}
 
-# ── 1. Variables actives et supplémentaires ──────────────────────────────────
-
 vars_actives <- c(
-  "ESCS",
-  "HISEI",
-  "HOMEPOS",
-  "LEARRES",
-  "SCHSUST",
-  "ST059Q01TA",
-  "ST059Q02JA",
-  "EXPO21ST"
-)   # j'ai enlevé  PARINVOL et PQSCHOOL car ces variables sont disponibles dans seulement 5 pays donc ça nique tout l'ACP
+  "ESCS",        # Statut socio-économique composite (inclut déjà HOMEPOS)
+  "LEARRES",     # Ressources éducatives à domicile
+  "SCHSUST",     # Soutien de l'établissement
+  "ST059Q01TA",  # Heures de maths / semaine
+  "ST059Q02JA",  # Heures de cours / semaine
+  "EXPO21ST"     # Exposition aux maths contemporaines
+)
 
 vars_sup <- c("score_global", "moyenne_maths", "moyenne_lecture", "moyenne_sciences")
 
-# ── 2. Agrégation par pays ───────────────────────────────────────────────────
-
+# ── Données agrégées par pays ────────────────────────────────────────────────
 pays_acp <- pisa_oecd_clean %>%
   group_by(CNT) %>%
-  summarise(across(all_of(c(vars_actives, vars_sup)),
-                   ~ mean(.x, na.rm = TRUE)),
-            .groups = "drop") %>%
+  summarise(
+    across(all_of(vars_actives), ~ mean(.x, na.rm = TRUE)),
+    score_global     = mean(score_global,     na.rm = TRUE),
+    moyenne_maths    = mean(moyenne_maths,    na.rm = TRUE),
+    moyenne_lecture  = mean(moyenne_lecture,  na.rm = TRUE),
+    moyenne_sciences = mean(moyenne_sciences, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
   filter(if_all(all_of(vars_actives), ~ !is.na(.x))) %>%
-  column_to_rownames("CNT")
+  as.data.frame()
 
-# ── 3. ACP avec FactoMineR ───────────────────────────────────────────────────
+rownames(pays_acp) <- pays_acp$CNT
+pays_acp$CNT <- NULL
 
-idx_actives <- 1:length(vars_actives)
-idx_sup     <- (length(vars_actives) + 1):(length(vars_actives) + length(vars_sup))
+# Supprimer variables avec trop de NA (> 20% des pays)
+seuil <- 0.2 * nrow(pays_acp)
+pays_acp <- pays_acp[, colSums(is.na(pays_acp)) <= seuil]
+pays_acp <- pays_acp[complete.cases(pays_acp), ]
+
+# Mettre à jour vars_actives selon ce qui reste
+vars_actives <- intersect(vars_actives, colnames(pays_acp))
+
+# ── ACP ──────────────────────────────────────────────────────────────────────
+idx_sup <- (length(vars_actives) + 1):ncol(pays_acp)
 
 res_acp <- PCA(
   pays_acp,
-  scale.unit  = TRUE,
-  quanti.sup  = idx_sup,
-  graph       = FALSE,
-  ncp         = 5
+  scale.unit = TRUE,
+  quanti.sup = idx_sup,
+  graph      = FALSE,
+  ncp        = 5
 )
+
+# Ajouter score_moyen à coord_ind pour les graphiques
+coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
+colnames(coord_ind) <- c("Dim1", "Dim2")
+coord_ind$CNT <- rownames(coord_ind)
+coord_ind <- coord_ind %>%
+  left_join(niveau_pays %>% select(CNT, score_moyen), by = "CNT")
+
 ```
 
-Choix du nombre d'axes retenus
-
-```{r, label="fig-23", fig.cap="-acp-scree-texte", echo=FALSE, message=FALSE, warning=FALSE}
-n_axes <- sum(res_acp$eig[, 1] >= 1)
-var_2ax <- round(res_acp$eig[2, 3], 1)
-var_3ax <- round(res_acp$eig[3, 3], 1)
-```
-
-Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
+Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **62,9% de la variance totale**. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
 
 ```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
@@ -1663,8 +1672,6 @@ Le cercle des corrélations représente les variables actives dans le plan Dim.1
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
   ESCS        = "ESCS",
-  HISEI       = "HISEI",
-  HOMEPOS     = "HOMEPOS",
   LEARRES     = "LEARRES",
   SCHSUST     = "SCHSUST",
   ST059Q01TA  = "Heures maths/semaine",
@@ -1737,26 +1744,18 @@ ggplot() +
 ```
 
 
-D'après le graphique de contribution aux axes en annexe, le premier axe — qui concentre à lui seul 41 % de la variance — structure 
-les pays selon leur niveau de capital socio-économique. Trois variables 
-contribuent fortement à cet axe et pointent toutes dans la même direction : 
-l'indice composite de statut socio-économique et culturel des familles, le 
-statut professionnel le plus élevé des parents, et la possession de biens 
-matériels au domicile. Cette convergence traduit leur forte intercorrélation. Ce qui est cohérent avec le fait que ces trois dimensions mesurent la richesse familiale. Les scores scolaires, introduits comme variables supplémentaires, se projettent dans cette même direction et sont très proches du cercle unité. Cette proximité suggère une association forte entre le capital socio-économique national et la performance scolaire, sans qu'on puisse toutefois en conclure un lien de causalité direct. L'agrégation au niveau national peut masquer des mécanismes plus complexes à l'œuvre au sein de chaque pays.
+D'après le graphique de contribution aux axes en annexe, le premier axe — qui concentre à lui seul 36 % de la variance — structure les pays selon leur niveau de capital socio-économique. Deux variables contribuent fortement à cet axe et pointent toutes dans la même direction : l'indice composite de statut socio-économique et culturel des familles et le statut professionnel le plus élevé des parents. Cette convergence traduit leur forte intercorrélation. Ce qui est cohérent avec le fait que ces trois dimensions mesurent la richesse familiale. Les scores scolaires, introduits comme variables supplémentaires, se projettent dans cette même direction et sont très proches du cercle unité. Cette proximité suggère une association forte entre le capital socio-économique national et la performance scolaire, sans qu'on puisse toutefois en conclure un lien de causalité direct. L'agrégation au niveau national peut masquer des mécanismes plus complexes à l'œuvre au sein de chaque pays.
 
 À l'opposé sur cet axe, les ressources éducatives mises à disposition des 
 élèves lors des fermetures d'école pointent dans la direction inverse. Ce 
 résultat, contre-intuitif au premier abord, avait déjà été identifié à 
 l'échelle individuelle en partie I : cette variable ne semble pas fonctionner comme un simple indicateur de richesse ou de réussite. Il est possible qu'elle capte davantage un contexte sanitaire particulier, les fermetures liées à la pandémie, qu'un avantage structurel durable pour les élèves.
 
-Le second axe qui représente **25 % de variance** capture une logique davantage organisationnelle. D'un côté, le nombre d'heures hebdomadaires de cours et le nombre d'heures de mathématiques par semaine tirent cet axe vers le bas, caractérisant des systèmes à forte intensité horaire. De l'autre, le 
+Le second axe qui représente **26,9 % de variance** capture une logique davantage organisationnelle. D'un côté, le nombre d'heures hebdomadaires de cours et le nombre d'heures de mathématiques par semaine tirent cet axe vers le bas, caractérisant des systèmes à forte intensité horaire. De l'autre, le 
 soutien institutionnel de l'établissement aux apprentissages et l'exposition 
 aux mathématiques contemporaines tirent dans le sens opposé, caractérisant des systèmes qui privilégient un accompagnement qualitatif plutôt que quantitatif. Il serait toutefois hasardeux d'interpréter cette opposition comme un arbitrage tranché entre quantité et qualité : cet axe traduit avant tout la diversité des organisations scolaires au sein de l'OCDE, sans qu'on puisse hiérarchiser ces approches à partir de ce seul plan factoriel.
 
-Un point mérite attention : les scores scolaires sont quasi-orthogonaux 
-à ce second axe, ce qui signifie que cette dimension organisationnelle 
-n'est que peu associée aux différences de performance entre pays. 
-Nous reviendrons sur cette observation dans la partie suivante.
+Les scores scolaires présentent une corrélation modérée avec le second axe (r = 0,29), ce qui suggère que la dimension organisationnelle n'est pas totalement indépendante des performances nationales. Toutefois, cet effet reste nettement plus faible que celui du premier axe, et il convient de l'interpréter avec prudence — une corrélation de 0,29 n'explique que 8 % de la variance des scores, contre 41 % pour le premier axe.
 
 ---
 
@@ -1893,8 +1892,6 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 labels_vars_contrib <- c(
   ESCS       = "Statut socio-économique (ESCS)",
-  HISEI      = "Statut prof. parental (HISEI)",
-  HOMEPOS    = "Biens matériels du ménage (HOMEPOS)",
   LEARRES    = "Ressources éduc. à domicile (LEARRES)",
   SCHSUST    = "Soutien de l'établissement (SCHSUST)",
   ST059Q01TA = "Heures de maths / semaine (ST059Q01TA)",
