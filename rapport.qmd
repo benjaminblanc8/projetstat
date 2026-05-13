@@ -117,6 +117,7 @@ library(factoextra)
 library(knitr)
 library(kableExtra)
 library(tibble)
+library(ggforce)
 
 pisa_oecd_clean <- pisa_oecd_clean %>%
   mutate(score_global = (moyenne_maths + moyenne_lecture + moyenne_sciences) / 3)
@@ -142,7 +143,7 @@ Pour répondre à notre problématique, il semble primordial de mesurer le nivea
 
 D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confronter le niveau scolaire des élèves avec différentes variables qui les caractérisent et qui caractérisent leur environnement. Nous avons donc sélectionné les variables qui nous semblaient être les plus pertinentes dans la base de données initiales. Nous les avons ensuite regroupées en trois catégories distinctes: les variables socio-économiques, les variables socio-familiales et celles définissant l’environnement scolaire de l'élève. Nous avons ensuite cherché à comprendre la manière dont étaient construites ces variables. 
 
-Nous avons regroupé les individus d’un même pays dans une nouvelle base de données niveau_pays. Cela a été possible grace à la variable CNT qui correspond au code ISO des pays. Cette manipulation a pour objectif d'étudier la réussite de ces derniers à l’échelle nationale. Nous avons ensuite regrouper ces pays en 3 groupes : les pays aux meilleurs résultats, ceux aux résultats intermédiaires et les ceux en difficulté. Pour se faire, nous avons créer la variable score_moyen qui correspond à la moyenne de la variable score_global de l'ensemble des élèves d'un même pays. Elle nous a ainsi permis de classer les pays par niveau. Voici les groupes que nous avons obtenus. Une autre méthode d'analyse que nous avons mis en place est de se concentrer que les 5 pays les plus performants et les 5 qui le sont le moins. Le graphique ci dessous les mets en avant.  
+Nous avons regroupé les individus d’un même pays dans une nouvelle base de données niveau_pays. Cela a été possible grace à la variable CNT qui correspond au code ISO des pays. Cette manipulation a pour objectif d'étudier la réussite de ces derniers à l’échelle nationale. Nous avons ensuite regrouper ces pays en 3 groupes : les forts, les moyens et les faibles. Pour se faire, nous avons créer la variable score_moyen qui correspond à la moyenne de la variable score_global de l'ensemble des élèves d'un même pays. Elle nous a ainsi permis de classer les pays par niveau. Voici les groupes que nous avons obtenus. Une autre méthode d'analyse que nous avons mis en place est de se concentrer que les 5 pays les plus performants et les 5 qui le sont le moins. Le graphique ci dessous les mets en avant.  
 
 ```{r, label="fig-1", fig.cap="Classement des pays de l'OCDE selon le niveau scolaire", echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
 
@@ -358,7 +359,8 @@ for(v in vars_factor_ok){
 }
 
 # Affichage
-
+mat_r
+mat_eta
 ```
 
 Avant tout, nous nous sommes intéréssé à ce que l'on pensait être le principal facteur d'inégalité de résultat scolaire: la situation socio-économique de l'élève.
@@ -846,19 +848,12 @@ pisa_oecd_clean %>%
     plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
   )
 ```
-<<<<<<< HEAD
-```{r, fig.cap="Force du lien entre variables ordinales/qualitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE}
-# ─────────────────────# ─────────────────────────────────────────────────────────────
-# Deux tableaux séparés :
-# 1. Top 3 corrélations de Pearson
-# 2. Top 3 coefficients Eta²
-
-```
 
 La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. Il est aussi important à prendre en compte que plus de la moitié des interrogés n'ont pas répondu, ce résultat est donc biaisé.
 De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion, d'autant plus que cette variable présente près de 80% de non réponse. Ainsi, il est possible que si 100% des intérrogés avaient répondu, les résultats auraient été complétement différent. Même si il semble au premier abord évident qu'un élève en bonne santé, dispose de meilleures conditions pour performer à l'école.
 
 On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait être lié à la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
+
 ```{r, label="fig-13", fig.cap="Score moyen selon le parcours individuel de l'élève", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
 
 # ============================================================
@@ -963,10 +958,16 @@ library(tidyr)
 library(scales)
 
 # =========================
-# Labels
+# Corrélations de Pearson
 # =========================
 
-labels_all <- c(
+top_r <- data.frame(
+  variable = rownames(mat_r),
+  coefficient = as.numeric(mat_r[, 1]),
+  type = "Corrélation de Pearson (r)"
+)
+
+labels_r <- c(
   ESCS       = "Statut socio-économique",
   HISEI      = "Statut professionnel parental",
   HOMEPOS    = "Biens matériels",
@@ -976,8 +977,22 @@ labels_all <- c(
   PQSCHOOL   = "Qualité établissement",
   ST059Q01TA = "Heures maths/semaine",
   ST059Q02JA = "Heures cours/semaine",
-  EXPO21ST   = "Exposition maths XXIe siècle",
+  EXPO21ST   = "Exposition maths XXIe siècle"
+)
 
+top_r$variable <- labels_r[top_r$variable]
+
+# =========================
+# Coefficients eta
+# =========================
+
+top_eta <- data.frame(
+  variable = rownames(mat_eta),
+  coefficient = as.numeric(mat_eta[, 1]),
+  type = "Coefficient η (eta)"
+)
+
+labels_eta <- c(
   PROGN      = "Type de filière",
   ST255Q01JA = "Nombre de livres",
   HISCED     = "Niveau éducatif parents",
@@ -994,79 +1009,36 @@ labels_all <- c(
   ST267Q02JA = "Soutien émotionnel enseignants"
 )
 
-# ─────────────────────────────────────────────────────────────
-# TABLEAU 1 : Pearson
-# ─────────────────────────────────────────────────────────────
+top_eta$variable <- labels_eta[top_eta$variable]
 
-top_r <- data.frame(
-  variable = rownames(mat_r),
-  coefficient = as.numeric(mat_r[,1])
-) %>%
-  mutate(variable = labels_all[variable]) %>%
+# =========================
+# Fusion + top 5
+# =========================
+
+tab_final <- bind_rows(top_r, top_eta) %>%
   filter(!is.na(variable)) %>%
   arrange(desc(coefficient)) %>%
-  slice_head(n = 3) %>%
-  mutate(coefficient = round(coefficient, 2))
-
-top_r %>%
-  gt() %>%
-  
-  tab_header(
-    title = md("**Top 3 des corrélations de Pearson**"),
-    subtitle = "Variables quantitatives les plus liées au score scolaire global"
-  ) %>%
-  
-  cols_label(
-    variable = "Variable",
-    coefficient = "Coefficient r"
-  ) %>%
-  
-  fmt_number(
-    columns = coefficient,
-    decimals = 2
-  ) %>%
-  
-  data_color(
-    columns = coefficient,
-    palette = c("#f7f7f7", "#4575b4")
-  ) %>%
-  
-  opt_row_striping() %>%
-  
-  tab_options(
-    table.font.size = px(13)
+  slice_head(n = 5) %>%
+  mutate(
+    coefficient = round(coefficient, 2)
   )
 
-# ─────────────────────────────────────────────────────────────
-# TABLEAU 2 : Eta²
-# ─────────────────────────────────────────────────────────────
+# =========================
+# Tableau final
+# =========================
 
-top_eta <- data.frame(
-  variable = rownames(mat_eta),
-  coefficient = as.numeric(mat_eta[,1])
-) %>%
-  mutate(variable = labels_all[variable]) %>%
-  filter(!is.na(variable)) %>%
-  arrange(desc(coefficient)) %>%
-  slice_head(n = 3) %>%
-  mutate(coefficient = round(coefficient, 2))
-
-top_eta %>%
+tab_final %>%
   gt() %>%
   
   tab_header(
-    title = md("**Top 3 des coefficients Eta²**"),
-    subtitle = "Variables qualitatives les plus liées au score scolaire global"
+    title = md("**Top 5 des variables les plus associées au score scolaire global**"),
+    subtitle = "PISA 2022 — Pays membres de l’OCDE"
   ) %>%
   
   cols_label(
     variable = "Variable",
-    coefficient = "Coefficient Eta²"
-  ) %>%
-  
-  fmt_number(
-    columns = coefficient,
-    decimals = 2
+    coefficient = "Coefficient",
+    type = "Type de lien"
   ) %>%
   
   data_color(
@@ -1074,20 +1046,44 @@ top_eta %>%
     palette = c("#f7f7f7", "#1a9850")
   ) %>%
   
+  fmt_number(
+    columns = coefficient,
+    decimals = 2
+  ) %>%
+  
+  tab_source_note(
+    source_note = md(
+      "**Lecture :** plus le coefficient est proche de 1, plus le lien avec le score scolaire global est fort."
+    )
+  ) %>%
+  
   opt_row_striping() %>%
   
   tab_options(
-    table.font.size = px(13)
+    table.font.size = px(13),
+    heading.title.font.size = px(18),
+    heading.subtitle.font.size = px(12)
   )
 ```
 
 
 # II — Les vecteurs d'inégalités scolaires sont-ils les mêmes au sein de tous les pays de l'OCDE
 
-Nous avons identifié à l'échelle individuelle les variables qui affecte la trajectoire scolaire d'un élève étudiant dans un pays de l'OCDE. Désormais, nous allons changer d'échelle.Nous souhaitons vérifier si à l'échelle nationale ce sont les mêmes caractéristiques qui définissent le niveau scolaire d'un pays sur la scène internationale. Ainsi nous avons classé les pays en trois catégories : Les pays ayant les meilleurs résultats, les pays aux résultats intermédiaires et ceux en difficulté selon les résultats des élèves qui y étudient. 
+Nous avons identifié à l'échelle individuelle les variables qui affecte la trajectoire scolaire d'un élève étudiant dans un pays de l'OCDE. Désormais, nous allons changer d'échelle.Nous souhaitons vérifier si à l'échelle nationale ce sont les mêmes caractéristiques qui définissent le niveau scolaire d'un pays sur la scène internationale. Ainsi nous avons regrouper les pays en trois catégories : fort, moyen et faible selon les résultats des élèves qui y étudient. 
 
 
-```{r,  echo=FALSE, message=FALSE, warning=FALSE}
+
+## A — Le capital économique affecte-t-il la réussite scolaire uniformément au sein de l'OCDE
+
+
+Nous avons vu dans la première partie qu'à l'échelle individuelle certaines variables économiques étaient liées à la réussite scolaire d'un élève. Nous voulons maintenant savoir si ces mêmes variables influencent le niveau scolaire d'un pays par rapport aux autres dans l'OCDE. Ainsi, nous avons calculer la moyenne pour chaque groupe de pays des variables significatives à l'échelle individuelles. 
+```{r, label="fig-15", fig.cap="moyennes des variables par groupe par pays", echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(kableExtra)
+
+# =========================
+# 1. GROUPES DE PAYS
+# =========================
 niveau_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
   summarise(
@@ -1103,14 +1099,22 @@ niveau_pays <- pisa_oecd_clean %>%
   )
 
 # =========================
-# 2. VARIABLES
+# 2. LABELS PROPRES
 # =========================
-vars_analyse <- c("ESCS", "SCHSUST", "PQSCHOOL",
-                  "ST059Q01TA", "ST059Q02JA",
-                  "EXPO21ST", "HISEI", "HOMEPOS",
-                  "LEARRES", "PARINVOL")
+labels_vars <- c(
+  ESCS        = "Statut socio-économique (ESCS)",
+  SCHSUST     = "Durabilité scolaire perçue",
+  PQSCHOOL    = "Qualité de l’école",
+  ST059Q01TA  = "Sentiment d’appartenance",
+  ST059Q02JA  = "Sentiment d’exclusion",
+  EXPO21ST    = "Compétences du XXIe siècle",
+  HISEI       = "Statut professionnel parental",
+  HOMEPOS     = "Biens matériels à domicile",
+  LEARRES     = "Ressources éducatives",
+  PARINVOL    = "Implication parentale"
+)
 
-vars_analyse <- intersect(vars_analyse, names(pisa_oecd_clean))
+vars_analyse <- intersect(names(labels_vars), names(pisa_oecd_clean))
 
 # =========================
 # 3. MOYENNES PAR GROUPE
@@ -1128,104 +1132,14 @@ moyennes_groupe <- pisa_oecd_clean %>%
                                "Dans la moyenne",
                                "Performant"))
   ) %>%
-  arrange(groupe)
-
-# =========================
-# 4. TABLEAU
-# =========================
-kable(moyennes_groupe,
-      digits = 2,
-      caption = "Moyennes des variables par groupe de pays",
-      booktabs = TRUE) %>%
-  kable_styling(latex_options = c("hold_position", "scale_down"),
-                font_size = 8) %>%
-  row_spec(1, background = "#f8d7da") %>%
-  row_spec(2, background = "#fff3cd") %>%
-  row_spec(3, background = "#d4edda") %>%
-  footnote(
-    general = "NOTE DE LECTURE : Dans les pays en difficulté, la valeur de l'indice ESCS est en moyenne de -0,22.",
-    general_title = "",
-    footnote_as_chunk = TRUE
-  )
-```
-
-
-
-
-## A — Le capital économique affecte-t-il la réussite scolaire uniformément au sein de l'OCDE
-
-
-Nous avons vu dans la première partie qu'à l'échelle individuelle certaines variables économiques étaient liées à la réussite scolaire d'un élève. Nous voulons maintenant savoir si ces mêmes variables influencent le niveau scolaire d'un pays par rapport aux autres dans l'OCDE. Ainsi, nous avons calculer la moyenne des variables significatives à l'échelle individuelles pour chaque partie du classement des pays de pays . 
-```{r, label="fig-15", fig.cap="moyennes des variables par groupe par pays", echo=FALSE, message=FALSE, warning=FALSE}
-library(dplyr)
-library(kableExtra)
-
-# Labels lisibles
-labels_vars <- c(
-  ESCS        = "Indice socio-économique (ESCS)",
-  SCHSUST     = "Durabilité scolaire perçue",
-  PQSCHOOL    = "Qualité perçue de l’école",
-  ST059Q01TA  = "Sentiment d’appartenance à l’école",
-  ST059Q02JA  = "Sentiment d’exclusion scolaire",
-  EXPO21ST    = "Exposition aux compétences du XXIe siècle",
-  HISEI       = "Statut professionnel parental",
-  HOMEPOS     = "Biens matériels à domicile",
-  LEARRES     = "Ressources éducatives",
-  PARINVOL    = "Implication parentale"
-)
-
-# Variables réellement présentes
-vars_analyse <- intersect(
-  names(labels_vars),
-  names(pisa_oecd_clean)
-)
-
-# Niveau des pays
-niveau_pays <- pisa_oecd_clean %>%
-  group_by(CNT) %>%
-  summarise(
-    score_moyen = mean(score_global, na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(
-    groupe = case_when(
-      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Performant",
-      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
-      TRUE ~ "Dans la moyenne"
-    )
-  )
-
-moyennes_groupe <- pisa_oecd_clean %>%
-  left_join(
-    niveau_pays %>% select(CNT, groupe),
-    by = "CNT"
-  ) %>%
-  group_by(groupe) %>%
-  summarise(
-    across(all_of(vars_analyse), ~ mean(.x, na.rm = TRUE)),
-    .groups = "drop"
-  ) %>%
-  
-  # Ordre souhaité des groupes
-  mutate(
-    groupe = factor(
-      groupe,
-      levels = c(
-        "Performant",
-        "Dans la moyenne",
-        "En difficulté"
-      )
-    )
-  ) %>%
-  
   arrange(groupe) %>%
   
-  # Renommage des colonnes
-  rename_with(
-    ~ labels_vars[.x],
-    all_of(vars_analyse)
-  )
-# Tableau final
+  # ⭐ RENOMMAGE PROPRE
+  rename_with(~ labels_vars[.x], all_of(vars_analyse))
+
+# =========================
+# 4. TABLEAU FINAL
+# =========================
 kable(
   moyennes_groupe,
   digits = 2,
@@ -1236,59 +1150,31 @@ kable(
     latex_options = c("hold_position", "scale_down"),
     font_size = 8
   ) %>%
-  row_spec(
-    which(moyennes_groupe$groupe == "Performant"),
-    background = "#d4edda"
-  ) %>%
-  row_spec(
-    which(moyennes_groupe$groupe == "Dans la moyenne"),
-    background = "#fff3cd"
-  ) %>%
-  row_spec(
-    which(moyennes_groupe$groupe == "En difficulté"),
-    background = "#f8d7da"
+  
+  row_spec(1, background = "#f8d7da") %>%
+  row_spec(2, background = "#fff3cd") %>%
+  row_spec(3, background = "#d4edda") %>%
+  
+  footnote(
+    general = "NOTE DE LECTURE : Les valeurs correspondent aux moyennes des variables dans chaque groupe de pays (standardisées pour les indices). Les pays performants présentent des niveaux plus élevés sur les variables favorables à la réussite scolaire.",
+    general_title = "",
+    footnote_as_chunk = TRUE
   )
-
-niveau_pays <- pisa_oecd_clean %>%
-  group_by(CNT) %>%
-  summarise(score_moyen = mean(score_global, na.rm = TRUE), .groups = "drop") %>%
-  mutate(groupe = case_when(
-    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Performant",
-    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
-    TRUE ~ "Dans la moyenne"
-  ))
-
-moyennes_groupe <- pisa_oecd_clean %>%
-  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT") %>%
-  mutate(groupe = factor(groupe,
-                         levels = c("En difficulté",
-                                    "Dans la moyenne",
-                                    "Performant"))) %>%
-  group_by(groupe) %>%
-  summarise(across(all_of(vars_analyse), ~ mean(.x, na.rm = TRUE)),
-            .groups = "drop")
-
-
-
 ```
 
-<<<<<<< HEAD
-Afin de rendre l'analyse du tableau ci dessus plus claire, il est important de rappeler que ESCS est composé d'HOMEPOS et que ces deux variables ainsi que LEARRES sont des variables standardisées. L'indice ESCS est à l'échelle individuelle fortement lié au niveau scolaire. Il est important de prendre des pincettes lors de l'analyse à l'échelle macroéconomque puisqu'on efface les inégalités au sein d'un même pays. On constate à cette échelle qu'une relation existe bel et bien. Il existe un écart de 0,48 point entre les pays en difficulté et les pays aux meilleurs résultats, ce qui reste modeste pour un indice standardisé. On constate également une asymétrie. L'écart entre les pays en difficulté et ceux aux résultats intermédiaires est près de 4 fois supérieur à celui des pays aux résultats intermédiaires et ceux aux meilleurs résultats. On peut en conclure que le statut socio-économique joue surtout par le bas. Un faible niveau ESCS semble davantage pénalisant qu'un indice élevé est bénéfique. Ainsi, la pauvreté des milieux scolaires serait un frein plus puissant que la richesse n'en serait un accélérateur. On pourrait aussi imaginer un effet de seuil. Au-delà d'un certain niveau socio-économique, l'ESCS cesse d'être le facteur déterminant du niveau scolaire d'un pays. 
-=======
-Afin de rendre l'analyse du tableau ci dessus plus claire, il est important de rappeler que ESCS est composé d'HOMEPOS (biens matériels à domicile) et que ces deux variables ainsi que les ressources éducatives sont des variables standardisées. L'indice ESCS est à l'échelle individuelle fortement lié au niveau scolaire. Il est important de prendre des pincettes lors de l'analyse à l'échelle macroéconomque puisqu'on efface les inégalités au sein d'un même pays. On constate à cette échelle qu'une relation existe bel et bien. Il existe un écart de 0,48 point entre le groupe faible et le groupe fort, ce qui reste modeste pour un indice standardisé. On constate également une asymétrie. L'écart entre le groupe faible et moyen est prés de 4 fois supérieur à celui entre le groupe moyen et fort. On peut en conclure que le statut socio-économique joue surtout par le bas. Un faible niveau ESCS semble davantage pénalisant qu'un indice élevé est bénéfique. Ainsi, la pauvreté des milieux scolaires serait un frein plus puissant que la richesse n'en serait un accélérateur. On pourrait aussi imaginer un effet de seuil. Au-delà d'un certain niveau socio-économique, l'ESCS cesse d'être le facteur déterminant du niveau scolaire d'un pays. 
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
+Afin de rendre l'analyse du tableau ci dessus plus claire, il est important de rappeler que ESCS est composé d'HOMEPOS et que ces deux variables ainsi que LEARRES sont des variables standardisées. L'indice ESCS est à l'échelle individuelle fortement lié au niveau scolaire. Il est important de prendre des pincettes lors de l'analyse à l'échelle macroéconomque puisqu'on efface les inégalités au sein d'un même pays. On constate à cette échelle qu'une relation existe bel et bien. Il existe un écart de 0,48 point entre le groupe faible et le groupe fort, ce qui reste modeste pour un indice standardisé. On constate également une asymétrie. L'écart entre le groupe faible et moyen est prés de 4 fois supérieur à celui entre le groupe moyen et fort. On peut en conclure que le statut socio-économique joue surtout par le bas. Un faible niveau ESCS semble davantage pénalisant qu'un indice élevé est bénéfique. Ainsi, la pauvreté des milieux scolaires serait un frein plus puissant que la richesse n'en serait un accélérateur. On pourrait aussi imaginer un effet de seuil. Au-delà d'un certain niveau socio-économique, l'ESCS cesse d'être le facteur déterminant du niveau scolaire d'un pays. 
 
 Du fait de la composition de l'indice, on observe une tendance similaire pour les possesions matérielles, avec un effet légèrement plus amplifié.
 
-De plus, à l'échelle individuelle la possession de livres est lié au niveau scolaire. On retrouve également cette intuition à l'échelle nationale. Comme l'indice ESCS l'écart est plus important entre les pays en difficulté et ceux aux résultats intermédiaires qu'entre ces derniers et les pays aux meilleures résultats. Cependant les écarts ne sont pas comparables entre les deux indices.L'indice ESCS est un indice standardisé alors que ST255Q01JA est une variable ordinale codée numérique. Si on se rapporte au code de l'indice, l'entier dont sont le plus proche trois moyennes est 4. Cela correspont à la présence de 26 à 100 livres au domicile familial. De cette manière, l'écart ne semble plus aussi significatif. 
+De plus, à l'échelle individuelle la possession de livres est lié au niveau scolaire. On retrouve également cette intuition à l'échelle nationale. Comme l'indice ESCS l'écart est plus important entre les pays faibles et moyens qu'entre le groupe moyen et fort. Cependant les écarts ne sont pas comparables entre les deux indices.L'indice ESCS est un indice standardisé alors que ST255Q01JA est une variable ordinale codée numérique. Si on se rapporte au code de l'indice, l'entier dont sont le plus proche trois moyennes est 4. Cela correspont à la présence de 26 à 100 livres au domicile familial. De cette manière, l'écart ne semble plus aussi significatif. 
 
-Quant à l'indice LEARRES, il peut être à la fois interpréter comme résultant de l'environnement scolaire et des ressources que l'école met à disposition de l'élève en dehors du temps scolaire que comme représentatif du niveau économique du ménage. A l'échelle individuelle, on constatait une absence totale de corrélation avec le niveau scolaire. Cependant à l'échelle nationale, le résultat est autre et peut être contre intuitif. Une valeur élevé de cet indice signfie que lors des fermetures d'école l'élève à eu accès a davantage de ressources variées qu'une valeur faible. Une valeur faible peut ainsi traduire à la fois un manque d"équipement ou un manque de suivi de la part de l'école. On constate à l'échelle nationale qu'au sein des pays en difficulté les élèves ont eu accès à davantage de ressources que dans les pays aux meilleures résultats et ceux aux résultats intermédiaires dont la moyenne est similaire à 0,02 point de pourcentage près. Ce résultat interpèle puisque le niveau de capital socio-économique est lié au niveau scolaire. On pourrait penser que autant les pays avec un indice ESCS élevé que ses habitants disposent de davantage de moyens pour permettre le suivi de l'école à distance et qu'ainsi, l'indice LEARRES serait plus élevé pour les pays aux meilleurs résultats or c'est le contraire. Cela peut s'expliquer par le fait que les pays en difficulté ont pu être moins touché par les fermetures d'école ou encore que l'indice LEARRES mesure la quantité des ressources pédagogiques à dispositif et non pas la qualité. Enfin, il es possible que les réponses des élèves soient biaisés. Les élèves des pays en difficulté pourraient avoir surestimés leurs ressources disponibles puisqu'ils répondant par rapport à ce qu'il connaissent. 
+Quant à l'indice LEARRES, il peut être à la fois interpréter comme résultant de l'environnement scolaire et des ressources que l'école met à disposition de l'élève en dehors du temps scolaire que comme représentatif du niveau économique du ménage. A l'échelle individuelle, on constatait une absence totale de corrélation avec le niveau scolaire. Cependant à l'échelle nationale, le résultat est autre et peut être contre intuitif. Une valeur élevé de cet indice signfie que lors des fermetures d'école l'élève à eu accès a davantage de ressources variées qu'une valeur faible. Une valeur faible peut ainsi traduire à la fois un manque d"équipement ou un manque de suivi de la part de l'école. On constate à l'échelle nationale que dans le groupe faible les élèves ont eu accès à davantage de ressources que dans les pays forts et moyens dont la moyenne est similaire à 0,02 point de pourcentage près. Ce résultat interpèle puisque le niveau de capital socio-économique est lié au niveau scolaire. On pourrait penser que autant les pays avec un indice ESCS élevé que ses habitants disposent de davantage de moyens pour permettre le suivi de l'école à distance et qu'ainsi, l'indice LEARRES serait plus élevé pour les pays forts or c'est le contraire. Cela peut s'expliquer par le fait que les pays du groupe faible ont pu être moins touché par les fermetures d'école ou encore que l'indice LEARRES mesure la quantité des ressources pédagogiques à dispositif et non pas la qualité. Enfin, il es possible que les réponses des élèves soient biaisés. Les élèves des pays faibles pourraient avoir surestimés leurs ressources disponibles puisqu'ils répondant par rapport à ce qu'il connaissent. 
 
 ## B — L'environnement scolaire national est il vecteur des réussites ?
 
-Dans la première Partie, nous avons vu que certaines variables liées à l'environnement scolaire de l'élève avaient en effet un impact sur la qualité de ses notes. Pour constater cela au niveau des pays, nous avons décidé de nous pencher à nouveau sur les pays aux meilleurs résultats et les pays en difficulté, mais en nous penchant maintenant sur la différence entre certains indicateurs pour les 2 types de pays.
+Dans la première Partie, nous avons vu que certaines variables liées à l'environnement scolaire de l'élève avaient en effet un impact sur la qualité de ses notes. Pour constater cela au niveau des pays, nous avons décidé de nous pencher à nouveau sur les pays forts et les pays faibles, mais en nous penchant maintenant sur la différence entre certains indicateurs pour les 2 types de pays.
 
-```{r, label="fig-16", fig.cap="Écart standardisé entre pays aux meilleurs résultats et ceux en difficulté", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, results='hide'}
+```{r, label="fig-16", fig.cap="Écart standardisé entre pays forts et faibles", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, results='hide'}
 
 # Variables de la partie B (sans DURECEC et ST267Q02JA)
 vars_analyse_b <- intersect(
@@ -1310,8 +1196,8 @@ moyennes_groupe_b <- pisa_oecd_clean %>%
     "Qualité établissement" = PQSCHOOL,
     "Soutien apprentissages" = SCHSUST,
     "Qualité enseignement maths" = ST272Q01JA,
-    "Heures de maths/semaine" = ST059Q01TA,
-    "Heures de cours/semaine" = ST059Q02JA,
+    "Nombre de cours de maths/semaine" = ST059Q01TA,
+    "Nombre de cours/semaine" = ST059Q02JA,
     "Exposition maths XXIe s." = EXPO21ST
   )
 
@@ -1321,97 +1207,17 @@ kable(moyennes_groupe_b, digits = 2,
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Performant"),   background = "#d4edda") %>%
   row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Dans la moyenne"),  background = "#fff3cd") %>%
-  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "En difficulté"), background = "#f8d7da")
-
-```
-
-
-```{r, label="fig-17", fig.cap="écart standardisée entre les pays aux meilleurs résultats et ceux en difficulté", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
-
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-# Variables de la partie B (sélection sécurisée)
-vars_b <- intersect(
-  c("PQSCHOOL", "SCHSUST", "ST272Q01JA", "ST059Q01TA",
-    "ST059Q02JA", "EXPO21ST"),
-  names(pisa_oecd_clean)
-)
-
-# 1. Standardisation au niveau élève
-pisa_std <- pisa_oecd_clean %>%
-  mutate(across(all_of(vars_b), ~ as.numeric(scale(.x))))
-
-# 2. Ajout du groupe de pays
-pisa_std <- pisa_std %>%
-  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
-
-# 3. Moyennes par groupe
-moyennes_std <- pisa_std %>%
-  group_by(groupe) %>%
-  summarise(across(all_of(vars_b), ~ mean(.x, na.rm = TRUE)),
-            .groups = "drop")
-
-# 4. Labels propres
-labels_b <- c(
-  PQSCHOOL   = "Qualité établissement",
-  SCHSUST    = "Soutien apprentissages",
-  ST272Q01JA = "Qualité enseignement maths",
-  ST059Q01TA = "Heures de maths/semaine",
-  ST059Q02JA = "Heures de cours/semaine",
-  EXPO21ST   = "Exposition maths XXIe s."
-)
-
-# Passage en format long
-moyennes_long_std <- moyennes_std %>%
-  pivot_longer(
-    cols = -groupe,
-    names_to = "Variable",
-    values_to = "Valeur_std"
-  ) %>%
-  mutate(Variable = recode(Variable, !!!labels_b))
-
-# 5. Différence Performant - En difficulté
-# 5. Différence Performant - En difficulté
-
-diff_std <- moyennes_long_std %>%
-  filter(groupe %in% c("En difficulté", "Performant")) %>%
-  pivot_wider(
-    names_from = groupe,
-    values_from = Valeur_std
-  ) %>%
-  mutate(
-    diff = Performant - `En difficulté`
-  ) %>%
-  arrange(diff)
-
-# 6. Graphique
-ggplot(diff_std,
-       aes(x = reorder(Variable, diff), y = diff, fill = diff > 0)) +
-  geom_col(width = 0.7) +
-  coord_flip() +
-  scale_fill_manual(values = c("TRUE" = "#1a9850", "FALSE" = "#d73027"),
-                    guide = "none") +
-  labs(
-
-    title = "Écart standardisé entre pays performants et en difficulté",
-    x = NULL,
-    y = "Différence standardisée",
-    caption = "Variables centrées-réduites au niveau élève avant agrégation.\nNOTE DE LECTURE : L'écart standardisé entre les pays aux meilleurs \nrésultats et ceux en difficulté est de -0,41 en terme de qualité de l'établissement."
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "En difficulté"), background = "#f8d7da") %>%
+    # ⭐ NOTE DE LECTURE
+  footnote(
+    general = "Note de lecture : Les élèves des pays performant on en moyenne 26.23 cours par semaine",
+    general_title = "Moyenne des variables par groupe de pays"
   )
 ```
 
-On constate sur ce graphique que les résultats sont contre-intuitifs. En effet, la qualité de l'établissement semble avoir un gros effet négatif sur la réussite d'un pays, ainsi que le nombre d'heures de cours par semaine. Le premier point est compliqué à expliquer :  Ce dernier point peut peut être s'expliquer par le fait que les pays de l'OCDE sont globalement des pays dévellopés avec un nombre décent d'heures de cours par semaine. Ainsi, il serait faux de dire que moins il y a d'heure de cours, meilleurs sont les résultats. En effet, il est fort probable qu'un pays hors OCDE avec très peu d'heures de cours par semaine ait de bien moins bon résultats qu'un pays de l'OCDE. Seulement, cette différence s'explique peut être par le fait que les élèves sont plus épanouis avec moins d'heures de cours, et ont donc de meilleurs résultats. On peut par exemple prendre le cas de l'Allemagne, qui n'a le cours que le matin et laisse l'après-midi libre pour des activités sportives par exemple. Moins d'heure de cours peut aussi dire plus de travail personnel, ce qui expliquerait aussi les meilleurs résultats. Enfin, le soutien de l'aprentissage semble être une caractéristique des pays aux meilleurs résultats, en effet accompagner tout type d'élèves ne peut que être bénéfique sur la réussite globale du pays.
 
-Afin d'approfondir le lien entre pays et résultats, nous pouvons aussi étudier le nuage de points suivant : 
+```{r, label="fig-17", fig.cap="écart standardisée entre forts et faibles", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
-```{r, label="fig-18", fig.cap="Lien entre niveau scolaire moyen et nombre d'heures de cours", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
@@ -1421,7 +1227,7 @@ library(ggrepel)
 # =========================
 niveau_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
-  summarise(
+  summarise( 
     score_moyen = mean(score_global, na.rm = TRUE),
     .groups = "drop"
   ) %>%
@@ -1455,7 +1261,7 @@ ggplot(
     size = 3
   ) +
   labs(
-    title = "Lien entre niveau scolaire moyen et nombre d’heures de cours",
+    title = "Lien entre niveau scolaire moyen et nombre de cours",
     x = "Score moyen global",
     y = "Heures de cours par semaine",
     caption = "Source : PISA 2022 — OCDE"
@@ -1472,7 +1278,73 @@ ggplot(
   )
 ```
 
-On peut voir ici que à part le Mexique, tout les pays en difficulté ont un nombre élevé d'heures de cours par semaine, tandis que dans les pays aux meilleurs résultats, il y a des pays tels que le Canada, la Nouvelle-Zelande ou l'Australie avec un volume horaire faible. Ainsi, ce nuage de points nous montre que l'augmentation du temps de travail et les résultats n'ont pas une relation linéaire, et même l'inverse (Le Costa Rica ne réussit pas bien malgré un très gros volume horaire, tandis que à part le Mexique, les pays avec un faible volume horaire résusissent bien). Ce n'est pas non plus décoréllé, car des pays comme la Pologne ou l'Estonie ont un nombre important d'heures par semaine, et sont quand même dans les pays aux meilleurs résultats.
+On constate sur ce graphique que les résultats sont contre-intuitifs. En effet, la qualité de l'établissement semble avoir un gros effet négatif sur la réussite d'un pays, ainsi que le nombre d'heures de cours par semaine. Le premier point est compliqué à expliquer :  Ce dernier point peut peut être s'expliquer par le fait que les pays de l'OCDE sont globalement des pays dévellopés avec un nombre décent d'heures de cours par semaine. Ainsi, il serait faux de dire que moins il y a d'heure de cours, meilleurs sont les résultats. En effet, il est fort probable qu'un pays hors OCDE avec très peu d'heures de cours par semaine ait de bien moins bon résultats qu'un pays de l'OCDE. Seulement, cette différence s'explique peut être par le fait que les élèves sont plus épanouis avec moins d'heures de cours, et ont donc de meilleurs résultats. On peut par exemple prendre le cas de l'Allemagne, qui n'a le cours que le matin et laisse l'après-midi libre pour des activités sportives par exemple. Moins d'heure de cours peut aussi dire plus de travail personnel, ce qui expliquerait aussi les meilleurs résultats. Enfin, le soutien de l'aprentissage semble être une caractéristique des pays forts, en effet accompagner tout type d'élèves ne peut que être bénéfique sur la réussite globale du pays.
+
+Afin d'approfondir le lien entre pays et résultats, nous pouvons aussi étudier le nuage de points suivant : 
+
+```{r, label="fig-18", fig.cap="Lien entre niveau scolaire moyen et nombre d'heures de cours", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+
+# =========================
+# 1. GROUPES DE PAYS (si besoin ailleurs)
+# =========================
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = case_when(
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+      TRUE ~ "Dans la moyenne"
+    )
+  )
+
+# =========================
+# 2. DONNÉES ABSENCE
+# =========================
+absence_pays <- pisa_oecd_clean %>%
+  mutate(
+    ST260Q01JA = as.numeric(as.character(ST260Q01JA))
+  ) %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    prop_absence = mean(ST260Q01JA >= 2, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# =========================
+# 3. GRAPHIQUE (SANS COULEUR)
+# =========================
+
+ggplot(
+  absence_pays,
+  aes(x = prop_absence, y = score_moyen)
+) +
+  geom_point(size = 2) +
+  geom_text_repel(
+    aes(label = CNT),
+    size = 3
+  ) +
+  labs(
+    title = "Lien entre absences prolongées et performance des pays",
+    x = "Proportion d'élèves avec absences prolongées",
+    y = "Score moyen global",
+    caption = "Source : PISA 2022 — OCDE\nNote : l'Estonie a un score global moyen d'environ 530 pour  une proportion d'absentéisme prolongée de 3%"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
+
+On peut voir ici que à part le Mexique, tout les pays faibles ont un nombre élevé d'heures de cours par semaine, tandis que dans les pays forts, il y a des pays tels que le Canada, la Nouvelle-Zelande ou l'Australie avec un volume horaire faible. Ainsi, ce nuage de points nous montre que l'augmentation du temps de travail et les résultats n'ont pas une relation linéaire, et même l'inverse (Le Costa Rica ne réussit pas bien malgré un très gros volume horaire, tandis que à part le Mexique, les pays avec un faible volume horaire résusissent bien). Ce n'est pas non plus décoréllé, car des pays comme la Pologne ou l'Estonie ont un nombre important d'heures par semaine, et sont quand même dans les pays forts.
 
 Ainsi, à l’échelle des pays, les variables de l’environnement scolaire ne présentent pas de lien clair avec la réussite moyenne. En particulier, le volume horaire ne semble pas déterminant, comme le montre l’absence de relation linéaire dans le nuage de points. Ces résultats, parfois contre-intuitifs, suggèrent que la quantité d’enseignement importe moins que sa qualité. Ils mettent en évidence des mécanismes différents de ceux observés à l’échelle individuelle.
 
@@ -1480,15 +1352,8 @@ Ainsi, à l’échelle des pays, les variables de l’environnement scolaire ne 
 
 Dans la première partie, nous avons constaté que le niveau d'études des parents était un facteur très important dans la réussite de l'élève. Afin d'étudier cette variable au niveau des pays, nous avons pris le mode de cette variable par pays, c'est à dire la modalité la plus representé au sein de ce pays.
 
-```{r label="fig-19", fig.cap="Lien entre niveau d'éducation parental et performance des pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-19", fig.cap="Lien entre niveau d'éducation parental (mode) et performance des pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
-library(dplyr)
-library(ggplot2)
-<<<<<<< HEAD
-=======
-library(ggrepel)
-
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
 
 # =========================
 # 1. GROUPES DE PAYS (score moyen)
@@ -1501,8 +1366,8 @@ niveau_pays <- pisa_oecd_clean %>%
   ) %>%
   mutate(
     groupe = case_when(
-      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
-      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En diwfficulté",
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Performant",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
       TRUE ~ "Dans la moyenne"
     )
   )
@@ -1511,23 +1376,22 @@ niveau_pays <- pisa_oecd_clean %>%
 # 2. DATASET PROPRE (FIX IMPORTANT HISCED)
 # =========================
 hisced_pays <- pisa_oecd_clean %>%
-  
+ 
   mutate(
     # FIX CRITIQUE : assure que HISCED est numérique
     HISCED = as.numeric(as.character(HISCED))
   ) %>%
-  
+ 
   group_by(CNT) %>%
-  
+ 
   summarise(
     hisced_mean = mean(HISCED, na.rm = TRUE),
     score_moyen = mean(score_global, na.rm = TRUE),
     .groups = "drop"
-<<<<<<< HEAD
   ) %>%
-  
+ 
   left_join(niveau_pays, by = "CNT") %>%
-  
+ 
   # sécurité anti-NA (IMPORTANT pour PDF)
   filter(
     !is.na(hisced_mean),
@@ -1555,28 +1419,10 @@ ggplot(hisced_pays,
   scale_fill_manual(
     values = c(
       "En difficulté" = "#d73027",
-      "Résultats intermédiaires" = "#fee08b",
-      "Meilleurs résultats" = "#1a9850"
+      "Dans la moyenne" = "#fee08b",
+      "Performant" = "#1a9850"
     )
-=======
-  )
 
-
-# Nuage de points sans couleurs ni légende
-ggplot(
-  hisced_pays,
-  aes(x = hisced_mode, y = score_moyen)
-) +
-  geom_point(size = 2) +
-  geom_text_repel(
-    aes(label = CNT),
-    size = 3
-  ) +
-  geom_smooth(
-    method = "lm",
-    se = FALSE,
-    color = "black"
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
   ) +
 
   labs(
@@ -1587,21 +1433,8 @@ ggplot(
     caption = "Source : PISA 2022 — OCDE"
   ) +
 
-  theme_minimal() +
-
-  theme(
-<<<<<<< HEAD
-    legend.position = "none",
-    plot.title = element_text(face = "bold"),
-    axis.text.x = element_text(angle = 15, hjust = 1)
-=======
-    plot.title = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
-  )
+  theme_minimal()
 ```
-
-d
 
 Tout d'abord, on constate que touts les pays ont un niveau élevé à HISCED, le plus bas étant à 3, ce qui correspond à l'équivalent du baccalauréat. De plus, les pays performants ne sont pas necessairement ceux avec les niveaux d'études des parents les plus hauts. On peut par exemple prendre l'exemple de la République Tchèque, l'Autriche ou la Suisse. Il reste toutetfois compliqué d'analyser ce graphique car la grande majorité des pays se situent au même niveau (8 et 9), ce qui laisse peu de dispersion pour étudier les différences.
 
@@ -1609,10 +1442,11 @@ Tout d'abord, on constate que touts les pays ont un niveau élevé à HISCED, le
 Désormais, penchons-nous sur les effets de l'immigration. Pour cela, nous allons nous intéresser à la proportion de migrants de première et deuxième génération parmis les élèves.
 
 ```{r, label="fig-20", fig.cap="Lien entre proportion d'élèves issus de l'immigration et performance des pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
-<<<<<<< HEAD
+install.packages("rnaturalearthdata")
 library(rnaturalearth)
 library(rnaturalearthdata)
 library(sf)
+library(scales)
 
 immigration_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
@@ -1678,54 +1512,9 @@ ggplot() +
     title    = "Immigration scolaire et performance dans les pays de l'OCDE",
     subtitle = "Couleur de fond : proportion d'élèves issus de l'immigration\nCarrés : groupe de performance (vert = forts, orange = intermédiaires, rouge = faibles)",
     caption  = "Source : PISA 2022 – OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : la Suisse présente une proportion élevée d'élèves immigrés et appartient au groupe des meilleurs résultats."
-=======
-library(dplyr)
-library(ggplot2)
-library(ggrepel)
-
-# Agrégation au niveau pays
-immig_pays <- pisa_oecd_clean %>%
-  group_by(CNT) %>%
-  summarise(
-    score_moyen = mean(score_global, na.rm = TRUE),
-    prop_immig = mean(IMMIG %in% c(2, 3), na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Nuage de points sans couleurs ni légende
-ggplot(
-  immig_pays,
-  aes(x = prop_immig, y = score_moyen)
-) +
-  geom_point(size = 2) +
-<<<<<<< HEAD
-  geom_text_repel(
-    aes(label = CNT),
-    size = 3
-=======
-  geom_text_repel(aes(label = CNT), size = 3) +
-  scale_color_manual(
-    values = c(
-      "En difficulté" = "#d73027",
-      "Dans la moyenne" = "#fee08b",
-      "Meilleurs résultats" = "#1a9850"
-    ),
-    name = "Groupe de pays"
->>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
-  ) +
-  labs(
-    x = "Proportion d'élèves issus de l'immigration",
-    y = "Score moyen global",
-<<<<<<< HEAD
-    caption = "Source : PISA 2022 — OCDE"
-=======
-    caption = "Source : PISA 2022 — OCDE.\nNOTE DE LECTURE : En Norvège, environ 14% des élèves sont issus de l'immigration pour un score global moyen)."
->>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
   ) +
   theme_minimal(base_size = 10) +
   theme(
-<<<<<<< HEAD
     plot.title    = element_text(face = "bold", size = 11),
     plot.subtitle = element_text(size = 8, color = "grey40"),
     plot.caption  = element_text(size = 7, color = "grey50"),
@@ -1734,14 +1523,10 @@ ggplot(
     panel.grid  = element_blank(),
     axis.text   = element_blank(),
     axis.title  = element_blank()
-=======
-    plot.title = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
   )
 
 ```
-On constate que la part d'immigrés a très peu d'impact sur les résultats. Parmis les pays aux meilleurs résultats, il existe des pays avec très peu et beaucoup d'immigration (Japon et Suisse par exemple). Parmis les pays en difficulté, il y a moins d'immigration, ce qui est lié à l'attractivité plus faible de ces pays, comme par exemple le Mexique et la Colombie.
+On constate que la part d'immigrés a très peu d'impact sur les résultats. Parmis les pays forts, il existe des pays avec très peu et beuacoup d'immigration (Japon et Suisse par exemple). Parmis les pays faibles, il y a moins d'immigration, ce qui est lié à l'attractivité plus faible de ces pays, comme par exemple le Mexique et la Colombie.
 
 Pour les absences, nous allons nous intéresser à la proportion d'élèves ayant au moins une absence prolongée
 ```{r, label="fig-21", fig.cap="lien entre absences prolongées et performance des pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
@@ -1749,9 +1534,6 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 
-<<<<<<< HEAD
-# Agrégation au niveau pays
-=======
 # =========================
 # 1. GROUPES DE PAYS (AUTONOME)
 # =========================
@@ -1765,36 +1547,23 @@ niveau_pays <- pisa_oecd_clean %>%
     groupe = case_when(
       score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
       score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
-      TRUE ~ "Dans la moyenne"
+      TRUE ~ "Résultats intermédiaires"
     )
   )
 
 # =========================
 # 2. DONNÉES ABSENCE (AUTONOME)
 # =========================
->>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
 absence_pays <- pisa_oecd_clean %>%
-  mutate(
-    ST260Q01JA = as.numeric(as.character(ST260Q01JA))
-  ) %>%
+  mutate(ST260Q01JA = as.numeric(as.character(ST260Q01JA))) %>%
   group_by(CNT) %>%
   summarise(
     score_moyen = mean(score_global, na.rm = TRUE),
     prop_absence = mean(ST260Q01JA >= 2, na.rm = TRUE),
     .groups = "drop"
-  )
+  ) %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT")
 
-<<<<<<< HEAD
-# Nuage de points sans couleurs ni légende
-ggplot(
-  absence_pays,
-  aes(x = prop_absence, y = score_moyen)
-) +
-  geom_point(size = 2) +
-  geom_text_repel(
-    aes(label = CNT),
-    size = 3
-=======
 # =========================
 # 3. GRAPHIQUE
 # =========================
@@ -1805,29 +1574,25 @@ ggplot(absence_pays,
   scale_color_manual(
     values = c(
       "En difficulté" = "#d73027",
-      "Dans la moyenne" = "#fee08b",
+      "Résultats intermédiaires" = "#fee08b",
       "Meilleurs résultats" = "#1a9850"
     ),
     name = "Groupe de pays"
->>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   labs(
     title = "Lien entre absences prolongées et performance des pays",
     x = "Proportion d'élèves avec absences prolongées",
     y = "Score moyen global",
-<<<<<<< HEAD
-    caption = "Source : PISA 2022 — OCDE"
-=======
     caption = "Source : PISA 2022 — OCDE \n Note de lecture: En Australie environ 6,5% des élèves sont concernés par les absences prolongées pour un socre global moyen d'environ 498"
->>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
+    legend.position = "bottom"
   )
 ```
-Ici, le lien semble être plus clair. En effet, la plupart des pays en difficulté ont une proportion plus élevée d’absentéisme, tandis que les pays les plus performants présentent globalement des taux d’absences plus faibles. La tendance négative observée suggère que l’assiduité des élèves joue un rôle important dans la réussite scolaire à l’échelle nationale. Contrairement à certaines variables étudiées précédemment, l’absentéisme apparaît donc comme un facteur plus directement associé aux écarts de performance entre pays, même si quelques exceptions subsistent.
+Ici, le lien semble être plus clair. En effet, la plupart des pays faibles ont une proportion plus élevée d’absentéisme, tandis que les pays les plus performants présentent globalement des taux d’absences plus faibles. La tendance négative observée suggère que l’assiduité des élèves joue un rôle important dans la réussite scolaire à l’échelle nationale. Contrairement à certaines variables étudiées précédemment, l’absentéisme apparaît donc comme un facteur plus directement associé aux écarts de performance entre pays, même si quelques exceptions subsistent.
 
 
 Ainsi, contrairement aux variables liées à l’environnement scolaire, certaines caractéristiques socio-familiales apparaissent davantage liées aux écarts de performance entre pays. Si le niveau d’éducation des parents est difficile à exploiter ici en raison d’un manque de dispersion, d’autres facteurs comme l’absentéisme montrent un lien plus clair avec la réussite scolaire. À l’inverse, la part d’élèves issus de l’immigration ne semble pas constituer un facteur déterminant à elle seule. Dans l’ensemble, ces résultats suggèrent que les inégalités entre pays s’expliquent en partie par des facteurs sociaux et comportementaux, plus que par les seules caractéristiques du système éducatif.
@@ -1845,7 +1610,7 @@ sont pas renseignées pour 28 pays sur les 37 que compte notre échantillon.
 Les inclure aurait contraint à n'analyser qu'une poignée de pays, ce qui 
 aurait rendu l'analyse à la fois statistiquement fragile et géographiquement 
 peu représentative de l'OCDE. Nous avons donc fait le choix de les exclure 
-des variables actives, au profit d'un échantillon de 25 pays.Les variables actives retenues pour l'ACP ont été sélectionnées de manière à couvrir les trois dimensions explorées en partie I, tout en privilégiant celles qui caractérisent le contexte national plutôt que le profil individuel de l'élève. On y retrouve ainsi des indicateurs du capital économique et culturel des familles, des variables décrivant l'organisation et l'intensité du système scolaire, ainsi qu'un indicateur de ressources éducatives à domicile, conservé malgré sa faible corrélation individuelle pour tester si son rôle diffère à l'échelle nationale.
+des variables actives, au profit d'un échantillon de 26 pays.Les variables actives retenues pour l'ACP ont été sélectionnées de manière à couvrir les trois dimensions explorées en partie I, tout en privilégiant celles qui caractérisent le contexte national plutôt que le profil individuel de l'élève. On y retrouve ainsi des indicateurs du capital économique et culturel des familles, des variables décrivant l'organisation et l'intensité du système scolaire, ainsi qu'un indicateur de ressources éducatives à domicile, conservé malgré sa faible corrélation individuelle pour tester si son rôle diffère à l'échelle nationale.
 
 Les scores scolaires sont quant à eux introduits en variables 
 supplémentaires : ils ne participent pas à la construction des axes mais 
@@ -1920,7 +1685,7 @@ coord_ind <- coord_ind %>%
 
 ```
 
-Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **62,9% de la variance totale**. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
+Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **59,9% de la variance totale**. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
 
 ```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
@@ -1935,7 +1700,6 @@ fviz_eig(
   ncp        = 5
 ) +
   labs(
-    title   = "Éboulis des valeurs propres",
     x       = "Composante principale",
     y       = "Pourcentage de variance expliquée (%)",
     caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : la ligne rouge indique le seuil de 1 (règle de Kaiser)."
@@ -1958,11 +1722,11 @@ Le cercle des corrélations représente les variables actives dans le plan Dim.1
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
   ESCS        = "ESCS",
-  LEARRES     = "LEARRES",
-  SCHSUST     = "SCHSUST",
-  ST059Q01TA  = "Heures maths/semaine",
-  ST059Q02JA  = "Heures cours/semaine",
-  EXPO21ST    = "EXPO21ST"
+  LEARRES     = "Ressources éducatives",
+  SCHSUST     = "Effort institutionnel",
+  ST059Q01TA  = "Séances de maths/semaine",
+  ST059Q02JA  = "Séances/semaine",
+  EXPO21ST    = "Modernité du système éducatif"
 )
 
 # Coordonnées des variables actives
@@ -2002,7 +1766,7 @@ ggplot() +
   geom_text_repel(data = coord_var,
                   aes(x = Dim1, y = Dim2, label = label),
                   size = 3, color = "grey20",
-                  box.padding = 0.4, max.overlaps = 20) +
+                  box.padding = 0.5, max.overlaps = 20) +
   # Flèches variables supplémentaires (scores) en rouge tirets
   geom_segment(data = coord_sup,
              aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
@@ -2013,7 +1777,6 @@ ggplot() +
                 size = 3, color = "grey40", fontface = "bold",
                 box.padding = 0.5, max.overlaps = 20) +
   labs(
-    title   = "Cercle des corrélations — plan Dim.1 × Dim.2",
     subtitle = "Flèches rouges en pointillés : scores scolaires (variables supplémentaires)",
     x       = paste0("Dim.1 (", pct[1], "% de variance)"),
     y       = paste0("Dim.2 (", pct[2], "% de variance)"),
@@ -2030,29 +1793,18 @@ ggplot() +
 ```
 
 
-D'après le graphique de contribution aux axes en annexe, le premier axe — qui concentre à lui seul 36 % de la variance — structure les pays selon leur niveau de capital socio-économique. Deux variables contribuent fortement à cet axe et pointent toutes dans la même direction : l'indice composite de statut socio-économique et culturel des familles et le statut professionnel le plus élevé des parents. Cette convergence traduit leur forte intercorrélation. Ce qui est cohérent avec le fait que ces trois dimensions mesurent la richesse familiale. Les scores scolaires, introduits comme variables supplémentaires, se projettent dans cette même direction et sont très proches du cercle unité. Cette proximité suggère une association forte entre le capital socio-économique national et la performance scolaire, sans qu'on puisse toutefois en conclure un lien de causalité direct. L'agrégation au niveau national peut masquer des mécanismes plus complexes à l'œuvre au sein de chaque pays.
+D'après le graphique de contribution aux axes en annexe, le premier axe — qui concentre à lui seul 35,8 % de la variance — structure les pays selon l'organisation pédagogique de leur système scolaire. Quatre variables contribuent majoritairement à sa construction : le soutien institutionnel de l'établissement aux apprentissages (SCHSUST), l'exposition aux mathématiques contemporaines (EXPO21ST), les ressources éducatives à domicile (LEARRES) et, dans le sens opposé, le nombre d'heures de cours hebdomadaires (ST059Q02JA). Cet axe oppose donc des systèmes qui privilégient un accompagnement institutionnel riche et diversifié à des systèmes dont la signature pédagogique passe d'abord par un volume horaire élevé. Les scores scolaires, projetés en variables supplémentaires, ne présentent qu'une corrélation faible avec cette dimension (r = −0,23) : la manière dont un système éducatif s'organise pédagogiquement n'est pas, à elle seule, un déterminant fort de la performance moyenne nationale.
 
-À l'opposé sur cet axe, les ressources éducatives mises à disposition des 
-élèves lors des fermetures d'école pointent dans la direction inverse. Ce 
-résultat, contre-intuitif au premier abord, avait déjà été identifié à 
-l'échelle individuelle en partie I : cette variable ne semble pas fonctionner comme un simple indicateur de richesse ou de réussite. Il est possible qu'elle capte davantage un contexte sanitaire particulier, les fermetures liées à la pandémie, qu'un avantage structurel durable pour les élèves.
+Le second axe, qui capture 24,1 % de la variance, est avant tout porté par le capital socio-économique des familles. L'indice ESCS contribue à hauteur de près de 38 % à sa construction, en opposition avec le nombre d'heures de mathématiques hebdomadaires (ST059Q01TA), qui contribue dans des proportions similaires en sens inverse. Cette opposition est riche d'enseignement : elle suggère que les systèmes où les élèves bénéficient d'un capital socio-économique élevé tendent à mobiliser un volume horaire de mathématiques plus modéré, tandis que les systèmes à intensité horaire forte se rencontrent plutôt dans des contextes où le capital familial moyen est plus faible. Les scores scolaires se projettent fortement dans la direction du capital socio-économique élevé, avec une corrélation r = −0,64 avec cet axe — une intensité nettement supérieure à celle observée sur le premier axe. Ce résultat confirme, à l'échelle agrégée, ce qui ressortait déjà de l'analyse individuelle de la partie I : le capital socio-économique constitue le principal déterminant des écarts de performance entre pays.
 
-Le second axe qui représente **26,9 % de variance** capture une logique davantage organisationnelle. D'un côté, le nombre d'heures hebdomadaires de cours et le nombre d'heures de mathématiques par semaine tirent cet axe vers le bas, caractérisant des systèmes à forte intensité horaire. De l'autre, le 
-soutien institutionnel de l'établissement aux apprentissages et l'exposition 
-aux mathématiques contemporaines tirent dans le sens opposé, caractérisant des systèmes qui privilégient un accompagnement qualitatif plutôt que quantitatif. Il serait toutefois hasardeux d'interpréter cette opposition comme un arbitrage tranché entre quantité et qualité : cet axe traduit avant tout la diversité des organisations scolaires au sein de l'OCDE, sans qu'on puisse hiérarchiser ces approches à partir de ce seul plan factoriel.
-
-Les scores scolaires présentent une corrélation modérée avec le second axe (r = 0,29), ce qui suggère que la dimension organisationnelle n'est pas totalement indépendante des performances nationales. Toutefois, cet effet reste nettement plus faible que celui du premier axe, et il convient de l'interpréter avec prudence — une corrélation de 0,29 n'explique que 8 % de la variance des scores, contre 41 % pour le premier axe.
+Il convient toutefois de rester prudent dans l'interprétation. D'une part, une corrélation, même de cette intensité, ne suffit pas à établir un lien de causalité direct. D'autre part, le travail sur des moyennes nationales gomme des mécanismes plus fins qui jouent au sein de chaque pays. Enfin, la variable LEARRES présente une orientation contre-intuitive — elle pointe du côté du capital socio-économique faible — comme nous l'avions déjà constaté à l'échelle individuelle ; il est probable qu'elle capte davantage l'intensité de l'exposition aux fermetures liées à la pandémie qu'un avantage structurel durable.
 
 ---
 
 ## C — Une typologie des pays de l’OCDE selon leur position dans l’espace factoriel
 
 
-<<<<<<< HEAD
-La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (meilleurs résultats, intermédiaire, en difficulté) défini en partie II.
-=======
-La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (performant, dans la moyenne, en difficulté) défini en partie II.
->>>>>>> c7cd3e23d8a2232f98514165d7ef6781df0c0113
+La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (fort, moyen, faible) défini en partie II.
 
 ```{r, label="fig-26", fig.cap="Projection des pays — clustering K-means (k = 4)", acp-clustering, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6}
 
@@ -2061,123 +1813,129 @@ coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
 colnames(coord_ind) <- c("Dim1", "Dim2")
 coord_ind$CNT <- rownames(coord_ind)
 
-# ── Méthode du coude (graphique → annexe) ───────────────────────────────────
-set.seed(42)
-inertie <- sapply(1:8, function(k) {
-  kmeans(coord_ind[, c("Dim1", "Dim2")],
-         centers = k, nstart = 25, iter.max = 100)$tot.withinss
-})
-
-# ── K-means k=4 ─────────────────────────────────────────────────────────────
+# ── K-means k=4 ──────────────────────────────────────────────────────────────
 set.seed(42)
 km <- kmeans(coord_ind[, c("Dim1", "Dim2")],
-             centers = 4, nstart = 25, iter.max = 100)
-
+             centers = 4, nstart = 50, iter.max = 100)
 coord_ind$cluster <- factor(km$cluster)
 
 # ── Identifier chaque cluster par son centroïde ──────────────────────────────
 centres <- coord_ind %>%
   group_by(cluster) %>%
-  summarise(mDim1 = mean(Dim1), mDim2 = mean(Dim2), .groups = "drop")
-
-# Nommer selon position (on ajuste après avoir vu les résultats)
-centres <- centres %>%
+  summarise(mDim1 = mean(Dim1), mDim2 = mean(Dim2), .groups = "drop") %>%
   mutate(nom = case_when(
-    mDim1 < -1                      ~ "Systèmes sous contrainte",
-    mDim1 > 0.5  & mDim2 > 0.5     ~ "Capital élevé,\nsoutien fort",
-    mDim1 > 0.5  & mDim2 < -0.5    ~ "Capital élevé,\nintensité horaire forte",
-    TRUE                             ~ "Profil intermédiaire"
+    mDim2 >  1.5 ~ "Pays à faible capital socio-économique",  # bleu : très haut sur Dim2
+    mDim1 >  1   ~ "Pays à fort soutien institutionnel",      # rouge : très à droite
+    mDim1 < -1   ~ "Pays à forte intensité scolaire",         # vert : très à gauche
+    TRUE         ~ "Pays sans avantages structurels"          # orange : au centre
   ))
+
 
 coord_ind <- coord_ind %>%
   left_join(centres %>% select(cluster, nom), by = "cluster")
 
-# ── Couleurs fixes par cluster ───────────────────────────────────────────────
+# ── Couleurs liées au NOM (pas au numéro de cluster) ─────────────────────────
 couleurs_clusters <- c(
-  "1" = "#1a9850",
-  "2" = "#4393c3",
-  "3" = "#d73027",
-  "4" = "#f4a582"
+  "Pays à forte intensité scolaire"        = "#1a9850",  # vert
+  "Pays à faible capital socio-économique" = "#4393c3",  # bleu
+  "Pays à fort soutien institutionnel"     = "#d73027",  # rouge
+  "Pays sans avantages structurels"        = "#f4a582"   # orange
 )
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 📝 PLACEMENT DES ÉTIQUETTES — modifie librement label_x et label_y
+# ═════════════════════════════════════════════════════════════════════════════
+labels_position <- data.frame(
+  nom = c(
+    "Pays à forte intensité scolaire",        # vert
+    "Pays à faible capital socio-économique", # bleu
+    "Pays à fort soutien institutionnel",     # rouge
+    "Pays sans avantages structurels"         # orange
+  ),
+  label_x = c(-2.7,  2.5,  2.5,  -1.0),   # ⬅️ position horizontale (axe Dim.1)
+  label_y = c( 1.5,  3.2, -2.3,  -1.5)    # ⬅️ position verticale (axe Dim.2)
+)
+# ═════════════════════════════════════════════════════════════════════════════
 
 pct <- round(res_acp$eig[1:2, 2], 1)
 
-# Centroïdes pour labels sur le graphique
-centres_plot <- coord_ind %>%
-  group_by(cluster, nom) %>%
-  summarise(Dim1 = mean(Dim1), Dim2 = mean(Dim2), .groups = "drop")
+# ── Biplot final ─────────────────────────────────────────────────────────────
+ggplot(coord_ind, aes(x = Dim1, y = Dim2)) +
+  geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3, linetype = "dashed") +
+  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3, linetype = "dashed") +
 
-# ── Biplot avec clusters ─────────────────────────────────────────────────────
-ggplot(coord_ind, aes(x = Dim1, y = Dim2,
-                      color = cluster, fill = cluster,
-                      label = CNT)) +
-  geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
-  geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
-  stat_ellipse(aes(group = cluster),
-               geom = "polygon", alpha = 0.07,
-               level = 0.75, show.legend = FALSE) +
-  geom_point(size = 3.5, alpha = 0.9) +
-  geom_text_repel(size = 2.8, fontface = "bold",
-                  box.padding = 0.4, max.overlaps = 30,
+  # 🔵 Ellipses englobant TOUS les points de chaque cluster
+  geom_mark_ellipse(aes(group = nom, color = nom, fill = nom),
+                    alpha = 0.18,
+                    linewidth = 1,
+                    expand = unit(4, "mm"),
+                    show.legend = FALSE) +
+
+  # Points
+  geom_point(aes(color = nom), size = 3.5, alpha = 0.9, show.legend = FALSE) +
+
+  # Labels des pays
+  geom_text_repel(aes(label = CNT, color = nom),
+                  size = 2.8, fontface = "bold",
+                  box.padding = 0.6, max.overlaps = 30,
                   min.segment.length = 0,
                   show.legend = FALSE) +
-  annotate("label",
-         x = c(-3.75, 0, 1.8, 0),
-         y = c(0.1, 1.67, -2.8, -0.67),
-         label = c("Systèmes sous\ncontrainte",
-                   "Modèles anglophones\net nordiques",
-                   "Systèmes exigeants\nà capital élevé",
-                   "Europe continentale\net Amérique du Sud"),
-         color = c("#4393c3", "#d73027", "#f4a582", "#1a9850"),
-             size = 2.6, fontface = "italic",
-             fill = "white", alpha = 0.85, label.size = 0.3,
+
+  # 📝 Étiquettes des bulles — positions définies par labels_position
+  geom_label(data = labels_position,
+             aes(x = label_x, y = label_y, label = nom, color = nom),
+             size = 2.8, fontface = "italic",
+             fill = "white", alpha = 0.92, label.size = 0.4,
+             inherit.aes = FALSE,
              show.legend = FALSE) +
-  scale_color_manual(values = couleurs_clusters, guide = "none") +
-  scale_fill_manual(values  = couleurs_clusters, guide = "none") +
+
+  scale_color_manual(values = couleurs_clusters) +
+  scale_fill_manual(values  = couleurs_clusters) +
+
   labs(
-    title   = "Projection des pays de l'OCDE dans le plan factoriel — clustering K-means (k = 4)",
-    subtitle = "Les ellipses représentent les zones de concentration à 75 % de chaque cluster.",
-    x       = paste0("Dim.1 — Capital socio-économique (", pct[1], "% de variance)"),
-    y       = paste0("Dim.2 — Intensité institutionnelle (", pct[2], "% de variance)"),
-    caption = paste0(
+    subtitle = "Les ellipses englobent l'ensemble des pays de chaque cluster.",
+    x        = paste0("Dim.1 — Organisation pédagogique (", pct[1], "% de variance)"),
+    y        = paste0("Dim.2 — Capital socio-économique (", pct[2], "% de variance)"),
+    caption  = paste0(
       "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\n",
-      "Note de lecture : la Turquie présente une coordonnée de −2,3 sur Dim.1, ",
-      "ce qui la place parmi les pays au capital socio-économique le plus faible de l'échantillon."
+      "Note de lecture : Dim.2 est négativement corrélée au score moyen (r = −0,64). ",
+      "Un pays plus haut sur le graphique présente un capital socio-économique plus faible."
     )
   ) +
   theme_minimal(base_size = 11) +
   theme(
-    plot.title    = element_text(face = "bold", size = 12),
-    plot.subtitle = element_text(size = 9, color = "grey40"),
-    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0)
+    plot.title       = element_text(face = "bold", size = 12),
+    plot.subtitle    = element_text(size = 9, color = "grey40"),
+    plot.caption     = element_text(size = 8, color = "grey40", hjust = 0),
+    panel.grid.minor = element_blank()
   )
-
-# Afficher les pays par cluster pour ajuster les noms
-print(coord_ind %>% arrange(cluster) %>% select(CNT, cluster, nom))
 ```
 
-La classification en quatre groupes révèle des profils nationaux contrastés que le seul classement par score moyen ne permettait pas de faire apparaître.
+La classification en quatre groupes révèle des profils nationaux contrastés que le seul classement par score moyen ne permettait pas de faire apparaître. Lue à la lumière des deux dimensions identifiées — l'organisation pédagogique sur Dim.1 et le capital socio-économique sur Dim.2 — cette typologie met en évidence quatre configurations distinctes au sein de l'OCDE.
 
-Le premier groupe, le plus large, rassemble onze pays dont la majorité appartient l'Europe continentale, auxquels s'ajoute le Chili, bien que ce dernier se distingue par une position plus excentrée, témoignant d'un profil socio-économique plus contraint que ses homologues européens du groupe.. Leur position centrale dans le plan factoriel — ni fortement positifs ni fortement négatifs sur les deux axes — traduit un profil intermédiaire : un capital socio-économique modéré et une organisation scolaire sans singularité marquée. C'est dans ce groupe que se situe la France, dont la médiocrité relative du classement PISA ne s'explique pas par un déficit flagrant sur l'un ou l'autre axe, mais plutôt par l'absence d'un avantage structurel clairement identifiable.
+Le premier groupe (cluster orange) rassemble une dizaine de pays principalement d'Europe continentale. Leur position centrale sur Dim.1 indique une organisation pédagogique sans singularité marquée, ni excès de soutien institutionnel ni volume horaire particulièrement élevé. Sur Dim.2, ces pays bénéficient d'un capital socio-économique légèrement supérieur à la moyenne de l'OCDE. C'est dans ce groupe que se situe la France, dont la médiocrité relative du classement PISA ne s'explique pas par un déficit flagrant sur l'un ou l'autre axe, mais plutôt par l'absence d'un avantage structurel clairement identifiable.
 
-Le deuxième groupe, le plus homogène, réunit la Colombie, le Mexique et la Turquie. Ces trois pays partagent un capital socio-économique nettement inférieur à la moyenne de l'OCDE, ce qui les place à l'extrémité gauche du premier axe. Leur regroupement confirme que les contraintes structurelles pesant sur ces systèmes éducatifs sont d'abord d'ordre économique.
+Le deuxième groupe (cluster bleu) réunit le Chili, la Colombie et la Turquie. Ces pays se distinguent par un capital socio-économique nettement inférieur à la moyenne de l'OCDE, combiné à une orientation pédagogique tournée vers le soutien institutionnel, sans que cette caractéristique ne se traduise par de bonnes performances. Au contraire, ils figurent parmi les moins performants de l'échantillon, ce qui souligne que le soutien institutionnel, à lui seul, ne suffit pas à compenser le déficit de capital socio-économique des familles.
 
-Le troisième groupe rassemble les grandes démocraties anglophones — Canada, Australie, Irlande, Nouvelle-Zélande, États-Unis — ainsi que la Finlande et, de façon plus surprenante, le Portugal. Ces pays partagent un capital socio-économique élevé combiné à des systèmes qui privilégient le soutien institutionnel sur le volume horaire. Leurs performances solides suggèrent qu'un accompagnement qualitatif peut se substituer efficacement à l'intensité horaire.
+Le troisième groupe (cluster rouge) rassemble les grandes démocraties anglo-saxones ainsi que la Finlande et le Portugal. Le Mexique s'y trouve également associé en raison de son orientation pédagogique, bien que son capital socio-économique le distingue nettement des autres pays du groupe. Pour l'essentiel du cluster, la combinaison d'un capital socio-économique élevé et d'un système privilégiant l'accompagnement qualitatif sur l'intensité horaire se traduit par des résultats solides. Cela suggère qu'un accompagnement institutionnel riche peut se substituer efficacement à un volume horaire élevé, dès lors qu'il s'inscrit dans un contexte socio-économique favorable.
 
-Le quatrième groupe, enfin, regroupe le Japon, la Corée, Israël et l'Islande. Les trois premiers sont parmi les mieux classés de l'OCDE et combinent un capital socio-économique élevé avec une forte intensité horaire — ce qui illustre qu'un système exigeant peut, dans certains contextes, amplifier les effets d'un capital familial déjà favorable. L'Islande constitue toutefois un cas atypique au sein de ce groupe : malgré un profil similaire sur les deux axes, son score moyen la place parmi les pays les moins performants de l'échantillon, ce qui suggère que d'autres facteurs, non captés par ces deux dimensions, jouent un rôle déterminant dans son cas.
+Le quatrième groupe (cluster vert), situés sur la gauche du plan factoriel. Leur profil pédagogique commun se caractérise par un volume horaire de cours plus élevé et un soutien institutionnel moins développé. Les performances au sein de ce groupe sont toutefois très hétérogènes : le Japon figure parmi les pays les mieux classés de l'OCDE, tandis que le Costa Rica se trouve parmi les moins performants. Cette hétérogénéité suggère que d'autres facteurs, non captés par ces deux dimensions, jouent un rôle déterminant dans la performance scolaire de certains de ces pays.
 
 
 # Conclusion
 
 Ce rapport avait pour ambition de comprendre si les sources des inégalités de niveau scolaire dans les pays de l'OCDE sont les mêmes à l'échelle individuelle qu'à l'échelle nationale. L'analyse des données PISA 2022, menée successivement à ces deux niveaux puis confirmée par une ACP, permet d'apporter des éléments de réponse nuancés à cette question.
-À l'échelle individuelle, le capital socio-économique des familles apparaît comme le facteur le plus structurellement lié à la réussite scolaire. L'indice ESCS, la possession de biens matériels et le statut professionnel des parents sont tous positivement corrélés aux scores des élèves, confirmant l'intuition de nombreux travaux antérieurs, dont ceux de Bourdieu et Passeron sur la reproduction sociale. En revanche, certains facteurs que l'on pourrait spontanément associer à la réussite semblent jouer un rôle bien plus limité qu'attendu : la présence de ressources éducatives à domicile ou le nombre d'heures de mathématiques hebdomadaires n'apparaissent pas liés au niveau scolaire. C'est davantage le type de filière suivi qui semble constituer le vecteur d'inégalités le plus fort à l'échelle individuelle, bien qu'il convienne d'interpréter ce résultat avec prudence, la filière étant souvent le reflet d'orientations précoces elles-mêmes conditionnées par le milieu socio-économique.
-À l'échelle nationale, les résultats convergent en partie avec ce constat, mais révèlent également des mécanismes propres. Le capital socio-économique moyen d'un pays reste associé à son niveau de performance, avec toutefois une asymétrie notable : un faible niveau d'ESCS semble davantage pénalisant qu'un niveau élevé n'est bénéfique. En revanche, les variables liées à l'environnement scolaire national produisent des résultats plus contre-intuitifs. Le volume horaire hebdomadaire, par exemple, n'entretient pas de relation linéaire claire avec la performance des pays, ce qui invite à penser que c'est moins la quantité d'enseignement que sa qualité qui conditionne la réussite à cette échelle. L'ACP vient confirmer ces résultats : le premier axe factoriel, structuré autour du capital socio-économique, est corrélé à hauteur de r = 0,71 avec les scores moyens nationaux, tandis que le second axe, capturant la diversité des organisations scolaires, n'y est quasiment pas corrélé (r = 0,04).
 
-En définitive, si le capital socio-économique constitue un facteur structurant commun aux deux niveaux d'analyse, les variables scolaires et socio-familiales n'opèrent pas de la même manière selon que l'on observe un élève ou un pays. Ces résultats appellent néanmoins à la prudence : les corrélations observées ne permettent pas d'établir des relations de causalité, et le travail sur des moyennes nationales efface une variabilité interne qui peut être considérable. 
+À l'échelle individuelle, le capital socio-économique des familles apparaît comme le facteur le plus structurellement lié à la réussite scolaire. L'indice ESCS, la possession de biens matériels et le statut professionnel des parents sont tous positivement corrélés aux scores des élèves, confirmant l'intuition de nombreux travaux antérieurs, dont ceux de Bourdieu et Passeron sur la reproduction sociale. En revanche, certains facteurs que l'on pourrait spontanément associer à la réussite semblent jouer un rôle bien plus limité qu'attendu : la présence de ressources éducatives à domicile ou le nombre d'heures de mathématiques hebdomadaires n'apparaissent pas liés au niveau scolaire. C'est davantage le type de filière suivi qui semble constituer le vecteur d'inégalités le plus fort à l'échelle individuelle, bien qu'il convienne d'interpréter ce résultat avec prudence, la filière étant souvent le reflet d'orientations précoces elles-mêmes conditionnées par le milieu socio-économique.
+
+À l'échelle nationale, les résultats convergent en partie avec ce constat, mais révèlent également des mécanismes propres. Le capital socio-économique moyen d'un pays reste associé à son niveau de performance, avec toutefois une asymétrie notable : un faible niveau d'ESCS semble davantage pénalisant qu'un niveau élevé n'est bénéfique. En revanche, les variables liées à l'environnement scolaire national produisent des résultats plus contre-intuitifs. Le volume horaire hebdomadaire, par exemple, n'entretient pas de relation linéaire claire avec la performance des pays, ce qui invite à penser que c'est moins la quantité d'enseignement que sa qualité qui conditionne la réussite à cette échelle.
+
+L'ACP vient préciser ces résultats en isolant deux logiques distinctes au sein des systèmes éducatifs de l'OCDE. La première, qui structure le premier axe factoriel, oppose les pays selon leur organisation pédagogique — soutien institutionnel et diversification d'un côté, intensité horaire de l'autre — sans qu'aucune de ces deux logiques ne se traduise mécaniquement par de meilleures performances (r = −0,23 avec les scores moyens). La seconde dimension, en revanche, est porteuse du capital socio-économique des familles et présente une corrélation nettement plus marquée avec la performance nationale (|r| = 0,64). Cette hiérarchie confirme, à l'échelle agrégée, ce que l'analyse individuelle suggérait déjà : les inégalités de niveau scolaire dans les pays de l'OCDE sont d'abord et avant tout des inégalités socio-économiques, et l'organisation pédagogique des systèmes n'intervient qu'à la marge dans la détermination des performances moyennes.
+
+En définitive, si le capital socio-économique constitue un facteur structurant commun aux deux niveaux d'analyse, les variables scolaires et socio-familiales n'opèrent pas de la même manière selon que l'on observe un élève ou un pays. Ces résultats appellent néanmoins à la prudence : les corrélations observées ne permettent pas d'établir des relations de causalité, et le travail sur des moyennes nationales efface une variabilité interne qui peut être considérable.
 
 
 # Annexe 
-
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE,}
 library(dplyr)
@@ -2227,7 +1985,7 @@ centroides <- carte_data %>%
   )
 
 ggplot() +
-  
+ 
   # Fond de carte
   geom_sf(
     data = carte_data,
@@ -2235,7 +1993,7 @@ ggplot() +
     color = "white",
     linewidth = 0.2
   ) +
-  
+ 
   # Couleur selon part d'immigrés
   geom_sf(
     data = carte_data %>% filter(!is.na(prop_immigres)),
@@ -2243,7 +2001,7 @@ ggplot() +
     color = "white",
     linewidth = 0.3
   ) +
-  
+ 
   # Carrés de performance
   geom_point(
     data = centroides,
@@ -2251,7 +2009,7 @@ ggplot() +
     shape = 15,
     size = 3
   ) +
-  
+ 
   # Bordure blanche
   geom_point(
     data = centroides,
@@ -2262,21 +2020,21 @@ ggplot() +
     fill = NA,
     color = "white"
   ) +
-  
+ 
   # Zoom sur l'Europe
   coord_sf(
     xlim = c(-25, 45),
     ylim = c(34, 72),
     expand = FALSE
   ) +
-  
+ 
   scale_fill_gradient(
     low    = "#ddeeff",
     high   = "#1a5276",
     labels = percent_format(accuracy = 1),
     name   = "Part d'élèves\nissus de\nl'immigration"
   ) +
-  
+ 
   scale_color_manual(
     values = c(
       "En difficulté"            = "#c0392b",
@@ -2285,19 +2043,19 @@ ggplot() +
     ),
     name = "Groupe de\nperformance"
   ) +
-  
+ 
   labs(
     title = "Immigration scolaire et performance en Europe (OCDE)",
-    
+   
     subtitle =
       "Couleur de fond : proportion d'élèves issus de l'immigration\nCarrés : niveau moyen de performance scolaire",
-    
+   
     caption =
       "Source : PISA 2022 – OCDE.\nChamp : pays européens membres de l'OCDE."
   ) +
-  
+ 
   theme_minimal(base_size = 10) +
-  
+ 
   theme(
     plot.title = element_text(face = "bold", size = 12),
     plot.subtitle = element_text(size = 8, color = "grey40"),
@@ -2308,11 +2066,6 @@ ggplot() +
     axis.title = element_blank()
   )
 ```
-
-
-
-
-
 
 ```{r, label="fig-27", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
@@ -2341,7 +2094,6 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
   coord_flip() +
   scale_fill_manual(values = c("Dim.1" = "#1a9850", "Dim.2" = "#4393c3")) +
   labs(
-    title   = "Contribution des variables aux axes 1 et 2 (%)",
     x       = NULL, y       = "Contribution (%)",
     fill    = NULL,
     caption = "Source : PISA 2022 — OCDE.\nNote de lecture : la ligne pointillée indique la contribution moyenne attendue si toutes les variables contribuaient également."
@@ -2373,7 +2125,6 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
                                 "Repr. partielle" = "#fee08b"),
                     name = NULL) +
   labs(
-    title   = "Qualité de représentation des pays dans le plan Dim.1 × Dim.2 (cos²)",
     x       = NULL, y = "Cos² (Dim.1 + Dim.2)",
     caption = "Source : PISA 2022 — OCDE.\nNote de lecture : un cos² > 0,7 (ligne pointillée) indique une bonne représentation du pays dans le plan factoriel.\nUn cos² faible signifie que le pays est mieux décrit par les axes suivants."
   ) +
@@ -2413,7 +2164,6 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) 
                               "3" = "Modèles anglophones et nordiques",
                               "4" = "Systèmes exigeants à capital élevé")) +
   labs(
-    title   = "Lien entre l'axe 1 de l'ACP et le score moyen national",
     subtitle = paste0("r de Pearson = ", round(corr_dim1_score, 2)),
     x       = "Dim.1 — Capital socio-économique",
     y       = "Score moyen national (PISA 2022)",
@@ -2428,7 +2178,7 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) 
   )
 ```
 
-```{r, label="fig-30", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-30", fig.cap="Valeurs propres et variance expliquée (5 premiers axes)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 # Tableau des valeurs propres
 vp <- as.data.frame(res_acp$eig)
@@ -2439,7 +2189,6 @@ vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
 kable(
   head(vp, 5),
   digits  = 2,
-  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
   booktabs = TRUE
 ) %>%
   kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
