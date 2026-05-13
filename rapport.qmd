@@ -465,7 +465,7 @@ Nous disposons également de variables décrivant l’environnement scolaire nat
 
 Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
 
-```{r, label="fig-5", fig.cap="Variables scolaires qualitatives et lien avec le score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
+```{r, label="fig-4", fig.cap="Variables scolaires qualitatives et lien avec le score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
 library(ggplot2)
 
 library(ggplot2)
