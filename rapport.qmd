@@ -4,6 +4,7 @@ format:
   pdf:
     documentclass: report
     mainfont: "TeX Gyre Termes"
+    
     header-includes: |
       \usepackage{enumitem}
       \setlist[itemize]{label=$\bullet$}  % Puce ronde classique
@@ -883,7 +884,7 @@ Quant à l'indice des ressources éducatives, il peut être à la fois interpré
 
 Dans la première Partie, nous avons vu que certaines variables liées à l'environnement scolaire de l'élève avaient en effet un impact sur la qualité de ses notes. Pour constater cela au niveau des pays, nous avons décidé de nous pencher à nouveau sur les pays forts et les pays faibles, mais en nous penchant maintenant sur la différence entre certains indicateurs pour les 2 types de pays.
 
-```{r, label="fig-16", fig.cap="Écart standardisé entre pays forts et faibles", echo=FALSE, message=FALSE, warning=FALSE, fig.width=1, fig.height=1}
+```{r, label="fig-16", fig.cap="Moyenne de variable par groupe de pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=1, fig.height=1}
 library(kableExtra)
 
 vars_analyse_b <- intersect(
@@ -928,7 +929,7 @@ kable(
   digits = 2,
   booktabs = TRUE,
   longtable = FALSE,
-  caption = "Moyennes des variables par groupe de pays"
+  caption = ""
 ) %>%
   
   kable_styling(
@@ -1013,7 +1014,6 @@ ggplot(
     size = 3
   ) +
   labs(
-    title = "Lien entre absences prolongées et performance des pays",
     x = "Proportion d'élèves avec absences prolongées",
     y = "Score moyen global",
     caption = "Source : PISA 2022 — OCDE\nNote : l'Estonie a un score global moyen d'environ 530 pour  une proportion d'absentéisme prolongée de 3%"
@@ -1190,7 +1190,6 @@ ggplot() +
     name = "Groupe de\nperformance"
   ) +
   labs(
-    title    = "Immigration scolaire et performance dans les pays de l'OCDE",
     subtitle = "Couleur de fond : proportion d'élèves issus de l'immigration\nCarrés : groupe de performance (vert = forts, orange = intermédiaires, rouge = faibles)",
     caption  = "Source : PISA 2022 – OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : la Suisse présente une proportion élevée d'élèves immigrés et appartient au groupe des meilleurs résultats."
   ) +
@@ -1261,7 +1260,6 @@ ggplot(absence_pays,
     name = "Groupe de pays"
   ) +
   labs(
-    title = "Lien entre absences prolongées et performance des pays",
     x = "Proportion d'élèves avec absences prolongées",
     y = "Score moyen global",
     caption = "Source : PISA 2022 — OCDE \n Note de lecture: En Australie environ 6,5% des élèves sont concernés par les absences prolongées pour un socre global moyen d'environ 498"
