@@ -1079,9 +1079,9 @@ niveau_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
   summarise(score_moyen = mean(score_global, na.rm = TRUE), .groups = "drop") %>%
   mutate(groupe = case_when(
-    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Fort",
-    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "Faible",
-    TRUE ~ "Moyen"
+    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Performant",
+    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+    TRUE ~ "Dans la moyenne"
   ))
 
 vars_analyse <- intersect(
@@ -1132,7 +1132,7 @@ moyennes_groupe_b <- pisa_oecd_clean %>%
   group_by(groupe) %>%
   summarise(across(all_of(vars_analyse_b), ~ mean(.x, na.rm = TRUE)),
             .groups = "drop") %>%
-  mutate(groupe = factor(groupe, levels = c("Faible", "Moyen", "Fort"))) %>%
+  mutate(groupe = factor(groupe, levels = c("Performant", "Dans la moyenne", "En difficulté"))) %>%
   arrange(groupe) %>%
   rename(
     "Groupe de pays" = groupe,
@@ -1149,9 +1149,9 @@ kable(moyennes_groupe_b, digits = 2,
       caption = "Moyennes des variables d’environnement scolaire par groupe de pays",
       booktabs = TRUE) %>%
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
-  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Fort"),   background = "#d4edda") %>%
-  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Moyen"),  background = "#fff3cd") %>%
-  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Faible"), background = "#f8d7da")
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Performant"),   background = "#d4edda") %>%
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Dans la moyenne"),  background = "#fff3cd") %>%
+  row_spec(which(moyennes_groupe_b$`Groupe de pays` == "En difficulté"), background = "#f8d7da")
 
 ```
 
@@ -1217,7 +1217,7 @@ ggplot(diff_std,
   scale_fill_manual(values = c("TRUE" = "#1a9850", "FALSE" = "#d73027"),
                     guide = "none") +
   labs(
-    title = "Écart standardisé entre pays forts et faibles",
+    title = "Écart standardisé entre pays performants et en difficulté",
     x = NULL,
     y = "Différence standardisée (Fort - Faible)",
     caption = "Variables centrées-réduites au niveau élève avant agrégation"
@@ -1256,9 +1256,9 @@ ggplot(heures_pays,
   geom_point(size = 2) +
   geom_text_repel(aes(label = CNT), size = 3) +
   scale_color_manual(values = c(
-    "Faible" = "#d73027",
-    "Moyen"  = "#fee08b",
-    "Fort"   = "#1a9850"
+    "En difficulté" = "#d73027",
+    "Dans la moyenne"  = "#fee08b",
+    "Performant"   = "#1a9850"
   )) +
   labs(
     title = "Lien entre niveau scolaire moyen et nombre d’heures de cours",
@@ -1312,9 +1312,9 @@ ggplot(hisced_pays,
   geom_text_repel(aes(label = CNT), size = 3) +
   geom_smooth(method = "lm", se = FALSE, color = "black") +
   scale_color_manual(values = c(
-    "Faible" = "#d73027",
-    "Moyen"  = "#fee08b",
-    "Fort"   = "#1a9850"
+   "En difficulté" = "#d73027",
+    "Dans la moyenne"  = "#fee08b",
+    "Performant"   = "#1a9850"
   )) +
   labs(
     title = "Lien entre niveau d’éducation parental (mode) et performance des pays",
@@ -1354,10 +1354,9 @@ ggplot(immig_pays,
        aes(x = prop_immig, y = score_moyen, color = groupe)) +
   geom_point(size = 2) +
   geom_text_repel(aes(label = CNT), size = 3) +
-  scale_color_manual(values = c(
-    "Faible" = "#d73027",
-    "Moyen"  = "#fee08b",
-    "Fort"   = "#1a9850"
+  scale_color_manual(values = c(  "En difficulté" = "#d73027",
+    "Dans la moyenne"  = "#fee08b",
+    "Performant"   = "#1a9850"
   )) +
   labs(
     title = "Lien entre proportion d’élèves issus de l’immigration et performance des pays",
@@ -1394,10 +1393,9 @@ ggplot(absence_pays,
        aes(x = prop_absence, y = score_moyen, color = groupe)) +
   geom_point(size = 2) +
   geom_text_repel(aes(label = CNT), size = 3) +
-  scale_color_manual(values = c(
-    "Faible" = "#d73027",
-    "Moyen"  = "#fee08b",
-    "Fort"   = "#1a9850"
+  scale_color_manual(values = c( "En difficulté" = "#d73027",
+    "Dans la moyenne"  = "#fee08b",
+    "Performant"   = "#1a9850"
   )) +
   labs(
     title = "Lien entre absences prolongées et performance des pays",
