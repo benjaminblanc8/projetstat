@@ -107,7 +107,6 @@ Louis GERVILLE-REACHE\\
 
 ```{r, echo=FALSE,results='hide'}
 pisa_oecd_clean=read.table("data_ocde.csv",header = TRUE,sep=",")
-install.packages("reshape2")
 library(reshape2)
 library(dplyr)
 library(tidyr)
@@ -145,7 +144,7 @@ D’autre part, pour mener notre analyse, il est nécessaire de pouvoir confront
 
 Nous avons regroupé les individus d’un même pays dans une nouvelle base de données niveau_pays. Cela a été possible grace à la variable CNT qui correspond au code ISO des pays. Cette manipulation a pour objectif d'étudier la réussite de ces derniers à l’échelle nationale. Nous avons ensuite regrouper ces pays en 3 groupes : les forts, les moyens et les faibles. Pour se faire, nous avons créer la variable score_moyen qui correspond à la moyenne de la variable score_global de l'ensemble des élèves d'un même pays. Elle nous a ainsi permis de classer les pays par niveau. Voici les groupes que nous avons obtenus. Une autre méthode d'analyse que nous avons mis en place est de se concentrer que les 5 pays les plus performants et les 5 qui le sont le moins. Le graphique ci dessous les mets en avant.  
 
-```{r, label="fig-1", fig.cap="Classement des pays de l'OCDE", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=5}
+```{r, label="fig-1", fig.cap="Classement des pays de l'OCDE selon le niveau scolaire", echo=FALSE, message=FALSE, warning=FALSE, fig.width=5, fig.height=3}
 
 # Agrégation par pays
 niveau_pays <- pisa_oecd_clean %>%
@@ -169,10 +168,10 @@ france  <- niveau_pays %>% filter(CNT == "FRA")
 selection <- bind_rows(top3, bottom3, france) %>%
   distinct() %>%
   mutate(groupe = case_when(
-    CNT == "FRA"          ~ "France",
-    CNT %in% top3$CNT    ~ "Top 3",
-    CNT %in% bottom3$CNT ~ "Bottom 3"
-  ))
+  score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
+  score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
+  TRUE ~ "Faible"
+))
 # Position de la France dans le graphique
 pos_fr <- which(levels(reorder(selection$CNT, selection$score_moyen)) == "FRA")
 
@@ -219,11 +218,10 @@ ggplot(selection, aes(x = reorder(CNT, score_moyen),
   coord_flip() +
   
   labs(
-    title   = "Classement des pays : Top 3, Bottom 3 et France",
     x       = NULL,
     y       = "Score moyen global",
     fill    = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : La france a un moyenne générale de 472.2"
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : La France a un moyenne générale de 472.2"
   ) +
   
   theme_minimal() +
@@ -246,7 +244,7 @@ Au sein des pays de l'OCDE, les résultats scolaires très diversifié. Les rés
 Lorsqu'on pense aux inégalités de niveau scolaire, on imagine comme première cause les inégalités économiques. De nombreuses études de l'INSEE montre que dès l'entrée à l'école les enfants issuent de milieux sociaux favorisés ont des acquis supérieurs à ceux issuent de milieux défavorisés. L'indice ESCS est un indice composite crée par l'OCDE afin de mesurer le statut socio-économique d'un individu. Nous allon alors le lien entre la réussite scolaire d'un élève et son statut socio-économique. 
 
 
-```{r, label="fig-2", echo=FALSE,message=FALSE,warning=FALSE}
+```{r, echo=FALSE, results='hide', fig.show='hide', message=FALSE,warning=FALSE}
 # Création de la moyenne globale
 pisa_oecd_clean <- pisa_oecd_clean %>%
   mutate(score_global = (
@@ -367,110 +365,90 @@ Avant tout, nous nous sommes intéréssé à ce que l'on pensait être le princi
 Sur le graphique ci-dessous, on constate un lien entre le score global de l'élève et l'indice ESCS. L’indice ESCS (Economic, Social and Cultural Status) est un indice composite construit par l'OCDE pour mesurer le statut socio-économique et culturel des élèves. C’est un indice standardisé à l'échelle OCDE. Cela signifie qu’il est construit de telle manière que sa moyenne est de 0 et son écart-type de 1.  Il est formé à partir de trois indices : le statut socioprofessionnel des parents (HISEI), le niveau de formation (PARED) des parents, ainsi que le patrimoine familial (HOMEPOS). Ce dernier indice inclut lui-même un grand nombre de variables parmi lesquelles les ressources culturelles, éducatives ainsi que d’autres ressources.
 On constate, en effet, que les élèves ayant un indice ESCS plus élevé ont tendance à avoir des meilleures notes. Ainsi, ce graphique traduit un lien entre réussite scolaire et niveau de capital économique. Plus l'individu est aisé, plus il a de chance de réussir à l'école. Cependant cela ne signifie pas que toutes les variables économiques sont impactantes quant à la réussite d'un élève. Ainsi, nous avons choisi d'étudier un certain nombre de variables représentatives, chacune à leur manière d'un certain capital économique. 
 
-```{r, label="fig-3", fig.cap="Lien entre statut socio-économique (ESCS) et score global", echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE}
+```{r, label="fig-2", fig.cap="Lien entre statut socio-économique (ESCS) et score global", echo=FALSE, fig.width=7, fig.height=5, message=FALSE, warning=FALSE, fig.pos="H"}
+
 
 ggplot(pisa_oecd_clean %>% filter(ESCS > -4 & ESCS < 3),
        aes(x = ESCS, y = score_global)) +
-  geom_density_2d_filled(alpha = 0.85, bins = 8) +
-  scale_fill_brewer(palette = "YlOrRd") +
+  stat_density_2d(
+    aes(fill = after_stat(density)),
+    geom     = "raster",
+    contour  = FALSE
+  ) +
+  scale_fill_gradientn(
+    colours = c("#FFFFB2", "#FEB24C", "#F03B20", "#BD0026"),
+    name    = "Concentration\nd'eleves"
+  ) +
   labs(
-    title = "Lien entre statut socio-économique (ESCS) et score global",
-    x = "Indice ESCS (statut économique, social et culturel)",
-    y = "Score global moyen",
-    fill = "Densité",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les zones plus foncées indiquent une plus forte concentration d'élèves."
+    x       = "Indice ESCS (statut economique, social et culturel)",
+    y       = "Score global moyen",
+    caption = "Source : PISA 2022 - OCDE. Champ : eleves de 15 ans des pays membres de l'OCDE.\nNote de lecture : La concentration d'eleves la plus elevée se situe autour d'un indice ESCS compris entre -0,5 et 0,5,\n associé à un score global proche de 500 points."
   ) +
   theme_minimal() +
   theme(
-    plot.title      = element_text(face = "bold", size = 12),
     plot.caption    = element_text(size = 8, color = "grey40", hjust = 0),
-    legend.position = "none"
+    legend.position = "right"
   )
 ```
 
 
 Pour étudier de manière individuelle l'impact de chaque variable de nature économique, nous avons réalisé deux matrices de corrélation. Une pour les variables quantitatives et une pour les variables qualitatives. Pour les variables quantitatives nous avons utilisé le coefficient de corrélation. Cet indicateur statistique permet de mesurer l’intensité et le sens de la relation linéaire entre deux variables quantitatives. Il est compris entre -1 et 1. Pour les variables qualitatives nous avons utilisé le rapport de corrélation. Il indique quelle part de la variation d'une variable est expliquée par une autre. Il est quant à lui compris entre 0 et 1. 
 
-```{r, label="fig-4", fig.cap="Corrélation entre variables quantitatives économique et scores", echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE}
-# ── Heatmap corrélations avec le score global ──────────────────────────
 
-mat_r_df <- as.data.frame(mat_r)
-mat_r_df$variable <- rownames(mat_r_df)
+Dans un premier temps, on constate le statut professionnel des parents ainsi que la possession de biens matériels sont également corrélés au niveau scolaire. Cela s'explique simplement par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de ce simple fait statistique, on peut facilement penser que la profession des parents impactent celle des enfants. Un effet de reproduction sociale se met en place. Un parent ayant fait de longue étude aura souvent tendance à pousser son enfant à faire de même. 
 
-labels_r <- c(
-  ESCS       = "Statut socio-éco. (ESCS)",
-  HISEI      = "Statut prof. parental (HISEI)",
-  HOMEPOS    = "Biens matériels (HOMEPOS)",
-  CULTPOSS   = "Biens culturels disponibles",
-  LEARRES    = "Ressources éducatives (LEARRES)"
+```{r, label="fig-3", fig.cap="Corrélation entre variables quantitatives économique et score global", echo=FALSE, fig.width=8, fig.height=5, message=FALSE, warning=FALSE, fig.pos="H"}
+# ============================================================
+# FIGURE 3 → Lollipop chart avec gradient de couleur
+# ============================================================
+
+data_lollipop <- data.frame(
+  variable = c("Statut socio-éco.", 
+               "Statut prof. parent", 
+               "Biens matériels", 
+               "Ressources éduc."),
+  r = c(0.41, 0.35, 0.41, 0.01)
 )
 
-# Passage en format long
-mat_r_long <- melt(
-  mat_r_df,
-  id.vars = "variable",
-  variable.name = "score",
-  value.name = "r"
-)
-
-# Ordre des variables
-mat_r_long$variable <- factor(
-  mat_r_long$variable,
-  levels = rev(names(labels_r)[names(labels_r) %in% unique(mat_r_long$variable)])
-)
-
-# Labels
-mat_r_long$label_var <- labels_r[as.character(mat_r_long$variable)]
-
-# Suppression des NA
-mat_r_long <- mat_r_long[!is.na(mat_r_long$label_var), ]
-
-# Renommage du score
-mat_r_long$score <- recode(
-  mat_r_long$score,
-  score_global = "Score global"
-)
-
-# Graphique
-ggplot(mat_r_long, aes(x = score, y = label_var, fill = r)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  
-  geom_text(
-    aes(label = round(r, 2)),
-    color = ifelse(abs(mat_r_long$r) > 0.3, "white", "black"),
-    size = 4,
-    fontface = "bold"
+fig3 <- ggplot(data_lollipop, aes(x = reorder(variable, r), y = r)) +
+  geom_segment(aes(xend = variable, y = 0, yend = r, color = r), 
+               linewidth = 1.5) +
+  geom_point(aes(color = r), size = 6) +
+  scale_color_gradient2(
+    low      = "#d73027",
+    mid      = "#fee08b", 
+    high     = "#1a9850",
+    midpoint = 0.2,
+    name     = "r de Pearson"
   ) +
-  
-  scale_fill_gradient2(
-    low = "#d73027",
-    mid = "#f7f7f7",
-    high = "#1a9850",
-    midpoint = 0,
-    limits = c(-0.5, 0.5),
-    name = "Corrélation\n(r de Pearson)"
-  ) +
-  
+  geom_text(aes(label = round(r, 2)), hjust = -0.6, size = 3.8, 
+            fontface = "bold") +
+  coord_flip() +
+  ylim(0, 0.58) +
   labs(
-    title = "Corrélation entre variables socio-économiques et score global",
-    x = NULL,
-    y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
+    x        = NULL, 
+    y        = "r de Pearson",
+    caption  = paste0(
+      "Source : PISA 2022 – OCDE. ",
+      "Champ : élèves de 15 ans des pays \n membres de l'OCDE.",
+      "\nNote de lecture : le coefficient de corrélation entre le statut socio- \néconomique (ESCS) et le score global est de 0,41."
+    )
   ) +
-  
-  theme_minimal(base_size = 11) +
+  theme_minimal(base_size = 12) +
   theme(
-    plot.title = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
-    axis.text.x = element_text(face = "bold"),
-    axis.text.y = element_text(size = 9),
-    legend.position = "right",
-    panel.grid = element_blank()
+    legend.position    = "right",
+    plot.title         = element_text(face = "bold"),
+    plot.caption       = element_text(hjust = 0, size = 8, color = "grey40"),
+    panel.grid.major.y = element_blank()
   )
+
+print(fig3)
 ```
+Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de discipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
 
+D'autre part, on constate que la présence de ressources éducatives lors de période de fermeture d'école est indépendante de la réussite scolaire. On pourrait penser qu'un enfant possédant davantage de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. Pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. On peut alors supposer que la plus part de l'apprentissage se fait lors du temps scolaire ou encore que la présence de ressources éducatives au domicile familial s'il n'est pas associé à des compétences d'enseignement n'est que peu utile. 
 
-```{r, label="fig-5", fig.cap="Force du lien entre variables qualitatives de nature économique et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+```{r, label="fig-4", fig.cap="Force du lien entre variables qualitatives de nature économique et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
 # ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
 labels_eta <- c(
   ST255Q01JA = "Nb livres à la maison",
@@ -511,9 +489,8 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
     name = "Eta\n(corrélation)"
   ) +
   labs(
-    title = "Force du lien entre variables qualitatives de nature économique et score",
     x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 0,45 : le nombre de livres à la maison est associé à 45% des différences de réussite en mathématiques."
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 0,46 : le nombre de livres à la maison est associé à 46% des différences de réussite scolaire."
   ) +
   theme_minimal(base_size = 11) +
   theme(
@@ -526,11 +503,6 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
   )
 ```
 
-Dans un premier temps, on constate le statut professionnel des parents ainsi que la possession de biens matériels sont également corrélés au niveau scolaire. Cela s'explique simplement par le fait que l'indice ESCS est composé des indices HOMEPOS et HISEI. Au delà de ce simple fait statistique, on peut facilement penser que la profession des parents impactent celle des enfants. Un effet de reproduction sociale se met en place. Un parent ayant fait de longue étude aura souvent tendance à pousser son enfant à faire de même. 
-
-Au delà de cet indice, un autre lien important semble émerger. Plus un enfant a de livres chez lui plus il réussit à l'école. On considère dans cette partie de l'analyse que possèder des livres en quantité importante est lié au capital économique. Cette hypothèse est vérifiée par les chiffres puisque le coefficient entre l'indice ESCS et ST255Q01JA est de 0,5.  Plus une famille est aisé plus elle détient le pouvoir d'achat nécessaire pour acheter des livres en quantité importante. Ainsi on peut considérer la possession de livre comme signe de richesse. Possèder des livres peut pour un enfant, faciliter l'apprentissage de discipline fondamentale comme la lecture et éveiller l'esprit des enfants.Cependant, une famille moins aisé peut également posséder des livres en quantité importante. On étudiera ce point dans la partie sur les caractéristiques socio-familiale.  
-
-D'autre part, on constate que la présence de ressources éducatives lors de période de fermeture d'école est indépendante de la réussite scolaire. On pourrait penser qu'un enfant possédant davantage de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. Pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. On peut alors supposer que la plus part de l'apprentissage se fait lors du temps scolaire ou encore que la présence de ressources éducatives au domicile familial s'il n'est pas associé à des compétences d'enseignement n'est que peu utile. 
 
 Quant aux autres variables de nature économiques,leur effet quant à l'explication des inégalités de niveau scolaire reste modéré. Nous en pouvons donc ni en conclure un véritable lien significatif ni en conclure une absence de lien. 
 
@@ -545,121 +517,146 @@ Nous disposons également de variables décrivant l’environnement scolaire nat
 
 
 Nous nous intéressons premièrement aux variables liées aux établissements scolaires. Le coefficient de corrélation de Pearson (r) quantifie l'intensité et le sens du lien linéaire entre deux variables quantitatives.
+```{r, label="fig-5", fig.cap="Variables scolaires et lien avec le score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
+library(ggplot2)
 
-```{r, label="fig-6", fig.cap="Corrélation entre variables quantitatives de nature scolaire et score scolaire", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
 
-# ── Heatmap corrélations (variables quantitatives) ──────────────────────────
-mat_r_df <- as.data.frame(mat_r)
-mat_r_df$variable <- rownames(mat_r_df)
-
-labels_r <- c(
-  SCHSUST    = "Soutien apprentissages (SCHSUST)",
-  PQSCHOOL   = "Qualité de l'établissement (PQSCHOOL)",
-  ST059Q01TA = "Heures maths/semaine (ST059Q01TA)",
-  ST059Q02JA = "Heures cours/semaine (ST059Q02JA)",
-  EXPO21ST   = "Expo maths XXIe s (EXPO21ST)"
+data_cleveland <- data.frame(
+  variable = c(
+    "Type de filiere", 
+    "Redoublement",
+    "Heures cours/semaine",
+    "Soutien apprentissages", 
+    "Duree prescolarisation",
+    "Soutien emotionnel enseignants",
+    "Heures maths/semaine", 
+    "Expo maths XXIe s.", 
+    "Qualite etablissement"
+  ),
+  coeff = c(0.49, 0.25, 0.22, 0.14, 0.11, 0.10, -0.05, -0.03, -0.03),
+  type  = c("eta", "eta", "r", "r", "eta", "eta", "r", "r", "r")
 )
 
-mat_r_long <- melt(mat_r_df, id.vars = "variable",
-                   variable.name = "matiere", value.name = "r")
-mat_r_long$variable <- factor(mat_r_long$variable,
-                               levels = rev(names(labels_r)[names(labels_r) %in% unique(mat_r_long$variable)]))
-mat_r_long$label_var <- labels_r[as.character(mat_r_long$variable)]
+# ============================================================
+# GRAPHIQUE 1 → Coefficient eta uniquement
+# ============================================================
 
-mat_r_long <- mat_r_long[!is.na(mat_r_long$label_var), ]
+data_eta <- data_cleveland %>% filter(type == "eta")
 
-mat_r_long$matiere   <- recode(mat_r_long$matiere,
-  moyenne_maths     = "Mathématiques",
-  moyenne_lecture   = "Lecture",
-  moyenne_sciences  = "Sciences"
-)
-
-ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = round(r, 2)),
-            color = ifelse(abs(mat_r_long$r) > 0.3, "white", "black"),
-            size = 3.5, fontface = "bold") +
-  scale_fill_gradient2(
-    low = "#d73027", mid = "#f7f7f7", high = "#1a9850",
-    midpoint = 0, limits = c(-0.5, 0.5),
-    name = "Corrélation\n(r de Pearson)"
+fig_eta <- ggplot(data_eta,
+                  aes(x = coeff,
+                      y = reorder(variable, coeff))) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "grey50", linewidth = 0.8) +
+  geom_segment(aes(x = 0, xend = coeff,
+                   yend = reorder(variable, coeff),
+                   color = coeff),
+               linewidth = 1.5) +
+  geom_point(aes(color = coeff), shape = 17, size = 5) +
+  geom_text(
+    aes(label = round(coeff, 2)),
+    hjust    = ifelse(data_eta$coeff >= 0, -0.5, 1.5),
+    size     = 3.5,
+    fontface = "bold"
   ) +
+  scale_color_gradient2(
+    low      = "#d73027",
+    mid      = "#fee08b",
+    high     = "#1a9850",
+    midpoint = 0,
+    name     = "Coefficient eta"
+  ) +
+  xlim(-0.10, 0.65) +
   labs(
-    title = "Corrélation entre variables quantitatives de nature scolaire et score",
-    x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
+    title   = "Force du lien : variables scolaires qualitatives",
+    subtitle = "Coefficient eta — variables qualitatives/ordinales",
+    x       = "Coefficient eta",
+    y       = NULL,
+    caption = "Source : PISA 2022 - OCDE. Champ : eleves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le type de filiere explique 49% des differences de reussite scolaire (eta = 0,49)."
   ) +
-  theme_minimal(base_size = 11) +
+  theme_minimal(base_size = 12) +
   theme(
-    plot.title    = element_text(face = "bold", size = 12),
-    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
-    axis.text.x   = element_text(face = "bold"),
-    axis.text.y   = element_text(size = 9),
-    legend.position = "right",
-    panel.grid    = element_blank()
-)
-
-```
-
-
-```{r, label="fig-7", fig.cap="Force du lien entre variables qualitatives de nature scolaire et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
-# ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
-labels_eta <- c(
-  ST127Q01TA = "Redoublement (ST127Q01TA)",
-  PROGN      = "Type de filière (PROGN)",
-  DURECEC    = "Durée scolarisation préscolaire(DURECEC)",
-  ST267Q02JA = "Soutien émotionnel enseignants(ST267Q02JA)"
-)
-
-mat_eta_df      <- as.data.frame(mat_eta)
-mat_eta_df$variable <- rownames(mat_eta_df)
-mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
-                        variable.name = "matiere", value.name = "eta")
-
-mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
-mat_eta_long$variable  <- factor(mat_eta_long$variable,
-                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
-mat_eta_long$label_var <- factor(mat_eta_long$label_var,
-                                 levels = labels_eta[levels(mat_eta_long$variable)])
-
-mat_eta_long <- mat_eta_long[!is.na(mat_eta_long$label_var), ]
-mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
-                                 moyenne_maths    = "Mathématiques",
-                                 moyenne_lecture  = "Lecture",
-                                 moyenne_sciences = "Sciences"
-)
-
-ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = round(eta, 2)),
-            color = ifelse(mat_eta_long$eta > 0.25, "white", "black"),
-            size = 3.5, fontface = "bold") +
-  scale_fill_gradient(
-    low = "#f7f7f7", high = "#1a9850",
-    limits = c(0, NA),
-    name = "Eta\n(corrélation)"
-  ) +
-  labs(
-    title = "Force du lien entre variables qualitatives de nature scolaire et scores scolaires (η)",
-    x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : η (eta) mesure l'intensité du lien entre une variable qualitative et une variable quantitative. Il varie entre 0 (aucun lien) et 1 (lien parfait)."
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
-    axis.text.x  = element_text(face = "bold"),
-    axis.text.y  = element_text(size = 9),
-    legend.position = "right",
-    panel.grid   = element_blank()
+    plot.title         = element_text(face = "bold"),
+    plot.subtitle      = element_text(size = 10, color = "grey40"),
+    plot.caption       = element_text(hjust = 0, size = 8, color = "grey40"),
+    panel.grid.major.y = element_blank(),
+    legend.position    = "right"
   )
+
+print(fig_eta)
 ```
+On constate sur le tableau des corrélations ci-dessus une relation quasi nulle entre la qualité perçue de
+l’établissement (PQSCHOOL) et les scores scolaires ce qui suggère l’absence de lien linéaire entre ces
+deux variables. Avant d’essayer d’analyser ce résultat, il est important de noter que cette variable a un
+taux de non-réponse de plus de 80%. Ainsi, cette absence de lien peut être du à un taux de réponse trop
+faible. Passant au delà du manque de réponse, on pourrait penser qu’une bonne qualité d’enseignement
+favorise la réussite scolaire. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire
+quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélation entre la qualité de
+l’enseignement et les résultats scolaires. Au delà de la qualité de l’enseignement, les différentes actions
+de soutien à l’apprentissage de la part de l’établissement pourraient être associé au niveau scolaire de
+ses élèves. On constate une faible corrélation positive. Dans le même domaine un soutien emotionnel de
+la part des enseignant explique environ 10% des écarts de niveau scolaire.Cependant, près de la moitié
+des sondés n’ont pas répondu à cette question. Ainsi, les efforts de soutien tant émotionnel que scolaire
+des établissements envers les élèves est associé à de meilleurs résultats scolaires de ses élèves. Ce lien
+reste faible cependant et est à nunacer compte tenue des non-réponse. Ainsi, l’impact des établissements
+fréquentés par l’élève sur sa réussite scolaire reste mitigé. La qualité des enseignements ne semble pas être
+associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement.
 
-
-On constate sur le tableau des corrélations ci-dessus une relation quasi nulle entre la qualité perçue de l'établissement (PQSCHOOL) et les scores scolaires ce qui suggère l'absence de lien linéaire entre ces deux variables. Avant d'essayer d'analyser ce résultat, il est important de noter que cette variable a un taux de non-réponse de plus de 80%. Ainsi, cette absence de lien peut être du à un taux de réponse trop faible. Passant au delà du manque de réponse, on pourrait penser qu'une bonne qualité d'enseignement favorise la réussite scolaire. Or le coefficient de corrélation est bien trop proche de 0 pour en déduire quoi que ce soit. Ainsi il est davantage pertinent de dire qu’il n’y a pas de corrélation entre la qualité de l’enseignement et les résultats scolaires. Au delà de la qualité de l’enseignement, les différentes actions de soutien à l'apprentissage de la part de l’établissement pourraient être associé au niveau scolaire de ses élèves. On constate une faible corrélation positive. Dans le même domaine un soutien emotionnel de la part des enseignant explique environ 10% des écarts de niveau scolaire.Cependant, près de la moitié des sondés n'ont pas répondu à cette question. Ainsi, les efforts de soutien tant émotionnel que scolaire des établissements envers les élèves est associé à de meilleurs résultats scolaires de ses élèves. Ce lien reste faible cependant et est à nunacer compte tenue des non-réponse. Ainsi, l’impact des établissements fréquentés par l’élève sur sa réussite scolaire reste mitigé. La qualité des enseignements ne semble pas être associé au niveau des élèves alors que le soutien mis en place lui semble y être corrélé mais faiblement. 
 
 Dorénavant, nous allons nous intéresser aux variables relatives au système national d’éducation. Dans certains pays, des établissements tel que les crèches sont fréquentés par un grand nombre d'enfant. Cette préscolarisation impacte elle la réussite des élèves. On remarque un lien mais qui reste faible, d'autant plus qu'un quart des sondés n'ont pas répondu. Ce lien en plus d'être faible peut donc être biaisé. Cette variable expliquerait environ 10% des inégalités de niveau scolaire. 
-Une autre variable à considérer est celle du redoublement. Le redoublement peut être à la fois considérer comme une variable individuelle mais comme une variable relative au système scolaire. En effet, dans certains pays le redoublement est commun alors qu'il n'existe pas dans d'autres. Même lorsqu'il existe il peut prendre des formes diverses et variées. Toutes formes confondues, il explique 24% des inégalités de niveau scolaire.Cependant, sans avoir le sens du lien il reste difficile à interpréter. D'une part les élèves qui redoublent sont souvent en difficulté, mais le redoublement a pour objectif de permettre leur réussite les années suivantes. Sans connaître le sens du lien on ne peut savoir quel effet prédomine.  
+Une autre variable à considérer est celle du redoublement. Le redoublement peut être à la fois considérer comme une variable individuelle mais comme une variable relative au système scolaire. En effet, dans certains pays le redoublement est commun alors qu'il n'existe pas dans d'autres. Même lorsqu'il existe il peut prendre des formes diverses et variées. Toutes formes confondues, il explique 24% des inégalités de niveau scolaire.Cependant, sans avoir le sens du lien il reste difficile à interpréter. D'une part les élèves qui redoublent sont souvent en difficulté, mais le redoublement a pour objectif de permettre leur réussite les années suivantes. Sans connaître le sens du lien on ne peut savoir quel effet prédomine.
+```{r, label="fig-6", fig.cap="Variables scolaires et lien avec le score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
+# ============================================================
+# GRAPHIQUE 2 → Corrélation de Pearson (r) uniquement
+# ============================================================
+
+data_r <- data_cleveland %>% filter(type == "r")
+
+fig_r <- ggplot(data_r,
+                aes(x = coeff,
+                    y = reorder(variable, coeff))) +
+  geom_vline(xintercept = 0, linetype = "dashed",
+             color = "grey50", linewidth = 0.8) +
+  geom_segment(aes(x = 0, xend = coeff,
+                   yend = reorder(variable, coeff),
+                   color = coeff),
+               linewidth = 1.5) +
+  geom_point(aes(color = coeff), shape = 16, size = 5) +
+  geom_text(
+    aes(label = round(coeff, 2)),
+    hjust    = ifelse(data_r$coeff >= 0, -0.5, 1.5),
+    size     = 3.5,
+    fontface = "bold"
+  ) +
+  scale_color_gradient2(
+    low      = "#d73027",
+    mid      = "#fee08b",
+    high     = "#1a9850",
+    midpoint = 0,
+    name     = "r de Pearson"
+  ) +
+  xlim(-0.18, 0.40) +
+  labs(
+    title    = "Force du lien : variables scolaires quantitatives",
+    subtitle = "Correlation de Pearson (r) — variables quantitatives",
+    x        = "r de Pearson",
+    y        = NULL,
+    caption  = "Source : PISA 2022 - OCDE. Champ : eleves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien negatif fort, proche de 0 l'absence de lien lineaire."
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title         = element_text(face = "bold"),
+    plot.subtitle      = element_text(size = 10, color = "grey40"),
+    plot.caption       = element_text(hjust = 0, size = 8, color = "grey40"),
+    panel.grid.major.y = element_blank(),
+    legend.position    = "right"
+  )
+
+print(fig_r)
+```
+
 
 C'est désormais sur les variables portant sur la suite de la scolarité que nous allons nous interroger. Tout d’abord, chaque élève a plus ou moins été exposé aux mathématiques, cela devrait donc avoir un impact sur son niveau dans ce domaine. Or on constate un coefficient de corrélation extrêmement proche de 0, en particulier pour la moyenne en mathématiques. Ainsi cette exposition semble indépendante du niveau scolaire y compris le niveau en mathématiques. Il serait alors intéressant de s’interroger concrètement sur ce que prend en compte cette exposition.Nous pouvons également étudier le nombre d’heure de mathématiques par semaine. Nous pouvons à la fois voir si il est lié à l’exposition au mathématiques pour comprendre la nature de la variable précédente mais également voir, s'il impacte le niveau des élèves. On note premièrement que l’exposition aux mathématiques ne correspond en rien aux nombres d’heures de mathématiques.
 
@@ -680,7 +677,7 @@ Dans un premier temps, nous allons étudier l’impact des différences d’acc�
 Dans un second temps, nous nous intéresserons à l’impact de l’implication parentale à l’aide des variables suivantes : l’aide familiale après l’école (ST295Q03JA), l’implication parentale(PARINVOL), le niveau d’éducation des parents (HISCED pour le Niveau d’éducation le plus élevé des parents, FISCED pour celui du père et MISCED pour celui de la mère). 
 Enfin, nous nous intéresserons à un certain nombre de caractéristiques sociales relatives à l’élève lui même tel que son genre(ST004D01T), son statut migratoire (IMMIG), sa santé (WB150Q01HA), ses potentiels redoublements (ST127Q01TA), ses potentielles absences prolongés (ST260Q01JA) et enfin sa persévérance face aux taches (ST307Q01JA).
 
-```{r, label="fig-8", fig.cap="Corrélation entre variables quantitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE}
+```{r, label="fig-10", fig.cap="Corrélation entre variables quantitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 
 # ── Heatmap corrélations (variables quantitatives) ──────────────────────────
 mat_r_df <- as.data.frame(mat_r)
@@ -714,9 +711,8 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
     name = "Corrélation\n(r de Pearson)"
   ) +
   labs(
-    title = "Corrélation entre variables quantitatives et scores scolaires",
     x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : r proche de 1 indique un lien positif fort, proche de -1 un lien négatif fort, proche de 0 l'absence de lien linéaire."
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture :le coefficient de corrélation entre l'implication parentale \n et le score global et de -0,18"
   ) +
   theme_minimal(base_size = 11) +
   theme(
@@ -730,75 +726,242 @@ ggplot(mat_r_long, aes(x = matiere, y = label_var, fill = r)) +
 
 
 ```
+Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire sont liées à leur réussite scolaire. Or, nous avons déja étudier cette possibilité lors de l'étude des variables économiques et n'en avons pas conclut de lien significatif. Au delà de l'aspect économique, les ressources mise à disposition de l'enfant représentent également les choix d'investissement des parents quant à la scolarité de leurs enfants.Il nous semblait alors important d'évoquer ce point ici. Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n'est pas forcément lié à sa réussite scolaire. Le niveau global de ressources n’est pas non plus lié au niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas être lié à la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. C'est notamment ce qu'on avait montré à travers la possesion de livre corrélé à la réussite scolaire. On observe que, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout être associé à une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. Or la possession de livre semble davantage être le reflet d'une certaine aisance économique, plus que d'une volonté de transmission à l'enfant.
 
-```{r, label="fig-9", fig.cap="Force du lien entre variables ordinales/qualitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE}
-# ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
+Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels.
+
+```{r, label="fig-11", fig.width=6, fig.height=4, echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H" }
+
+
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+
+# ── Labels ───────────────────────────────────────────────
 labels_eta <- c(
-  ST255Q01JA = "Nb livres à la maison (ST255Q01JA)",
-  ST295Q02JA = "Temps travail scolaire (ST295Q02JA)",
-  ST307Q01JA = "Persévérance face aux tâches (ST307Q01JA)",
-  WB150Q01HA = "État de santé perçu (WB150Q01HA)",
-  ST295Q03JA = "aide familiale (ST295Q03JA)",
-  HISCED     = "niveau max éducation parent (HISCED)",
-  FISCED     = "niveau éducation père (FISCED)",
-  MISCED     = "niveau éducation mère (MISCED)",
-  ST004D01T  = "genre (ST004D01T)",
-  IMMIG      = "statut migratoire (IMMIG)",
-  ST127Q01TA = "redoublement (ST127Q01TA)",
-  ST260Q01JA = "absences prolongées (ST260Q01JA)"
+  ST255Q01JA = "Nb livres maison",
+  ST295Q02JA = "Temps travail scolaire",
+  ST307Q01JA = "Persévérance",
+  WB150Q01HA = "Santé perçue",
+  ST295Q03JA = "Aide familiale",
+  HISCED     = "Education parents",
+  FISCED     = "Education père",
+  MISCED     = "Education mère",
+  ST004D01T  = "Genre",
+  IMMIG      = "Statut migratoire",
+  ST127Q01TA = "Redoublement",
+  ST260Q01JA = "Absences"
 )
 
-mat_eta_df      <- as.data.frame(mat_eta)
+# ── Data safe ───────────────────────────────────────────
+mat_eta_df <- as.data.frame(mat_eta)
 mat_eta_df$variable <- rownames(mat_eta_df)
-mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
-                        variable.name = "matiere", value.name = "eta")
+
+mat_eta_long <- melt(
+  mat_eta_df,
+  id.vars = "variable",
+  variable.name = "matiere",
+  value.name = "eta"
+)
 
 mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
-mat_eta_long$variable  <- factor(mat_eta_long$variable,
-                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
-mat_eta_long$label_var <- factor(mat_eta_long$label_var,
-                                 levels = labels_eta[levels(mat_eta_long$variable)])
-mat_eta_long <- mat_eta_long[!is.na(mat_eta_long$label_var), ]
-mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
-                                 moyenne_maths    = "Mathématiques",
-                                 moyenne_lecture  = "Lecture",
-                                 moyenne_sciences = "Sciences"
+
+# garder uniquement données valides
+mat_eta_long <- mat_eta_long %>%
+  filter(!is.na(label_var), !is.na(eta))
+
+# ordre propre
+mat_eta_long$variable <- factor(
+  mat_eta_long$variable,
+  levels = rev(unique(mat_eta_long$variable))
 )
 
+mat_eta_long$matiere <- recode(
+  mat_eta_long$matiere,
+  moyenne_maths = "Mathématiques",
+  moyenne_lecture = "Lecture",
+  moyenne_sciences = "Sciences"
+)
+
+# ── Plot robuste ─────────────────────────────────────────
 ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = round(eta, 2)),
-            color = ifelse(mat_eta_long$eta > 0.25, "white", "black"),
-            size = 3.5, fontface = "bold") +
+  geom_tile(color = "white") +
+  geom_text(
+    aes(label = round(eta, 2)),
+    size = 3,
+    fontface = "bold",
+    color = "black"
+  ) +
   scale_fill_gradient(
-    low = "#f7f7f7", high = "#1a9850",
-    limits = c(0, NA),
-    name = "Eta\n(corrélation)"
+    low = "#f7f7f7",
+    high = "#1a9850",
+    name = "Eta"
   ) +
-  labs(
-    title = "Force du lien = variables ordinales/qualitatives et score )",
-    x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : η (eta) mesure l'intensité du lien entre une variable qualitative et une variable quantitative. Il varie entre 0 (aucun lien) et 1 (lien parfait)."
-  ) +
+  labs(x = NULL, y = NULL) +
   theme_minimal(base_size = 11) +
   theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
-    axis.text.x  = element_text(face = "bold"),
-    axis.text.y  = element_text(size = 9),
+    axis.text.x = element_text(face = "bold"),
+    axis.text.y = element_text(size = 9),
     legend.position = "right",
-    panel.grid   = element_blank()
+    panel.grid = element_blank(),
+    plot.caption = element_text(size = 8, hjust = 0, color = "grey40")
+  )
+
+```
+
+
+Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation est lié à celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
+ 
+Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque même si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. D’autre part, une observation étonnante est issue de la base de donnée. L’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela suggère que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. On pourrait interpréter ce résultat de la manière suivante. Des parents voyant que leur enfant réussi, pourrait lui laisser davantage d'autonomie quant à l'accompagnement scolaire.
+
+Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On s'intéresse dans un premier temps à l'impact du genre sur la réussire des élève. D'après le graphique ci-dessous, c’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
+
+```{r, label="fig-12", fig.cap="Score moyen par matière selon le genre", echo=FALSE, fig.width=6, fig.height=4, message=FALSE, warning=FALSE}
+pisa_oecd_clean %>%
+  filter(!is.na(ST004D01T)) %>%
+  mutate(Genre = recode(factor(ST004D01T),
+    "1" = "Fille",
+    "2" = "Garçon"
+  )) %>%
+  group_by(Genre) %>%
+  summarise(
+    Mathématiques = mean(moyenne_maths, na.rm = TRUE),
+    Lecture       = mean(moyenne_lecture, na.rm = TRUE),
+    Sciences      = mean(moyenne_sciences, na.rm = TRUE)
+  ) %>%
+  tidyr::pivot_longer(-Genre, names_to = "Matière", values_to = "Score") %>%
+  ggplot(aes(x = Matière, y = Score, fill = Genre)) +
+  geom_col(position = "dodge", width = 0.6) +
+  geom_text(aes(label = round(Score, 1)),
+            position = position_dodge(width = 0.6),
+            vjust = -0.5, size = 3.2) +
+  scale_fill_manual(values = c("Fille" = "#d73027", "Garçon" = "#1a9850")) +
+  labs(
+    x = NULL, y = "Score moyen", fill = "Genre",
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : Le score global moyen des filles en lecture est de 490."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title   = element_text(face = "bold", size = 12),
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
   )
 ```
+<<<<<<< HEAD
 ```{r, fig.cap="Force du lien entre variables ordinales/qualitatives et scores scolaires", echo=FALSE, message=FALSE, warning=FALSE}
 # ─────────────────────# ─────────────────────────────────────────────────────────────
 # Deux tableaux séparés :
 # 1. Top 3 corrélations de Pearson
 # 2. Top 3 coefficients Eta²
-# ─────────────────────────────────────────────────────────────
+=======
 
+La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. Il est aussi important à prendre en compte que plus de la moitié des interrogés n'ont pas répondu, ce résultat est donc biaisé.
+De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion, d'autant plus que cette variable présente près de 80% de non réponse. Ainsi, il est possible que si 100% des intérrogés avaient répondu, les résultats auraient été complétement différent. Même si il semble au premier abord évident qu'un élève en bonne santé, dispose de meilleures conditions pour performer à l'école.
+
+On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait être lié à la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
+
+```{r, label="fig-13", fig.cap="Score moyen selon le parcours individuel de l'élève", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE}
+
+# ============================================================
+# FIGURES 10 + 11 + 12 → Facettes avec gradient de couleur
+# ============================================================
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Création des données
+data_facettes <- bind_rows(
+  data.frame(
+    variable = "Statut migratoire",
+    modalite = c("Natif", "2e generation", "1re generation"),
+    score    = c(485.1, 471.8, 452.6),
+    ordre    = 1:3
+  ),
+  data.frame(
+    variable = "Redoublement",
+    modalite = c("Jamais redouble", "Redouble une fois", "Redouble plusieurs fois"),
+    score    = c(487.8, 392.9, 365.4),
+    ordre    = 1:3
+  ),
+  data.frame(
+    variable = "Absences prolongees",
+    modalite = c("Jamais absent", "Absent une fois", "Absent 2 fois ou plus"),
+    score    = c(484.3, 439.6, 398.9),
+    ordre    = 1:3
+  )
+) |>
+  mutate(variable = factor(variable, 
+                           levels = c("Statut migratoire", 
+                                      "Redoublement", 
+                                      "Absences prolongees")))
+
+# Graphique
+fig_facettes <- ggplot(data_facettes, 
+                       aes(x    = reorder(modalite, ordre), 
+                           y    = score, 
+                           fill = score)) +
+  geom_col(width = 0.65, show.legend = TRUE) +
+  geom_text(aes(
+    label = score,
+    color = score < 430
+  ), 
+  hjust    = -0.15, 
+  size     = 3.3, 
+  fontface = "bold") +
+  coord_flip() +
+  facet_wrap(~ variable, scales = "free_y", ncol = 1) +
+  scale_fill_gradientn(
+    colours = c("#d73027", "#fee08b", "#1a9850"),
+    values  = scales::rescale(c(360, 440, 490)),
+    name    = "Score moyen",
+    limits  = c(350, 500)
+  ) +
+  scale_color_manual(
+    values = c("TRUE" = "white", "FALSE" = "black"),
+    guide  = "none"
+  ) +
+  scale_y_continuous(limits = c(0, 570)) +
+  labs(
+    x       = NULL, 
+    y       = "Score moyen",
+    caption = "Source : PISA 2022 - OCDE. Champ : eleves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global moyen d'un natif est de 485,1 ; celui d'un eleve ne a l'etranger (1re generation) est de 452,6."
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.title       = element_text(face = "bold"),
+    plot.caption     = element_text(hjust = 0, size = 8, color = "grey40"),
+    strip.text       = element_text(face = "bold", size = 11),
+    strip.background = element_rect(fill = "grey92", color = NA),
+    legend.position  = "right"
+  )
+
+print(fig_facettes)
+```
+
+On s’intéresse désormais au lien entre redoublement et réussite scolaire. Ce lien peut être double, un élève qui redouble est en difficulté, mais l’objectif du redoublement et de lui permettre de réussir. Il est aussi important de noter que certains pays de l’OCDE ne pratiquent pas ou très peu le redoublement. On remarque que les élèves n’ayant jamais redoublé ont en moyenne de meilleures moyennes que ceux qui ont redoublé une fois qui ont eu des meilleures moyennes que ceux qui ont redoublé plusieurs fois. C’est le cas tant en science, qu’en mathématiques et qu’en lecture.
+
+
+
+Pour finir, nous nous intéressons à l’impact des absences prolongées sur la réussite scolaire. La valeur 1 signifie que l’élève n’a jamais eu d’absence prolongée, la valeur 2 que c’est arrivé une fois et la valeur 3 que c’est arrivé 2 fois ou plus. La question prend en compte les années de l’ISCED 1, 2 et 3 c'est -à -dire du primaire au lycée. Encore une fois les élèves n’ayant jamais eu d’absence prolongé réussissent mieux que ceux qui en ont eu une qui réussissent mieux que ceux qui en ont eu 2 ou plus. Cependant, cette conclusion reste à nuancer, puisque cette analyse est basé sur seulement trois quarts des sondés compte tenue des non-réponses. 
+
+
+
+Finalement, l'ensemble des ressources que possède l'élève n'est pas lié à sa réussite, même si la possession de certaines ressources particulières peut l'être. Son investissement personnel ne l'est pas non plus. L'influence parentale est elle aussi partagé quant à la réussite scolaire. Le niveau socio-professionel joue un rôle mais l'implication de ces derniers est faiblement corrélés négativement au niveau scolaire de l'enfant. Enfin, le genre, la persévérance et la santé de l'élève sont faiblement liés à sa réussite sans pour autant que lien significatif émerge. L'immigration, le redoublement et les absences prolongées sont également faiblement lié à la réussite de l'élève. 
+
+
+
+
+Ainsi, à l'échelle individuelle, certaines variables influencent les résultats scolaires et sont donc à l'origine d'inégalité. Le patrimoine économique et culturel d'un individu joue un rôle, plus il évolue dans un environnement aisé, meilleur sont ses notes. Dans le domaine scolaire, l'influence de l'établissement fréquenté reste faible et le nombre d'heure de mathématiques hebdomadaire et même indépendant du niveau scolaire. C'est davantage le parcours individuel via les redoublements mais surtout le type de filière suivi qui affecte réellement la réussite d'un élève. Dans le domaine socio-familial, seul le niveau socio-professionnel des parents influence significativement la réussite scolaire. D'autres variables l'influencent mais pas de manière significative.
+
+```{r, label="tbl-11", tab.cap="Tableau des 5 vairables les plus liées au score global", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, tab.pos="H" }
+# ─────────────────────────────────────────────────────────────
+# Tableau des 5 variables les plus liées au score global
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
+# ─────────────────────────────────────────────────────────────
+library(ggplot2)
 library(dplyr)
 library(gt)
+library(tidyr)
+library(scales)
 
 # =========================
 # Labels
@@ -920,162 +1083,71 @@ top_eta %>%
 ```
 
 
-
-Intuitivement, on pourrait penser que la quantité et la qualité des ressources éducatives à disposition des élèves en dehors du temps scolaire sont liées à leur réussite scolaire. Or, nous avons déja étudier cette possibilité lors de l'étude des variables économiques et n'en avons pas conclut de lien significatif. Au delà de l'aspect économique, les ressources mise à disposition de l'enfant représentent également les choix d'investissement des parents quant à la scolarité de leurs enfants.Il nous semblait alors important d'évoquer ce point ici. Ainsi, le niveau de ressources matérielles et culturelles dont dispose un élève dans son environnement familial n'est pas forcément lié à sa réussite scolaire. Le niveau global de ressources n’est pas non plus lié au niveau d’un élève à l’échelle globale, mais cela n’écarte pas le fait qu’il peut être important dans certaines zones géographiques, ni que certains types de ressources ne peuvent pas être lié à la réussite scolaire d’un élève. Concentrons nous sur l’indice du nombre de livres présent dans le foyer de l’élève. C'est notamment ce qu'on avait montré à travers la possesion de livre corrélé à la réussite scolaire. On observe que, que plus un élève à de livre chez lui, plus il réussit à l’école. Cette corrélation est légèrement plus importante quant à la réussite en maths, ce qui semble étonnant, puisque la présence devrait avant tout être associé à une progression en lecture, mais on ne peut pas exclure que la présence de livre peut inclure des manuels scolaires. Or la possession de livre semble davantage être le reflet d'une certaine aisance économique, plus que d'une volonté de transmission à l'enfant.
-
-Au-delà de l’accès à différentes ressources, la réussite scolaire pourrait être expliquée par l’investissement d’un élève dans ses devoirs. Sans autres ressources que celles offertes par le système éducatif, davantage de travail pourrait permettre à l’élève de progresser. C’est effectivement ce qui ressort de la base de données, même si la corrélation reste faible. Ainsi la présence de livres au domicile familial semble davantage significative dans la réussite d’un élève que son investissement personnel. Nous pourrions voir ici une forme de déterminisme, au sens où le nombre de livres dont il dispose dépend davantage de son environnement familial que de caractéristiques individuelles comme ses efforts personnels. 
-
-Nous allons désormais nous concentrer sur l’impact des caractéristiques parentales sur la réussite de l’enfant à l’école. Tant par leur parcours, que par leurs actions quotidiennes, les parents jouent un rôle important dans la construction d’un enfant. C’est ce qu’on appelle la socialisation primaire. Ainsi il semble intéressant d’étudier leur impact sur la réussite scolaire. Dans un optique de reproduction sociale, nous pouvons nous demander si le niveau d’éducation est lié à celui des enfants. On remarque que globalement, le niveau d’étude des parents est corrélé positivement avec la réussite scolaire. On remarque également que la corrélation avec le niveau d’étude du père est légèrement plus forte que celle avec celui de la mère. C’est la moyenne en mathématiques qui semble le plus dépendante du niveau d’étude des parents. 
- 
-Cependant, l’aide familiale après l’école, ne permet que peu aux élèves de réussir puisque même si elle est corrélée positivement au résultats scolaires, cette corrélation reste négligeable. D’autre part, une observation étonnante est issue de la base de donnée. L’implication parentale ( la valorisation de l’éducation, l’implication dans les activités scolaires et extra-scolaires ..) est corrélé négativement avec la moyenne des élèves. Cela suggère que plus un élève a des bonnes notes, moins ses parents sont impliqués, alors qu’on pourrait penser que le soutien et l’accompagnement parental jouent un rôle primordial dans la réussite scolaire. On pourrait interpréter ce résultat de la manière suivante. Des parents voyant que leur enfant réussi, pourrait lui laisser davantage d'autonomie quant à l'accompagnement scolaire.
-
-Enfin, nous nous intéressons aux caractéristiques individuelles de l’élève. On s'intéresse dans un premier temps à l'impact du genre sur la réussire des élève. D'après le graphique ci-dessous, c’est en science que les résultats semblent le plus similaires. Cependant, les filles réussissent mieux que les garçons en lecture et moins bien en qu’eux en maths. 
-
-```{r, label="fig-10", fig.cap="Score moyen par matière selon le genre", echo=FALSE, fig.width=6, fig.height=4, message=FALSE, warning=FALSE}
-pisa_oecd_clean %>%
-  filter(!is.na(ST004D01T)) %>%
-  mutate(Genre = recode(factor(ST004D01T),
-    "1" = "Fille",
-    "2" = "Garçon"
-  )) %>%
-  group_by(Genre) %>%
-  summarise(
-    Mathématiques = mean(moyenne_maths, na.rm = TRUE),
-    Lecture       = mean(moyenne_lecture, na.rm = TRUE),
-    Sciences      = mean(moyenne_sciences, na.rm = TRUE)
-  ) %>%
-  tidyr::pivot_longer(-Genre, names_to = "Matière", values_to = "Score") %>%
-  ggplot(aes(x = Matière, y = Score, fill = Genre)) +
-  geom_col(position = "dodge", width = 0.6) +
-  geom_text(aes(label = round(Score, 1)),
-            position = position_dodge(width = 0.6),
-            vjust = -0.5, size = 3.2) +
-  scale_fill_manual(values = c("Fille" = "#d73027", "Garçon" = "#1a9850")) +
-  labs(
-    title = "Score moyen par matière selon le genre",
-    x = NULL, y = "Score moyen", fill = "Genre",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : les filles surpassent les garçons en lecture, les garçons surpassent les filles en mathématiques."
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
-  )
-```
-
-La persévérance face aux tâches est corrélée positivement à la réussite scolaire, cependant encore une fois cette corrélation est négligeable. Il est donc impossible d’observer un lien fort. On pourrait penser que persévérer fait progresser, mais des élèves en difficulté pourraient avoir besoin d’effectuer un effort extrêmement important pour peu de résultat. Il est aussi important à prendre en compte que plus de la moitié des interrogés n'ont pas répondu, ce résultat est donc biaisé.
-De la même manière l’état de santé des élèves est corrélée positivement avec la réussite scolaire, cependant cette corrélation reste trop faible pour en tirer une véritable conclusion, d'autant plus que cette variable présente près de 80% de non réponse. Ainsi, il est possible que si 100% des intérrogés avaient répondu, les résultats auraient été complétement différent. Même si il semble au premier abord évident qu'un élève en bonne santé, dispose de meilleures conditions pour performer à l'école.
-
-On s’intéresse désormais à l’impact des migrations sur la réussite scolaire. On rappelle la signification des issues: 1 : élève né dans le pays dont les parents sont nés dans le pays, 2: élève né dans le pays dont au moins un parent est né à l’étranger, 3: élève né à l’étranger. On remarque avec les graphiques suivants que les élèves de la catégorie 1 réussissent mieux que ceux de la catégorie 2 qui réussissent mieux que ceux de la catégorie 3. Cela pourrait être lié à la barrière de la langue. Un enfant ne parlant pas couramment la langue parlé à l’école rencontrera davantage de difficultés dans son apprentissage. 
-
-```{r, label="fig-11", fig.cap="Score moyen global selon le statut migratoire", echo=FALSE}
-pisa_oecd_clean %>%
-  filter(!is.na(IMMIG)) %>%
-  group_by(IMMIG) %>%
-  summarise(score = mean(score_global, na.rm = TRUE)) %>%
-  mutate(IMMIG = recode(factor(IMMIG),
-    "1" = "Natif",
-    "2" = "2e génération",
-    "3" = "1re génération"
-  )) %>%
-  ggplot(aes(x = IMMIG, y = score, fill = IMMIG)) +
-  geom_col(width = 0.6) +
-  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
-  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
-  labs(
-    title = "Score moyen global selon le statut migratoire",
-    x = "Statut migratoire", y = "Score moyen",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
-
-
-
-On s’intéresse désormais au lien entre redoublement et réussite scolaire. Ce lien peut être double, un élève qui redouble est en difficulté, mais l’objectif du redoublement et de lui permettre de réussir. Il est aussi important de noter que certains pays de l’OCDE ne pratiquent pas ou très peu le redoublement. On remarque que les élèves n’ayant jamais redoublé ont en moyenne de meilleures moyennes que ceux qui ont redoublé une fois qui ont eu des meilleures moyennes que ceux qui ont redoublé plusieurs fois. C’est le cas tant en science, qu’en mathématiques et qu’en lecture.
-
-```{r, label="fig-12", fig.cap="score moyen selon redoublement", echo=FALSE}
-pisa_oecd_clean %>%
-  filter(!is.na(ST127Q01TA)) %>%
-  group_by(ST127Q01TA) %>%
-  summarise(score = mean(score_global, na.rm = TRUE)) %>%
-  mutate(ST127Q01TA = recode(factor(ST127Q01TA),
-    "1" = "Jamais redoublé",
-    "2" = "Redoublé une fois",
-    "3" = "Redoublé plusieurs fois"
-  )) %>%
-  ggplot(aes(x = ST127Q01TA, y = score, fill = ST127Q01TA)) +
-  geom_col(width = 0.6) +
-  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
-  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
-  labs(
-    title = "Score moyen global selon le redoublement",
-    x = "Redoublement", y = "Score moyen",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
-
-
-Pour finir, nous nous intéressons à l’impact des absences prolongées sur la réussite scolaire. La valeur 1 signifie que l’élève n’a jamais eu d’absence prolongée, la valeur 2 que c’est arrivé une fois et la valeur 3 que c’est arrivé 2 fois ou plus. La question prend en compte les années de l’ISCED 1, 2 et 3 c'est -à -dire du primaire au lycée. Encore une fois les élèves n’ayant jamais eu d’absence prolongé réussissent mieux que ceux qui en ont eu une qui réussissent mieux que ceux qui en ont eu 2 ou plus. Cependant, cette conclusion reste à nuancer, puisque cette analyse est basé sur seulement trois quarts des sondés compte tenue des non-réponses. 
-
-```{r, label="fig-13", fig.cap="score moyen selon les absences prolongées", echo=FALSE}
-pisa_oecd_clean %>%
-  filter(!is.na(ST260Q01JA)) %>%
-  group_by(ST260Q01JA) %>%
-  summarise(score = mean(score_global, na.rm = TRUE)) %>%
-  mutate(ST260Q01JA = recode(factor(ST260Q01JA),
-    "1" = "Jamais absent",
-    "2" = "Absent une fois",
-    "3" = "Absent 2 fois ou plus"
-  )) %>%
-  ggplot(aes(x = ST260Q01JA, y = score, fill = ST260Q01JA)) +
-  geom_col(width = 0.6) +
-  geom_text(aes(label = round(score, 1)), vjust = -0.5, size = 3.5) +
-  scale_fill_manual(values = c("#1a9850", "#fee08b", "#d73027")) +
-  labs(
-    title = "Score moyen global selon les absences prolongées",
-    x = "Absences prolongées", y = "Score moyen",
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : le score global est la moyenne des scores en mathématiques, lecture et sciences."
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none",
-        plot.caption = element_text(size = 8, color = "grey40", hjust = 0))
-```
-
-Finalement, l'ensemble des ressources que possède l'élève n'est pas lié à sa réussite, même si la possession de certaines ressources particulières peut l'être. Son investissement personnel ne l'est pas non plus. L'influence parentale est elle aussi partagé quant à la réussite scolaire. Le niveau socio-professionel joue un rôle mais l'implication de ces derniers est faiblement corrélés négativement au niveau scolaire de l'enfant. Enfin, le genre, la persévérance et la santé de l'élève sont faiblement liés à sa réussite sans pour autant que lien significatif émerge. L'immigration, le redoublement et les absences prolongées sont également faiblement lié à la réussite de l'élève. 
-
-
-
-
-Ainsi, à l'échelle individuelle, certaines variables influencent les résultats scolaires et sont donc à l'origine d'inégalité. Le patrimoine économique et culturel d'un individu joue un rôle, plus il évolue dans un environnement aisé, meilleur sont ses notes. Dans le domaine scolaire, l'influence de l'établissement fréquenté reste faible et le nombre d'heure de mathématiques hebdomadaire et même indépendant du niveau scolaire. C'est davantage le parcours individuel via les redoublements mais surtout le type de filière suivi qui affecte réellement la réussite d'un élève. Dans le domaine socio-familial, seul le niveau socio-professionnel des parents influence significativement la réussite scolaire. D'autres variables l'influencent mais pas de manière significative.
-
-
 # II — Les vecteurs d'inégalités scolaires sont-ils les mêmes au sein de tous les pays de l'OCDE
 
 Nous avons identifié à l'échelle individuelle les variables qui affecte la trajectoire scolaire d'un élève étudiant dans un pays de l'OCDE. Désormais, nous allons changer d'échelle.Nous souhaitons vérifier si à l'échelle nationale ce sont les mêmes caractéristiques qui définissent le niveau scolaire d'un pays sur la scène internationale. Ainsi nous avons regrouper les pays en trois catégories : fort, moyen et faible selon les résultats des élèves qui y étudient. 
 
 
-```{r, label="fig-14", fig.cap="statistiques des scores par pays", echo=FALSE, message=FALSE, warning=FALSE}
-niveau_pays <- niveau_pays %>%
-  mutate(groupe = case_when(
-    score_moyen >= quantile(score_moyen, 0.66) ~ "Fort",
-    score_moyen >= quantile(score_moyen, 0.33) ~ "Moyen",
-    TRUE ~ "Faible"
-  ))
+```{r,  echo=FALSE, message=FALSE, warning=FALSE}
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = case_when(
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+      TRUE ~ "Résultats intermédiaires"
+    )
+  )
 
-kable(niveau_pays, digits = 2,
-      caption = "Statistiques des scores par pays",
+# =========================
+# 2. VARIABLES
+# =========================
+vars_analyse <- c("ESCS", "SCHSUST", "PQSCHOOL",
+                  "ST059Q01TA", "ST059Q02JA",
+                  "EXPO21ST", "HISEI", "HOMEPOS",
+                  "LEARRES", "PARINVOL")
+
+vars_analyse <- intersect(vars_analyse, names(pisa_oecd_clean))
+
+# =========================
+# 3. MOYENNES PAR GROUPE
+# =========================
+moyennes_groupe <- pisa_oecd_clean %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT") %>%
+  group_by(groupe) %>%
+  summarise(
+    across(all_of(vars_analyse), ~ mean(.x, na.rm = TRUE)),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = factor(groupe,
+                    levels = c("En difficulté",
+                               "Résultats intermédiaires",
+                               "Meilleurs résultats"))
+  ) %>%
+  arrange(groupe)
+
+# =========================
+# 4. TABLEAU
+# =========================
+kable(moyennes_groupe,
+      digits = 2,
+      caption = "Moyennes des variables par groupe de pays",
       booktabs = TRUE) %>%
-  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
-  row_spec(which(niveau_pays$groupe == "Fort"),   background = "#d4edda") %>%
-  row_spec(which(niveau_pays$groupe == "Moyen"),  background = "#fff3cd") %>%
-  row_spec(which(niveau_pays$groupe == "Faible"), background = "#f8d7da") %>%
-  row_spec(which(niveau_pays$CNT == "FRA"),       bold = TRUE, background = "#cce5ff")
+  kable_styling(latex_options = c("hold_position", "scale_down"),
+                font_size = 8) %>%
+  row_spec(1, background = "#f8d7da") %>%
+  row_spec(2, background = "#fff3cd") %>%
+  row_spec(3, background = "#d4edda") %>%
+  footnote(
+    general = "NOTE DE LECTURE : Dans les pays en difficulté, la valeur de l'indice ESCS est en moyenne de -0,22.",
+    general_title = "",
+    footnote_as_chunk = TRUE
+  )
 ```
 
 
@@ -1086,6 +1158,7 @@ kable(niveau_pays, digits = 2,
 
 Nous avons vu dans la première partie qu'à l'échelle individuelle certaines variables économiques étaient liées à la réussite scolaire d'un élève. Nous voulons maintenant savoir si ces mêmes variables influencent le niveau scolaire d'un pays par rapport aux autres dans l'OCDE. Ainsi, nous avons calculer la moyenne pour chaque groupe de pays des variables significatives à l'échelle individuelles. 
 ```{r, label="fig-15", fig.cap="moyennes des variables par groupe par pays", echo=FALSE, message=FALSE, warning=FALSE}
+<<<<<<< HEAD
 library(dplyr)
 library(kableExtra)
 
@@ -1177,6 +1250,33 @@ kable(
     which(moyennes_groupe$groupe == "En difficulté"),
     background = "#f8d7da"
   )
+=======
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(score_moyen = mean(score_global, na.rm = TRUE), .groups = "drop") %>%
+  mutate(groupe = case_when(
+    score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+    score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+    TRUE ~ "Résultats intermédiaires"
+  ))
+
+moyennes_groupe <- pisa_oecd_clean %>%
+  left_join(niveau_pays %>% select(CNT, groupe), by = "CNT") %>%
+  mutate(groupe = factor(groupe,
+                         levels = c("En difficulté",
+                                    "Résultats intermédiaires",
+                                    "Meilleurs résultats"))) %>%
+  group_by(groupe) %>%
+  summarise(across(all_of(vars_analyse), ~ mean(.x, na.rm = TRUE)),
+            .groups = "drop")
+
+kable(moyennes_groupe, digits = 2,
+      booktabs = TRUE) %>%
+  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
+  row_spec(which(moyennes_groupe$groupe == "Meilleurs résultats"), background = "#d4edda") %>%
+  row_spec(which(moyennes_groupe$groupe == "Résultats intermédiaires"), background = "#fff3cd") %>%
+  row_spec(which(moyennes_groupe$groupe == "En difficulté"), background = "#f8d7da")
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
 ```
 
 Afin de rendre l'analyse du tableau ci dessus plus claire, il est important de rappeler que ESCS est composé d'HOMEPOS (biens matériels à domicile) et que ces deux variables ainsi que les ressources éducatives sont des variables standardisées. L'indice ESCS est à l'échelle individuelle fortement lié au niveau scolaire. Il est important de prendre des pincettes lors de l'analyse à l'échelle macroéconomque puisqu'on efface les inégalités au sein d'un même pays. On constate à cette échelle qu'une relation existe bel et bien. Il existe un écart de 0,48 point entre le groupe faible et le groupe fort, ce qui reste modeste pour un indice standardisé. On constate également une asymétrie. L'écart entre le groupe faible et moyen est prés de 4 fois supérieur à celui entre le groupe moyen et fort. On peut en conclure que le statut socio-économique joue surtout par le bas. Un faible niveau ESCS semble davantage pénalisant qu'un indice élevé est bénéfique. Ainsi, la pauvreté des milieux scolaires serait un frein plus puissant que la richesse n'en serait un accélérateur. On pourrait aussi imaginer un effet de seuil. Au-delà d'un certain niveau socio-économique, l'ESCS cesse d'être le facteur déterminant du niveau scolaire d'un pays. 
@@ -1220,7 +1320,6 @@ moyennes_groupe_b <- pisa_oecd_clean %>%
 
 # Affichage du tableau
 kable(moyennes_groupe_b, digits = 2,
-      caption = "Moyennes des variables d’environnement scolaire par groupe de pays",
       booktabs = TRUE) %>%
   kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 8) %>%
   row_spec(which(moyennes_groupe_b$`Groupe de pays` == "Performant"),   background = "#d4edda") %>%
@@ -1236,7 +1335,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-# Variables de la partie B (sans les 2 dernières)
+# Variables de la partie B (sélection sécurisée)
 vars_b <- intersect(
   c("PQSCHOOL", "SCHSUST", "ST272Q01JA", "ST059Q01TA",
     "ST059Q02JA", "EXPO21ST"),
@@ -1276,8 +1375,9 @@ moyennes_long_std <- moyennes_std %>%
   ) %>%
   mutate(Variable = recode(Variable, !!!labels_b))
 
-# 5. Différence Fort - Faible
+# 5. Différence Meilleurs résultats - En difficulté
 diff_std <- moyennes_long_std %>%
+<<<<<<< HEAD
   filter(groupe %in% c("En difficulté", "Performant")) %>%
   pivot_wider(
     names_from = groupe,
@@ -1286,6 +1386,11 @@ diff_std <- moyennes_long_std %>%
   mutate(
     diff = Performant - `En difficulté`
   ) %>%
+=======
+  filter(groupe %in% c("En difficulté", "Meilleurs résultats")) %>%
+  pivot_wider(names_from = groupe, values_from = Valeur_std) %>%
+  mutate(diff = `Meilleurs résultats` - `En difficulté`) %>%
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   arrange(diff)
 
 # 6. Graphique
@@ -1296,17 +1401,19 @@ ggplot(diff_std,
   scale_fill_manual(values = c("TRUE" = "#1a9850", "FALSE" = "#d73027"),
                     guide = "none") +
   labs(
+<<<<<<< HEAD
     title = "Écart standardisé entre pays performants et en difficulté",
+=======
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
     x = NULL,
-    y = "Différence standardisée (Fort - Faible)",
-    caption = "Variables centrées-réduites au niveau élève avant agrégation"
+    y = "Différence standardisée",
+    caption = "Variables centrées-réduites au niveau élève avant agrégation.\nNOTE DE LECTURE : L'écart standardisé entre les pays aux meilleurs \nrésultats et ceux en difficulté est de -0,41 en terme de qualité de l'établissement."
   ) +
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", size = 12),
     plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
   )
-
 ```
 
 On constate sur ce graphique que les résultats sont contre-intuitifs. En effet, la qualité de l'établissement semble avoir un gros effet négatif sur la réussite d'un pays, ainsi que le nombre d'heures de cours par semaine. Le premier point est compliqué à expliquer :  Ce dernier point peut peut être s'expliquer par le fait que les pays de l'OCDE sont globalement des pays dévellopés avec un nombre décent d'heures de cours par semaine. Ainsi, il serait faux de dire que moins il y a d'heure de cours, meilleurs sont les résultats. En effet, il est fort probable qu'un pays hors OCDE avec très peu d'heures de cours par semaine ait de bien moins bon résultats qu'un pays de l'OCDE. Seulement, cette différence s'explique peut être par le fait que les élèves sont plus épanouis avec moins d'heures de cours, et ont donc de meilleurs résultats. On peut par exemple prendre le cas de l'Allemagne, qui n'a le cours que le matin et laisse l'après-midi libre pour des activités sportives par exemple. Moins d'heure de cours peut aussi dire plus de travail personnel, ce qui expliquerait aussi les meilleurs résultats. Enfin, le soutien de l'aprentissage semble être une caractéristique des pays forts, en effet accompagner tout type d'élèves ne peut que être bénéfique sur la réussite globale du pays.
@@ -1318,7 +1425,26 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 
-# Moyenne des heures de cours par pays
+# =========================
+# 1. CRÉATION DES GROUPES DE PAYS (AUTONOME)
+# =========================
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = case_when(
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+      TRUE ~ "Résultats intermédiaires"
+    )
+  )
+
+# =========================
+# 2. CRÉATION DE heures_pays (AUTONOME)
+# =========================
 heures_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
   summarise(
@@ -1327,6 +1453,7 @@ heures_pays <- pisa_oecd_clean %>%
     .groups = "drop"
   )
 
+<<<<<<< HEAD
 # Nuage de points sans couleurs ni légende
 ggplot(
   heures_pays,
@@ -1342,6 +1469,27 @@ ggplot(
     x = "Score moyen global",
     y = "Heures de cours par semaine",
     caption = "Source : PISA 2022 — OCDE"
+=======
+# =========================
+# 3. GRAPHIQUE
+# =========================
+ggplot(heures_pays, 
+       aes(x = heures_moy, y = moyenne, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(
+    values = c(
+      "En difficulté" = "#d73027",
+      "Résultats intermédiaires" = "#fee08b",
+      "Meilleurs résultats" = "#1a9850"
+    ),
+    name = "Groupe de pays"
+  ) +
+  labs(
+    x = "Heures de cours par semaine",
+    y = "Score moyen global",
+    caption = "Source : PISA 2022 — OCDE.\nNOTE DE LECTURE : Le Chili a un nombre d'heure de cours hebdomadire de 30h pour un score global moyen d'environ 451."
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   theme_minimal() +
   theme(
@@ -1359,25 +1507,48 @@ Ainsi, à l’échelle des pays, les variables de l’environnement scolaire ne 
 Dans la première partie, nous avons constaté que le niveau d'études des parents était un facteur très important dans la réussite de l'élève. Afin d'étudier cette variable au niveau des pays, nous avons pris le mode de cette variable par pays, c'est à dire la modalité la plus representé au sein de ce pays.
 
 ```{r, label="fig-19", fig.cap="Lien entre niveau d'éducation parental (mode) et performance des pays", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+<<<<<<< HEAD
 library(dplyr)
 library(ggplot2)
 library(ggrepel)
+=======
 
-# Fonction pour calculer le mode
-mode_stat <- function(x) {
-  ux <- na.omit(unique(x))
-  ux[which.max(tabulate(match(x, ux)))]
-}
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
 
-# Agrégation au niveau pays
+# =========================
+# 1. CHECK DE BASE (évite erreurs silencieuses Quarto)
+# =========================
+stopifnot(exists("pisa_oecd_clean"))
+
+# =========================
+# 2. CRÉATION DES GROUPES PAYS
+# =========================
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = case_when(
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+      TRUE ~ "Résultats intermédiaires"
+    )
+  )
+
+# =========================
+# 3. DATASET ANALYSE
+# =========================
 hisced_pays <- pisa_oecd_clean %>%
   group_by(CNT) %>%
   summarise(
     score_moyen = mean(score_global, na.rm = TRUE),
-    hisced_mode = mode_stat(HISCED),
+    hisced_mean = mean(HISCED, na.rm = TRUE),
     .groups = "drop"
   )
 
+<<<<<<< HEAD
 # Nuage de points sans couleurs ni légende
 ggplot(
   hisced_pays,
@@ -1392,12 +1563,35 @@ ggplot(
     method = "lm",
     se = FALSE,
     color = "black"
+=======
+# =========================
+# 4. GRAPHIQUE SAFE PDF
+# =========================
+ggplot(hisced_pays,
+       aes(x = hisced_mean, y = score_moyen, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(
+    aes(label = CNT),
+    size = 3,
+    max.overlaps = 15
+  ) +
+  scale_color_manual(
+    values = c(
+      "En difficulté" = "#d73027",
+      "Résultats intermédiaires" = "#fee08b",
+      "Meilleurs résultats" = "#1a9850"
+    ),
+    name = "Groupe de pays"
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   labs(
-    title = "Lien entre niveau d’éducation parental (mode) et performance des pays",
-    x = "Niveau d’éducation parental le plus fréquent (HISCED)",
+    x = "Niveau d’éducation parental moyen (HISCED)",
     y = "Score moyen global",
+<<<<<<< HEAD
     caption = "Source : PISA 2022 — OCDE"
+=======
+    caption = "Source : PISA 2022 — OCDE.\nNOTE DE LECTURE : En Israël, l'indice HISCED moyen est de 8 pour un score global moyen d'environ 449"
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   theme_minimal() +
   theme(
@@ -1405,6 +1599,7 @@ ggplot(
     plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
   )
 ```
+
 Tout d'abord, on constate que touts les pays ont un niveau élevé à HISCED, le plus bas étant à 3, ce qui correspond à l'équivalent du baccalauréat. De plus, les pays performants ne sont pas necessairement ceux avec les niveaux d'études des parents les plus hauts. On peut par exemple prendre l'exemple de la République Tchèque, l'Autriche ou la Suisse. Il reste toutetfois compliqué d'analyser ce graphique car la grande majorité des pays se situent au même niveau (8 et 9), ce qui laisse peu de dispersion pour étudier les différences.
 
 
@@ -1430,15 +1625,29 @@ ggplot(
   aes(x = prop_immig, y = score_moyen)
 ) +
   geom_point(size = 2) +
+<<<<<<< HEAD
   geom_text_repel(
     aes(label = CNT),
     size = 3
+=======
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(
+    values = c(
+      "En difficulté" = "#d73027",
+      "Résultats intermédiaires" = "#fee08b",
+      "Meilleurs résultats" = "#1a9850"
+    ),
+    name = "Groupe de pays"
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   labs(
-    title = "Lien entre proportion d’élèves issus de l’immigration et performance des pays",
     x = "Proportion d'élèves issus de l'immigration",
     y = "Score moyen global",
+<<<<<<< HEAD
     caption = "Source : PISA 2022 — OCDE"
+=======
+    caption = "Source : PISA 2022 — OCDE.\nNOTE DE LECTURE : En Norvège, environ 14% des élèves sont issus de l'immigration pour un score global moyen)."
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   theme_minimal() +
   theme(
@@ -1454,7 +1663,30 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 
+<<<<<<< HEAD
 # Agrégation au niveau pays
+=======
+# =========================
+# 1. GROUPES DE PAYS (AUTONOME)
+# =========================
+niveau_pays <- pisa_oecd_clean %>%
+  group_by(CNT) %>%
+  summarise(
+    score_moyen = mean(score_global, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    groupe = case_when(
+      score_moyen >= quantile(score_moyen, 2/3, na.rm = TRUE) ~ "Meilleurs résultats",
+      score_moyen <= quantile(score_moyen, 1/3, na.rm = TRUE) ~ "En difficulté",
+      TRUE ~ "Résultats intermédiaires"
+    )
+  )
+
+# =========================
+# 2. DONNÉES ABSENCE (AUTONOME)
+# =========================
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
 absence_pays <- pisa_oecd_clean %>%
   mutate(
     ST260Q01JA = as.numeric(as.character(ST260Q01JA))
@@ -1466,6 +1698,7 @@ absence_pays <- pisa_oecd_clean %>%
     .groups = "drop"
   )
 
+<<<<<<< HEAD
 # Nuage de points sans couleurs ni légende
 ggplot(
   absence_pays,
@@ -1475,12 +1708,32 @@ ggplot(
   geom_text_repel(
     aes(label = CNT),
     size = 3
+=======
+# =========================
+# 3. GRAPHIQUE
+# =========================
+ggplot(absence_pays, 
+       aes(x = prop_absence, y = score_moyen, color = groupe)) +
+  geom_point(size = 2) +
+  geom_text_repel(aes(label = CNT), size = 3) +
+  scale_color_manual(
+    values = c(
+      "En difficulté" = "#d73027",
+      "Résultats intermédiaires" = "#fee08b",
+      "Meilleurs résultats" = "#1a9850"
+    ),
+    name = "Groupe de pays"
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   labs(
     title = "Lien entre absences prolongées et performance des pays",
     x = "Proportion d'élèves avec absences prolongées",
     y = "Score moyen global",
+<<<<<<< HEAD
     caption = "Source : PISA 2022 — OCDE"
+=======
+    caption = "Source : PISA 2022 — OCDE \n Note de lecture: En Australie environ 6,5% des élèves sont concernés par les absences prolongées pour un socre global moyen d'environ 498"
+>>>>>>> 89d23512876b9b267e24f1db20b9eaaacf328b58
   ) +
   theme_minimal() +
   theme(
@@ -1497,7 +1750,7 @@ Ainsi, contrairement aux variables liées à l’environnement scolaire, certain
 # III — Mise en évidence des facteurs structurants des inégalités scolaires : une approche par ACP
 
 
-## A —  Un axe structuré par le capital socio-économique (ESCS, HISEI, HOMEPOS)
+## A —  Un axe structuré par le capital socio-économique
 
 Avant de présenter les résultats, il convient d'expliciter un choix 
 méthodologique qui conditionne la construction de l'ACP. Parmi les 
@@ -1506,7 +1759,7 @@ sont pas renseignées pour 28 pays sur les 37 que compte notre échantillon.
 Les inclure aurait contraint à n'analyser qu'une poignée de pays, ce qui 
 aurait rendu l'analyse à la fois statistiquement fragile et géographiquement 
 peu représentative de l'OCDE. Nous avons donc fait le choix de les exclure 
-des variables actives, au profit d'un échantillon de 25 pays.
+des variables actives, au profit d'un échantillon de 25 pays.Les variables actives retenues pour l'ACP ont été sélectionnées de manière à couvrir les trois dimensions explorées en partie I, tout en privilégiant celles qui caractérisent le contexte national plutôt que le profil individuel de l'élève. On y retrouve ainsi des indicateurs du capital économique et culturel des familles, des variables décrivant l'organisation et l'intensité du système scolaire, ainsi qu'un indicateur de ressources éducatives à domicile, conservé malgré sa faible corrélation individuelle pour tester si son rôle diffère à l'échelle nationale.
 
 Les scores scolaires sont quant à eux introduits en variables 
 supplémentaires : ils ne participent pas à la construction des axes mais 
@@ -1517,7 +1770,7 @@ performance scolaire, sans que ces dernières n'influencent l'analyse.
 
 L'ACP est une méthode de réduction de dimension qui synthétise un ensemble 
 de variables corrélées en un nombre réduit d'axes orthogonaux, appelés 
-**composantes principales**. Chaque axe capture une fraction de la variance 
+composantes principales. Chaque axe capture une fraction de la variance 
 totale du nuage de points. Les variables sont normalisées avant 
 l'analyse, ce qui garantit que les différences d'échelle entre indices 
 standardisés et variables brutes n'introduisent pas de biais dans la 
@@ -1572,27 +1825,10 @@ var_2ax <- round(res_acp$eig[2, 3], 1)
 var_3ax <- round(res_acp$eig[3, 3], 1)
 ```
 
-L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
+Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs propres et le tableau associé permettent de déterminer le nombre d'axes à retenir. Selon la règle de Kaiser, on conserve les composantes dont la valeur propre est supérieure à 1 qui est le seuil en dessous duquel un axe explique moins de variance qu'une variable originale prise isolément. Trois axes satisfont donc ce critère. Les deux premiers axes expliquent à eux seuls **66,4 % de la variance totale**, ce qui est un résultat satisfaisant pour une ACP sur données agrégées par pays. Le troisième axe porte 15,4 % de variance supplémentaire, portant le cumul à 81,8 %. Dans la suite de l'analyse, nous nous concentrons sur le plan factoriel formé par les deux premières dimensions, qui constituent la représentation la plus synthétique et la plus lisible de la structure des pays de l'OCDE.
 
-```{r, label="fig-24", fig.cap="acp-scree", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
-# Tableau des valeurs propres
-vp <- as.data.frame(res_acp$eig)
-colnames(vp) <- c("Valeur propre", "% variance", "% cumulé")
-vp$Axe <- paste0("Dim.", 1:nrow(vp))
-vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
-
-kable(
-  head(vp, 5),
-  digits  = 2,
-  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
-  booktabs = TRUE
-) %>%
-  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
-  row_spec(which(head(vp$`Valeur propre`, 5) >= 1), bold = TRUE)
-```
-
-```{r, label="fig-25", fig.cap="-acp-eig-plot", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 fviz_eig(
   res_acp,
@@ -1622,7 +1858,7 @@ fviz_eig(
 
 Le cercle des corrélations représente les variables actives dans le plan Dim.1 × Dim.2. La longueur d'une flèche indique la qualité de représentation de la variable dans ce plan (cos²) : plus elle est proche du cercle unité, mieux la variable est captée par les deux premiers axes. L'orientation indique la corrélation avec chaque dimension. Les variables pointant dans la même direction sont positivement corrélées entre elles dans cet espace ; des variables à angle droit sont indépendantes dans ce plan.
 
-```{r, label="fig-26", fig.cap="-acp-cercle", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+```{r, label="fig-25", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
 
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
@@ -1676,13 +1912,13 @@ ggplot() +
                   box.padding = 0.4, max.overlaps = 20) +
   # Flèches variables supplémentaires (scores) en rouge tirets
   geom_segment(data = coord_sup,
-               aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
-               arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
-               color = "#d73027", linewidth = 0.9, linetype = "dashed") +
+             aes(x = 0, y = 0, xend = Dim1, yend = Dim2),
+             arrow = arrow(length = unit(0.2, "cm"), type = "closed"),
+             color = "grey40", linewidth = 0.9, linetype = "dashed") +
   geom_text_repel(data = coord_sup,
-                  aes(x = Dim1, y = Dim2, label = label),
-                  size = 3, color = "#a50026", fontface = "bold",
-                  box.padding = 0.5, max.overlaps = 20) +
+                aes(x = Dim1, y = Dim2, label = label),
+                size = 3, color = "grey40", fontface = "bold",
+                box.padding = 0.5, max.overlaps = 20) +
   labs(
     title   = "Cercle des corrélations — plan Dim.1 × Dim.2",
     subtitle = "Flèches rouges en pointillés : scores scolaires (variables supplémentaires)",
@@ -1729,76 +1965,117 @@ Nous reviendrons sur cette observation dans la partie suivante.
 
 La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (performant, dans la moyenne, en difficulté) défini en partie II.
 
-```{r, label="fig-27", fig.cap="-acp-individus", echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=7}
+```{r, label="fig-26", fig.cap="Projection des pays — clustering K-means (k = 4)", acp-clustering, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6}
 
-# Coordonnées des individus (pays)
+# ── Coordonnées des pays ─────────────────────────────────────────────────────
 coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
 colnames(coord_ind) <- c("Dim1", "Dim2")
 coord_ind$CNT <- rownames(coord_ind)
 
-# Rattacher groupe (fort / moyen / faible) depuis niveau_pays
-# (niveau_pays doit exister dans l'environnement — calculé en partie II)
-coord_ind <- coord_ind %>%
-  left_join(niveau_pays %>% select(CNT, groupe, score_moyen), by = "CNT")
+# ── Méthode du coude (graphique → annexe) ───────────────────────────────────
+set.seed(42)
+inertie <- sapply(1:8, function(k) {
+  kmeans(coord_ind[, c("Dim1", "Dim2")],
+         centers = k, nstart = 25, iter.max = 100)$tot.withinss
+})
 
-# Couleurs groupe
-couleurs_groupe <- c(
-  "Fort"   = "#1a9850",
-  "Moyen"  = "#fee08b",
-  "Faible" = "#d73027"
+# ── K-means k=4 ─────────────────────────────────────────────────────────────
+set.seed(42)
+km <- kmeans(coord_ind[, c("Dim1", "Dim2")],
+             centers = 4, nstart = 25, iter.max = 100)
+
+coord_ind$cluster <- factor(km$cluster)
+
+# ── Identifier chaque cluster par son centroïde ──────────────────────────────
+centres <- coord_ind %>%
+  group_by(cluster) %>%
+  summarise(mDim1 = mean(Dim1), mDim2 = mean(Dim2), .groups = "drop")
+
+# Nommer selon position (on ajuste après avoir vu les résultats)
+centres <- centres %>%
+  mutate(nom = case_when(
+    mDim1 < -1                      ~ "Systèmes sous contrainte",
+    mDim1 > 0.5  & mDim2 > 0.5     ~ "Capital élevé,\nsoutien fort",
+    mDim1 > 0.5  & mDim2 < -0.5    ~ "Capital élevé,\nintensité horaire forte",
+    TRUE                             ~ "Profil intermédiaire"
+  ))
+
+coord_ind <- coord_ind %>%
+  left_join(centres %>% select(cluster, nom), by = "cluster")
+
+# ── Couleurs fixes par cluster ───────────────────────────────────────────────
+couleurs_clusters <- c(
+  "1" = "#1a9850",
+  "2" = "#4393c3",
+  "3" = "#d73027",
+  "4" = "#f4a582"
 )
 
-ggplot(coord_ind, aes(x = Dim1, y = Dim2, color = groupe, label = CNT)) +
+pct <- round(res_acp$eig[1:2, 2], 1)
+
+# Centroïdes pour labels sur le graphique
+centres_plot <- coord_ind %>%
+  group_by(cluster, nom) %>%
+  summarise(Dim1 = mean(Dim1), Dim2 = mean(Dim2), .groups = "drop")
+
+# ── Biplot avec clusters ─────────────────────────────────────────────────────
+ggplot(coord_ind, aes(x = Dim1, y = Dim2,
+                      color = cluster, fill = cluster,
+                      label = CNT)) +
   geom_hline(yintercept = 0, color = "grey70", linewidth = 0.3) +
   geom_vline(xintercept = 0, color = "grey70", linewidth = 0.3) +
-  geom_point(aes(size = score_moyen), alpha = 0.85) +
-  geom_text_repel(size = 3, fontface = "bold",
-                  box.padding = 0.4, max.overlaps = 30) +
-  scale_color_manual(values = couleurs_groupe, name = "Groupe (niveau)") +
-  scale_size_continuous(range = c(2, 6), guide = "none") +
+  stat_ellipse(aes(group = cluster),
+               geom = "polygon", alpha = 0.07,
+               level = 0.75, show.legend = FALSE) +
+  geom_point(size = 3.5, alpha = 0.9) +
+  geom_text_repel(size = 2.8, fontface = "bold",
+                  box.padding = 0.4, max.overlaps = 30,
+                  min.segment.length = 0,
+                  show.legend = FALSE) +
+  annotate("label",
+         x = c(-3.75, 0, 1.8, 0),
+         y = c(0.1, 1.67, -2.8, -0.67),
+         label = c("Systèmes sous\ncontrainte",
+                   "Modèles anglophones\net nordiques",
+                   "Systèmes exigeants\nà capital élevé",
+                   "Europe continentale\net Amérique du Sud"),
+         color = c("#4393c3", "#d73027", "#f4a582", "#1a9850"),
+             size = 2.6, fontface = "italic",
+             fill = "white", alpha = 0.85, label.size = 0.3,
+             show.legend = FALSE) +
+  scale_color_manual(values = couleurs_clusters, guide = "none") +
+  scale_fill_manual(values  = couleurs_clusters, guide = "none") +
   labs(
-    title   = "Projection des pays de l'OCDE dans le plan factoriel (Dim.1 × Dim.2)",
-    subtitle = "Taille des points proportionnelle au score moyen. Codes ISO 3 lettres.",
+    title   = "Projection des pays de l'OCDE dans le plan factoriel — clustering K-means (k = 4)",
+    subtitle = "Les ellipses représentent les zones de concentration à 75 % de chaque cluster.",
     x       = paste0("Dim.1 — Capital socio-économique (", pct[1], "% de variance)"),
     y       = paste0("Dim.2 — Intensité institutionnelle (", pct[2], "% de variance)"),
-    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : chaque point représente un pays. Les groupes (fort / moyen / faible)\nsont définis par tiers sur la base du score moyen global."
+    caption = paste0(
+      "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\n",
+      "Note de lecture : la Turquie présente une coordonnée de −2,3 sur Dim.1, ",
+      "ce qui la place parmi les pays au capital socio-économique le plus faible de l'échantillon."
+    )
   ) +
   theme_minimal(base_size = 11) +
   theme(
     plot.title    = element_text(face = "bold", size = 12),
     plot.subtitle = element_text(size = 9, color = "grey40"),
-    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
-    legend.position = "bottom"
+    plot.caption  = element_text(size = 8, color = "grey40", hjust = 0)
   )
+
+# Afficher les pays par cluster pour ajuster les noms
+print(coord_ind %>% arrange(cluster) %>% select(CNT, cluster, nom))
 ```
 
-Plusieurs configurations émergent de cette projection :
+La classification en quatre groupes révèle des profils nationaux contrastés que le seul classement par score moyen ne permettait pas de faire apparaître.
 
-**Les pays à fort capital socio-économique et forte performance** (quadrant droit) regroupent des pays comme la Corée (KOR), la Suisse (CHE), la Belgique (BEL) ou la Slovénie (SVN). Ils se situent dans les valeurs positives de Dim.1, confirmant que leur niveau scolaire élevé s'accompagne d'un contexte socio-économique favorable. Mais Israël (ISR) et l'Islande (ISL) se trouvent également dans ce quadrant, avec des performances plus contrastées. Israël étant considéré comme « fort » malgré une forte dispersion interne, et l'Islance classé dans le groupe « faible » malgré un ESCS élevé, ce qui en fait un cas atypique sur lequel nous reviendrons.
+Le premier groupe, le plus large, rassemble onze pays dont la majorité appartient l'Europe continentale, auxquels s'ajoute le Chili, bien que ce dernier se distingue par une position plus excentrée, témoignant d'un profil socio-économique plus contraint que ses homologues européens du groupe.. Leur position centrale dans le plan factoriel — ni fortement positifs ni fortement négatifs sur les deux axes — traduit un profil intermédiaire : un capital socio-économique modéré et une organisation scolaire sans singularité marquée. C'est dans ce groupe que se situe la France, dont la médiocrité relative du classement PISA ne s'explique pas par un déficit flagrant sur l'un ou l'autre axe, mais plutôt par l'absence d'un avantage structurel clairement identifiable.
 
-**Les pays à faible capital socio-économique et faible performance** (quadrant gauche) comprennent le Mexique (MEX), la Colombie (COL) et le Chili (CHL). Leur position nettement négative sur Dim.1 est cohérente avec leur classement en bas du tableau des scores. La Turquie (TUR) occupe une position particulière : très négative sur les deux axes, elle combine un faible capital socio-économique et une intensité horaire élevée (valeur basse sur Dim.2), sans que cette dernière ne semble compenser le premier facteur.
+Le deuxième groupe, le plus homogène, réunit la Colombie, le Mexique et la Turquie. Ces trois pays partagent un capital socio-économique nettement inférieur à la moyenne de l'OCDE, ce qui les place à l'extrémité gauche du premier axe. Leur regroupement confirme que les contraintes structurelles pesant sur ces systèmes éducatifs sont d'abord d'ordre économique.
 
-**Les pays anglophones à organisation scolaire légère** (quadrant supérieur droit) comme le Canada (CAN), l'Irlande (IRL), l'Australie (AUS) et la Nouvelle-Zélande (NZL) présentent un capital socio-économique élevé combiné à des valeurs positives sur Dim.2, associées à davantage de soutien institutionnel et moins d'heures formelles. Ce groupe présente des performances solides, ce qui ne permet pas de conclure que la réduction du volume horaire est préjudiciable à la réussite.
+Le troisième groupe rassemble les grandes démocraties anglophones — Canada, Australie, Irlande, Nouvelle-Zélande, États-Unis — ainsi que la Finlande et, de façon plus surprenante, le Portugal. Ces pays partagent un capital socio-économique élevé combiné à des systèmes qui privilégient le soutien institutionnel sur le volume horaire. Leurs performances solides suggèrent qu'un accompagnement qualitatif peut se substituer efficacement à l'intensité horaire.
 
-**Le Japon (JPN)** occupe une position singulière en bas à droite du plan : capital socio-économique élevé, mais Dim.2 très négative, suggérant un système à forte intensité horaire. C'est l'un des pays les mieux notés de l'OCDE, ce qui illustre qu'un système peut combiner rigueur institutionnelle et excellence académique.
-
-**La France (FRA)** se positionne légèrement à droite de l'axe central (Dim.1 modérément positive) et proche de zéro sur Dim.2, ce qui la place dans une configuration assez médiane. Son classement au 27e rang sur 37 suggère que son capital socio-économique moyen, bien que supérieur à celui des pays les moins favorisés, ne suffit pas à compenser d'autres facteurs — notamment une forte dispersion interne des résultats, qui n'est pas captée par cette ACP réalisée sur des moyennes nationales.
-
-
-D'après le graphique de qualité de représentation des pays en annexe, tous les pays ne sont pas également bien représentés dans le plan Dim.1 × Dim.2. Le cos², compris entre 0 et 1, mesure la part de la variabilité d'un pays qui est expliquée par les deux premières dimensions. Un cos² supérieur à 0,7 est généralement considéré comme satisfaisant.
-
-La Turquie, la Colombie, le Mexique et plusieurs autres pays sont très bien représentés dans ce plan, ce qui signifie que leur positionnement dans l'OCDE est essentiellement déterminé par les deux grandes dimensions identifiées.
-
-À l'inverse, des pays comme la France, la Lituanie, la Hongrie ou l'Espagne présentent des cos² plus faibles, inférieurs à 0,3. Cela signifie que leur profil est davantage structuré par les axes suivants (Dim.3 et au-delà), non représentés ici. Ces pays échappent partiellement à la logique binaire capital socio-économique / intensité institutionnelle, et mériteraient une analyse complémentaire sur les dimensions suivantes pour comprendre ce qui les distingue réellement.
-
-
-Le graphique de synthèse intitulé "Lien entre l'axe 1 et le score moyen national" confronte directement la position de chaque pays sur l'axe 1 de l'ACP à son score moyen national. La corrélation observée est de **r = 0,71**, ce qui constitue un résultat notable : le premier axe de l'ACP étant construit sans aucune information sur les scores scolaires — reproduit à lui seul 50 % de la variance des performances nationales (r² ≈ 0,50).
-
-Ce résultat vient confirmer, à l'échelle nationale et par une méthode multivariée, ce que les analyses de corrélation de la partie I avaient mis en évidence à l'échelle individuelle : le capital socio-économique des familles est le facteur structural le plus fortement associé aux inégalités de niveau scolaire au sein de l'OCDE. Ce n'est pas un facteur parmi d'autres — c'est la première dimension de différenciation entre les systèmes éducatifs nationaux.
-
-En revanche, la corrélation entre la deuxième dimension (intensité institutionnelle) et les scores est quasi nulle (**r = 0,04**). Ce résultat invite à la prudence quant aux discours qui font de l'intensité scolaire un levier principal de la performance nationale. À l'échelle de l'OCDE, cette dimension distingue certes les pays entre eux, mais elle ne semble pas structurellement liée à leurs résultats moyens. Cela ne signifie pas que ces facteurs sont sans effet. Ils peuvent jouer à d'autres niveaux d'analyse (individuel, local) ou interagir avec d'autres variables non captées ici mais ils ne constituent pas, à eux seuls, un déterminant national de la performance scolaire.
-
-Enfin, il convient de rappeler les limites inhérentes à cette ACP. Travailler sur des moyennes nationales efface la variabilité interne à chaque pays, qui peut être considérable. Un pays peut afficher un ESCS moyen élevé tout en présentant de fortes inégalités internes — or c'est précisément cette dispersion qui détermine les inégalités scolaires au sens propre. L'ACP nationale donne une image de la structure entre pays, non de la structure au sein des pays. Les deux niveaux d'analyse sont complémentaires et doivent être lus conjointement pour répondre pleinement à notre problématique.
+Le quatrième groupe, enfin, regroupe le Japon, la Corée, Israël et l'Islande. Les trois premiers sont parmi les mieux classés de l'OCDE et combinent un capital socio-économique élevé avec une forte intensité horaire — ce qui illustre qu'un système exigeant peut, dans certains contextes, amplifier les effets d'un capital familial déjà favorable. L'Islande constitue toutefois un cas atypique au sein de ce groupe : malgré un profil similaire sur les deux axes, son score moyen la place parmi les pays les moins performants de l'échantillon, ce qui suggère que d'autres facteurs, non captés par ces deux dimensions, jouent un rôle déterminant dans son cas.
 
 
 # Conclusion
@@ -1812,7 +2089,7 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 # Annexe 
 
-```{r, label="fig-28", fig.cap="-acp-contrib", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-27", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 labels_vars_contrib <- c(
   ESCS       = "Statut socio-économique (ESCS)",
@@ -1854,7 +2131,7 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
 ```
 
 
-```{r, label="fig-29", fig.cap="-acp-cos2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-28", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
 cos2_ind <- as.data.frame(res_acp$ind$cos2[, 1:2])
 colnames(cos2_ind) <- c("Dim1", "Dim2")
@@ -1888,20 +2165,30 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
 
 
 
-```{r, label="fig-30", fig.cap="-acp-synthese", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-29", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
 
+coord_ind <- coord_ind %>%
+  left_join(niveau_pays %>% select(CNT, score_moyen), by = "CNT")
 # Corrélations entre coordonnées Dim.1 et scores scolaires
 corr_dim1_score <- cor(coord_ind$Dim1, coord_ind$score_moyen, use = "complete.obs")
 corr_dim2_score <- cor(coord_ind$Dim2, coord_ind$score_moyen, use = "complete.obs")
 
 # Scatter Dim1 vs score_moyen avec droite de régression
-ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
+ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) +
   geom_smooth(method = "lm", se = TRUE, color = "grey50",
               linewidth = 0.8, linetype = "dashed", fill = "grey90") +
   geom_point(size = 3, alpha = 0.9) +
   geom_text_repel(size = 3, fontface = "bold",
                   box.padding = 0.4, max.overlaps = 25) +
-  scale_color_manual(values = couleurs_groupe, name = "Groupe") +
+  scale_color_manual(values = c("1" = "#1a9850",
+                               "2" = "#4393c3",
+                               "3" = "#d73027",
+                               "4" = "#f4a582"),
+                   name = "Cluster",
+                   labels = c("1" = "Europe continentale et Amérique du Sud",
+                              "2" = "Systèmes sous contrainte",
+                              "3" = "Modèles anglophones et nordiques",
+                              "4" = "Systèmes exigeants à capital élevé")) +
   labs(
     title   = "Lien entre l'axe 1 de l'ACP et le score moyen national",
     subtitle = paste0("r de Pearson = ", round(corr_dim1_score, 2)),
@@ -1916,4 +2203,22 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = groupe, label = CNT)) +
     plot.caption  = element_text(size = 8, color = "grey40", hjust = 0),
     legend.position = "bottom"
   )
+```
+
+```{r, label="fig-30", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+
+# Tableau des valeurs propres
+vp <- as.data.frame(res_acp$eig)
+colnames(vp) <- c("Valeur propre", "% variance", "% cumulé")
+vp$Axe <- paste0("Dim.", 1:nrow(vp))
+vp <- vp[, c("Axe", "Valeur propre", "% variance", "% cumulé")]
+
+kable(
+  head(vp, 5),
+  digits  = 2,
+  caption = "Valeurs propres et variance expliquée (5 premiers axes)",
+  booktabs = TRUE
+) %>%
+  kable_styling(latex_options = c("hold_position"), font_size = 9) %>%
+  row_spec(which(head(vp$`Valeur propre`, 5) >= 1), bold = TRUE)
 ```
