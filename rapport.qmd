@@ -2096,7 +2096,7 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) 
   )
 ```
 
-```{r, label="fig-33", fig.cap="Valeurs propres et variance expliquée (5 premiers axes)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-33", fig.cap="Valeurs propres et variance expliquée (5 premiers axes)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4, fig.pos="H"}
 
 # Tableau des valeurs propres
 vp <- as.data.frame(res_acp$eig)
