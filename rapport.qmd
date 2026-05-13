@@ -1386,7 +1386,7 @@ coord_ind <- coord_ind %>%
 ```
 
 
-```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-24", fig.cap="Éboulis des valeurs propres", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4, fig.pos="H"}
 
 fviz_eig(
   res_acp,
@@ -1400,7 +1400,7 @@ fviz_eig(
   labs(
     x       = "Composante principale",
     y       = "Pourcentage de variance expliquée (%)",
-    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : la ligne rouge indique le seuil de 1 (règle de Kaiser)."
+    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : 24,1% de la variance expliquée l'est par la deuxième composante."
   ) +
   geom_hline(yintercept = 100 / nrow(res_acp$eig),
              linetype = "dashed", color = "#d73027", linewidth = 0.6) +
@@ -1417,7 +1417,7 @@ Le tableau des valeurs propres est disponible en annexe. L'éboulis des valeurs 
 
 Le cercle des corrélations représente les variables actives dans le plan Dim.1 × Dim.2. La longueur d'une flèche indique la qualité de représentation de la variable dans ce plan (cos²) : plus elle est proche du cercle unité, mieux la variable est captée par les deux premiers axes. L'orientation indique la corrélation avec chaque dimension. Les variables pointant dans la même direction sont positivement corrélées entre elles dans cet espace ; des variables à angle droit sont indépendantes dans ce plan.
 
-```{r, label="fig-25", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6}
+```{r, label="fig-25", fig.cap="Cercle des corrélations — plan Dim.1 × Dim.2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=6, fig.pos="H"}
 
 # Labels lisibles pour les variables
 labels_vars_acp <- c(
@@ -1477,10 +1477,10 @@ ggplot() +
                 size = 3, color = "grey40", fontface = "bold",
                 box.padding = 0.5, max.overlaps = 20) +
   labs(
-    subtitle = "Flèches rouges en pointillés : scores scolaires (variables supplémentaires)",
+    subtitle = "Flèches noires en pointillés : scores scolaires (variables supplémentaires)",
     x       = paste0("Dim.1 (", pct[1], "% de variance)"),
     y       = paste0("Dim.2 (", pct[2], "% de variance)"),
-    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : la longueur et l'orientation des flèches indiquent la corrélation avec chaque axe.\nLes variables supplémentaires (scores) ne participent pas à la construction des axes."
+    caption = "Source : PISA 2022 — OCDE. Champ : pays membres de l'OCDE.\nNote de lecture : ESCS est bien représenté, modernité du système éducatif est la variable la moins bien représentée."
   ) +
   coord_equal(xlim = c(-1.15, 1.15), ylim = c(-1.15, 1.15)) +
   theme_minimal(base_size = 11) +
@@ -1506,7 +1506,7 @@ Il convient toutefois de rester prudent dans l'interprétation. D'une part, une 
 
 La projection des pays dans le plan Dim.1 × Dim.2 permet de visualiser simultanément leur position relative sur les deux dimensions identifiées. La taille des points est proportionnelle au score moyen national, et la couleur correspond au groupe de performance (fort, moyen, faible) défini en partie II.
 
-```{r, label="fig-26", fig.cap="Projection des pays — clustering K-means (k = 4)", acp-clustering, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6}
+```{r, label="fig-26", fig.cap="Projection des pays — clustering K-means (k = 4)", acp-clustering, echo=FALSE, message=FALSE, warning=FALSE, fig.width=9, fig.height=6, fig.pos="H"}
 
 # ── Coordonnées des pays ─────────────────────────────────────────────────────
 coord_ind <- as.data.frame(res_acp$ind$coord[, 1:2])
@@ -1636,7 +1636,7 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 
 # Annexe 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, label="fig-27",fig.cap="coefficient de corrélation de l'ensemble des variables quantitatives avec le score global", echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 # =========================
 # Variables quantitatives
 # =========================
@@ -1746,7 +1746,7 @@ ggplot(
   labs(
     x = NULL,
     y = NULL,
-    caption = "Source : PISA 2022 — OCDE."
+    caption = "Source : PISA 2022 — OCDE\n Note de lecture : Le coefficient de correlation entre l'ESCS et le score global est de 0.41."
   ) +
  
   theme_minimal(base_size = 11) +
@@ -1766,7 +1766,7 @@ ggplot(
 ```
 
 
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
+```{r, label="fig-28",fig.cap="coefficient de corrélation de l'ensemble des variables quanlitatives avec le score global", echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 library(dplyr)
 library(ggplot2)
 library(reshape2)
@@ -1846,7 +1846,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
   
   labs(
     x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE."
+    caption = "Source : PISA 2022 — OCDE. \nChamp : élèves de 15 ans des pays membres de l'OCDE.\n Note de lecture: Le rapport de corrélation entre le Programme nat. \nd'étude est le score global est de 0.49"
   ) +
   
   theme_minimal(base_size = 11) +
@@ -1860,7 +1860,7 @@ ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
 ```
 
 
-```{r,echo=FALSE, message=FALSE, warning=FALSE,}
+```{r,label="fig-29",fig.cap=" carte des pays européens de l'OCDE en fonction de la part d'élèves issus de l'immigration et des performances scolaires", echo=FALSE, message=FALSE, warning=FALSE, fig.pos="H"}
 library(dplyr)
 library(ggplot2)
 library(rnaturalearth)
@@ -1968,13 +1968,8 @@ ggplot() +
   ) +
  
   labs(
-    title = "Immigration scolaire et performance en Europe (OCDE)",
-   
-    subtitle =
-      "Couleur de fond : proportion d'élèves issus de l'immigration\nCarrés : niveau moyen de performance scolaire",
-   
     caption =
-      "Source : PISA 2022 – OCDE.\nChamp : pays européens membres de l'OCDE."
+      "Source : PISA 2022 – OCDE.\nChamp : pays européens membres de l'OCDE.\n Note de lecture: L'Espagne fait partie des pays aux résultats intermédiares,\n elle a un taux d'élève issu de l'immigration d'environ 10%"
   ) +
  
   theme_minimal(base_size = 10) +
@@ -1990,15 +1985,15 @@ ggplot() +
   )
 ```
 
-```{r, label="fig-27", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-30", fig.cap="Contribution des variables aux axes 1 et 2", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4, fig.pos="H"}
 
 labels_vars_contrib <- c(
-  ESCS       = "Statut socio-économique (ESCS)",
-  LEARRES    = "Ressources éduc. à domicile (LEARRES)",
-  SCHSUST    = "Soutien de l'établissement (SCHSUST)",
-  ST059Q01TA = "Heures de maths / semaine (ST059Q01TA)",
-  ST059Q02JA = "Heures de cours / semaine (ST059Q02JA)",
-  EXPO21ST   = "Exposition aux maths contemp. (EXPO21ST)"
+  ESCS       = "Statut socio-économique",
+  LEARRES    = "Ressources éduc. à domicile",
+  SCHSUST    = "Soutien de l'établissement",
+  ST059Q01TA = "Séance maths / semaine",
+  ST059Q02JA = "Séance cours / semaine",
+  EXPO21ST   = "Exposition aux maths contemp."
 )
 
 # Contributions des variables aux deux premiers axes
@@ -2019,7 +2014,7 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
   labs(
     x       = NULL, y       = "Contribution (%)",
     fill    = NULL,
-    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : la ligne pointillée indique la contribution moyenne attendue si toutes les variables contribuaient également."
+    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : La contribution de l'ESCS à la \ndimension 2 est d'environ 38%"
   ) +
   theme_minimal() +
   theme(
@@ -2029,7 +2024,7 @@ ggplot(contrib_long, aes(x = reorder(variable, contrib), y = contrib, fill = Axe
 ```
 
 
-```{r, label="fig-28", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-31", fig.cap="Qualité de représentation des pays (cos²)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, fig.pos="H"}
 
 cos2_ind <- as.data.frame(res_acp$ind$cos2[, 1:2])
 colnames(cos2_ind) <- c("Dim1", "Dim2")
@@ -2049,7 +2044,7 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
                     name = NULL) +
   labs(
     x       = NULL, y = "Cos² (Dim.1 + Dim.2)",
-    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : un cos² > 0,7 (ligne pointillée) indique une bonne représentation du pays dans le plan factoriel.\nUn cos² faible signifie que le pays est mieux décrit par les axes suivants."
+    caption = "Source : PISA 2022 — OCDE.\nNote de lecture : La France est très mal représentée, environ 10%."
   ) +
   theme_minimal() +
   theme(
@@ -2062,7 +2057,7 @@ ggplot(cos2_ind, aes(x = reorder(CNT, total), y = total,
 
 
 
-```{r, label="fig-29", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5}
+```{r, label="fig-32", fig.cap="Lien entre l'axe 1 de l'ACP et le score moyen national", echo=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=5, fig.pos="H"}
 
 coord_ind <- coord_ind %>%
   left_join(niveau_pays %>% select(CNT, score_moyen), by = "CNT")
@@ -2101,7 +2096,7 @@ ggplot(coord_ind, aes(x = Dim1, y = score_moyen, color = cluster, label = CNT)) 
   )
 ```
 
-```{r, label="fig-30", fig.cap="Valeurs propres et variance expliquée (5 premiers axes)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+```{r, label="fig-33", fig.cap="Valeurs propres et variance expliquée (5 premiers axes)", echo=FALSE, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
 
 # Tableau des valeurs propres
 vp <- as.data.frame(res_acp$eig)
