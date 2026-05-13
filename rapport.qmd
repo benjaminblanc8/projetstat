@@ -450,61 +450,6 @@ Au delà de cet indice, un autre lien important semble émerger. Plus un enfant 
 
 D'autre part, on constate que la présence de ressources éducatives lors de période de fermeture d'école est indépendante de la réussite scolaire. On pourrait penser qu'un enfant possédant davantage de ressources peut en bénéficier lors de son apprentissage en dehors du temps scolaire favorisant ainsi sa réussite. Pourtant les chiffres nous démontrent le contraire. Posséder des ressources éducatives n'influencent pas la réussite scolaire. On peut alors supposer que la plus part de l'apprentissage se fait lors du temps scolaire ou encore que la présence de ressources éducatives au domicile familial s'il n'est pas associé à des compétences d'enseignement n'est que peu utile. 
 
-```{r, label="fig-4", fig.cap="Force du lien entre variables qualitatives de nature économique et scores scolaires", echo=FALSE, fig.width=8, fig.height=6, message=FALSE, warning=FALSE, fig.pos="H"}
-# ── Heatmap eta (variables qualitatives / ordinales) ────────────────────────
-labels_eta <- c(
-  ST255Q01JA = "Nb livres à la maison",
-  FL170Q02JA = "Argent de poche",
-  FL170Q03JA = "Travail rémunéré",
-  ST294Q01JA = "Petit-déjeuner",
-  ST295Q04JA = "Travail pour financer études",
-  HISCED     = "Niveau éduc. parent (max)",
-  FISCED     = "Niveau éduc. père",
-  MISCED     = "Niveau éduc. mère"
-)
-
-mat_eta_df      <- as.data.frame(mat_eta)
-mat_eta_df$variable <- rownames(mat_eta_df)
-mat_eta_long    <- melt(mat_eta_df, id.vars = "variable",
-                        variable.name = "matiere", value.name = "eta")
-
-mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
-mat_eta_long$variable  <- factor(mat_eta_long$variable,
-                                 levels = rev(rownames(mat_eta)[order(rowMeans(mat_eta, na.rm = TRUE))]))
-mat_eta_long$label_var <- factor(mat_eta_long$label_var,
-                                 levels = labels_eta[levels(mat_eta_long$variable)])
-mat_eta_long <- mat_eta_long[!is.na(mat_eta_long$label_var), ]
-mat_eta_long$matiere   <- recode(mat_eta_long$matiere,
-                                 moyenne_maths    = "Mathématiques",
-                                 moyenne_lecture  = "Lecture",
-                                 moyenne_sciences = "Sciences"
-)
-
-ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = round(eta, 2)),
-            color = ifelse(mat_eta_long$eta > 0.25, "white", "black"),
-            size = 3.5, fontface = "bold") +
-  scale_fill_gradient(
-    low = "#f7f7f7", high = "#1a9850",
-    limits = c(0, NA),
-    name = "Eta\n(corrélation)"
-  ) +
-  labs(
-    x = NULL, y = NULL,
-    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE.\nNote de lecture : 0,46 : le nombre de livres à la maison est associé à 46% des différences de réussite scolaire."
-  ) +
-  theme_minimal(base_size = 11) +
-  theme(
-    plot.title   = element_text(face = "bold", size = 12),
-    plot.caption = element_text(size = 8, color = "grey40", hjust = 0),
-    axis.text.x  = element_text(face = "bold"),
-    axis.text.y  = element_text(size = 9),
-    legend.position = "right",
-    panel.grid   = element_blank()
-  )
-```
-
 
 Quant aux autres variables de nature économiques,leur effet quant à l'explication des inégalités de niveau scolaire reste modéré. Nous en pouvons donc ni en conclure un véritable lien significatif ni en conclure une absence de lien. 
 
@@ -1936,6 +1881,100 @@ En définitive, si le capital socio-économique constitue un facteur structurant
 
 
 # Annexe 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+
+labels_eta <- c(
+  ST255Q01JA = "Nb livres à la maison",
+  FL170Q02JA = "Argent de poche",
+  FL170Q03JA = "Travail rémunéré",
+  ST294Q01JA = "Petit-déjeuner",
+  ST295Q04JA = "Travail pour financer études",
+  HISCED     = "Niveau éduc. parent (max)",
+  FISCED     = "Niveau éduc. père",
+  MISCED     = "Niveau éduc. mère", 
+  ST127Q01TA = "Redoublement", 
+  ST272Q01JA = "Qualité enseignement maths",
+  PROGN      = "Programme national d’étude",
+  CNT        = "Pays",
+  ST295Q03JA = "Aide familiale",
+  IMMIG      = "Statut migratoire",
+  ST016Q01NA = "Satisfaction de vie",
+  ST260Q01JA = "Absence prolongée",
+  ST267Q02JA = "Soutien émotionnel enseignant",
+  ST295Q02JA = "Temps travail scolaire",
+  ST307Q01JA = "Persévérance face aux tâches",
+  WB150Q01HA = "État de santé"
+)
+
+# -------------------------
+# Mise en forme des données
+# -------------------------
+mat_eta_df <- as.data.frame(mat_eta)
+mat_eta_df$variable <- rownames(mat_eta_df)
+
+mat_eta_long <- melt(
+  mat_eta_df,
+  id.vars = "variable",
+  variable.name = "matiere",
+  value.name = "eta"
+)
+
+mat_eta_long$label_var <- labels_eta[as.character(mat_eta_long$variable)]
+
+# suppression des NA (variables non labellisées)
+mat_eta_long <- mat_eta_long[!is.na(mat_eta_long$label_var), ]
+
+# ordre des variables (tri par moyenne des eta)
+ord <- names(sort(rowMeans(mat_eta, na.rm = TRUE), decreasing = TRUE))
+mat_eta_long$variable <- factor(mat_eta_long$variable, levels = ord)
+
+# renommage des matières
+mat_eta_long$matiere <- recode(mat_eta_long$matiere,
+                               moyenne_maths    = "Mathématiques",
+                               moyenne_lecture  = "Lecture",
+                               moyenne_sciences = "Sciences"
+)
+
+# -------------------------
+# Graphique
+# -------------------------
+ggplot(mat_eta_long, aes(x = matiere, y = label_var, fill = eta)) +
+  
+  geom_tile(color = "white", linewidth = 0.5) +
+  
+  geom_text(
+    aes(label = round(eta, 2)),
+    color = "black",   # ✔️ UNE SEULE COULEUR FIXE
+    size = 3.5,
+    fontface = "bold"
+  ) +
+  
+  scale_fill_gradient(
+    low = "#f7f7f7",
+    high = "#1a9850",
+    limits = c(0, 1),
+    name = "Eta\n(corrélation)"
+  ) +
+  
+  labs(
+    x = NULL, y = NULL,
+    caption = "Source : PISA 2022 — OCDE. Champ : élèves de 15 ans des pays membres de l'OCDE."
+  ) +
+  
+  theme_minimal(base_size = 11) +
+  theme(
+    panel.grid = element_blank(),
+    axis.text.x = element_text(face = "bold"),
+    axis.text.y = element_text(size = 9),
+    legend.position = "right",
+    plot.caption = element_text(size = 8, color = "grey40", hjust = 0)
+  )
+```
+
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE,}
 library(dplyr)
